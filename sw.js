@@ -4,7 +4,7 @@
 
 /* Mudar este nome a cada versão publicada: é o que faz o aparelho de quem já
    instalou buscar o arquivo novo em vez de servir o antigo do cache. */
-const CACHE = "santo-terco-v1";
+const CACHE = "santo-terco-v2";
 
 const RECURSOS = [
   "./",
