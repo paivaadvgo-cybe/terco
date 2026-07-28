@@ -345,6 +345,21 @@ body.modo-direcao #imagem-fundo,
 body.sem-imagens #imagem-destaque,
 body.sem-imagens #imagem-fundo{ display:none !important; }
 
+/* Fio do ritmo (Fase 2) -------------------------------------------------
+   Só aparece quando o avanço é automático. Existe para que a pessoa saiba
+   que algo está contando — sem ele, uma oração longa como o Credo faz a tela
+   parecer travada por quase um minuto. Discreto de propósito: não é para
+   ser olhado, é para estar lá quando a dúvida vier. */
+#barra-ritmo{
+  position:absolute; top:0; left:0;
+  height:2px; width:0;
+  z-index:5;
+  background: var(--tinta-fraca);
+  opacity:0;
+  pointer-events:none;
+}
+#barra-ritmo.visivel{ opacity:.30; }
+
 /* Rodapé ---------------------------------------------------------------- */
 .rodape{
   flex:0 0 auto;
@@ -833,6 +848,7 @@ body.escutando .topo{ padding-top:32px; }
   <button id="botao-sair" aria-label="Sair da sessão">Sair</button>
   <button id="botao-pausa" aria-pressed="false" aria-label="Pausar o avanço automático">Pausar</button>
   <div id="indicador-voz" aria-hidden="true"></div>
+  <div id="barra-ritmo" aria-hidden="true"></div>
   <div id="indicador-escuta" role="status" aria-live="off" aria-label="Microfone ativo, acompanhando a reza">
     <span class="bolha" aria-hidden="true"></span>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -2507,7 +2523,7 @@ const APP = (function(){
   /* Sobe a cada publicação. Aparece no rodapé da tela inicial para que dê
      para conferir, olhando o aparelho, se a versão nova já chegou.
      Ao publicar: mude este número E o nome do cache no sw.js. */
-  const VERSAO = "2";
+  const VERSAO = "3";
 
   const cfg = function(){ return ARMAZENAMENTO.config(); };
   let grupoEscolhido = null;
@@ -3586,8 +3602,29 @@ const RITMO = (function(){
     VOZ.calar();
   });
 
+  /* Fio do ritmo: enche da esquerda para a direita ao longo da duração da
+     oração em curso. Com a leitura completa ligada quem manda é a fala, e o
+     tempo é imprevisível — nesse caso o fio não aparece. */
+  const fio = document.getElementById("barra-ritmo");
+
+  function animarFio(estado){
+    if (!fio) return;
+    const reduzido = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const mostrar = RITMO.estaAtivo() && !RITMO.estaPausado() &&
+                    !RITMO.guiadoPelaFala(estado) && !reduzido;
+    fio.classList.toggle("visivel", mostrar);
+    if (!mostrar){ fio.style.transition = "none"; fio.style.width = "0"; return; }
+    const ms = RITMO.duracaoDe(estado.tipo);
+    fio.style.transition = "none";
+    fio.style.width = "0";
+    void fio.offsetWidth;                  // força o navegador a assentar o zero
+    fio.style.transition = "width " + ms + "ms linear";
+    fio.style.width = "100%";
+  }
+
   INTERFACE.aoRenderizar(function(estado){
     atualizarBotaoPausa();
+    animarFio(estado);
     if (!VOZ.estaDisponivel()) return;
     if (RITMO.estaPausado()) return;
     const texto = VOZ.textoDe(estado, nivelAtual());
@@ -3618,6 +3655,8 @@ const RITMO = (function(){
       evento.stopPropagation();          // não pode contar como toque de avanço
       if (RITMO.estaPausado()) RITMO.retomar(); else RITMO.pausar();
       atualizarBotaoPausa();
+      const atual = NUCLEO.estado();
+      if (atual) animarFio(atual);
     });
   }
 
@@ -3767,6 +3806,8 @@ const RITMO = (function(){
       interruptor.addEventListener("click", function(){
         mudar("ritmoAutomatico", !config().ritmoAutomatico);
         pintarTudo();
+        const atual = NUCLEO.estado();
+        if (atual && APP.emSessao()) animarFio(atual);
       });
     }
   }
