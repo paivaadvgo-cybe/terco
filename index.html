@@ -62,8 +62,21 @@ body{
 }
 .tela.ativa{ display:flex; }
 
-/* Tela inicial ---------------------------------------------------------- */
-#tela-inicio{ justify-content:center; align-items:center; text-align:center; gap:0; }
+/* Tela inicial ----------------------------------------------------------
+   Diferente das telas de oração, esta é um menu: aqui rolar é aceitável, e
+   melhor do que deixar botão fora do alcance. Os dois espaçadores abaixo
+   centralizam o conteúdo quando há folga e desaparecem quando não há, que é
+   o que permite rolar em tela baixa sem cortar o topo. */
+#tela-inicio{
+  justify-content:flex-start;
+  align-items:center;
+  text-align:center;
+  gap:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+#tela-inicio::before,
+#tela-inicio::after{ content:""; flex:1 1 0; min-height:0; }
 
 .marca{
   font-size: clamp(26px, 7vw, 40px);
@@ -718,7 +731,15 @@ body.escutando .topo{ padding-top:32px; }
 .resumo-historico .rotulo{ font-size:12px; letter-spacing:.12em; text-transform:uppercase; color: var(--tinta-fraca); }
 
 /* Tela de conclusão ----------------------------------------------------- */
-#tela-fim{ justify-content:center; align-items:center; text-align:center; }
+#tela-fim{
+  justify-content:flex-start;
+  align-items:center;
+  text-align:center;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+}
+#tela-fim::before,
+#tela-fim::after{ content:""; flex:1 1 0; min-height:0; }
 #tela-fim .marca{ margin-bottom:14px; }
 #tela-fim p{ font-size: clamp(17px, 4.4vw, 20px); color: var(--tinta-media); margin:0 0 30px 0; max-width:30ch; line-height:1.5; }
 
@@ -751,6 +772,18 @@ body.escutando .topo{ padding-top:32px; }
   font-size: clamp(14px, 3.8vw, 16px);
   color: var(--tinta-media);
   line-height:1.55;
+}
+
+/* Número da versão, só na tela inicial. Serve para conferir, num relance,
+   se a atualização chegou ao aparelho — o cache do service worker faz a
+   versão antiga sobreviver até que o nome do cache mude. */
+.versao{
+  font-size:11px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:#3D3A34;
+  margin:18px 0 4px 0;
+  flex:0 0 auto;
 }
 
 .oculto{ display:none !important; }
@@ -790,6 +823,7 @@ body.escutando .topo{ padding-top:32px; }
     <button class="botao-secundario" id="botao-historico">Histórico</button>
   </div>
   <p class="aviso-discreto" id="aviso-inicio" role="status"></p>
+  <p class="versao" id="versao-app"></p>
 </section>
 
 <!-- ====================== TELA DE ORAÇÃO ====================== -->
@@ -2470,6 +2504,11 @@ const ENTRADA = (function(){
    ========================================================================== */
 const APP = (function(){
 
+  /* Sobe a cada publicação. Aparece no rodapé da tela inicial para que dê
+     para conferir, olhando o aparelho, se a versão nova já chegou.
+     Ao publicar: mude este número E o nome do cache no sw.js. */
+  const VERSAO = "2";
+
   const cfg = function(){ return ARMAZENAMENTO.config(); };
   let grupoEscolhido = null;
   let bloqueioDeTela = null;
@@ -2526,6 +2565,8 @@ const APP = (function(){
     const motivo = LITURGIA.motivoDaSugestao(hoje, config.ajusteLiturgico);
 
     INTERFACE.pegar("subtitulo-data").textContent = formatarDataLonga(hoje);
+    const marca = document.getElementById("versao-app");
+    if (marca) marca.textContent = "Versão " + VERSAO;
     INTERFACE.pegar("sugestao-dia").innerHTML =
       "Sugestão para " + motivo + ": <strong>" + DADOS.grupos[sugerido].nome + "</strong>";
 
@@ -2935,6 +2976,7 @@ const APP = (function(){
     montarConfiguracoes: montarConfiguracoes,
     aplicarConfiguracoes: aplicarConfiguracoes,
     mudarConfig: mudarConfig,
+    VERSAO: VERSAO,
     definirModoTeste: function(ligado){ modoTeste = !!ligado; },
     emSessao: function(){ return sessaoEmAndamento; }
   });
