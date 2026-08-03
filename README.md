@@ -164,3 +164,15 @@ divulgação ampla:
   consagrada entre os vinte;
 - a **tabela de variantes regionais** usada pelo acompanhamento por voz, que
   precisa incluir as formas rezadas na sua comunidade para acompanhar bem.
+
+---
+
+# Outros aplicativos neste repositório
+
+## ColorScan Auto
+
+Na pasta [`colorscan/`](colorscan/) há um segundo PWA independente: o
+**ColorScan Auto**, que identifica a cor da pintura de veículos pela câmera do
+celular (para funileiros e pintores). Com o GitHub Pages ativo, ele fica em
+`https://SEU-USUARIO.github.io/terco/colorscan/`. Instruções completas em
+[`colorscan/README.md`](colorscan/README.md).
