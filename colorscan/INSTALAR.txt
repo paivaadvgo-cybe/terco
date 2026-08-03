@@ -1,0 +1,46 @@
+COLORSCAN AUTO — COMO INSTALAR NO GOOGLE CHROME
+================================================
+
+O ColorScan Auto é um PWA (aplicativo web instalável). O Chrome exige um
+endereço seguro (https:// ou localhost) para liberar a câmera — por isso NÃO
+funciona abrindo o index.html com dois cliques (file://).
+
+Há duas formas de usar:
+
+------------------------------------------------------------------
+OPÇÃO 1 — NO CELULAR, PELA INTERNET (recomendada)
+------------------------------------------------------------------
+1. Publique o repositório no GitHub Pages (o README na raiz do repositório
+   "terco" ensina o passo a passo).
+2. No Chrome do celular, acesse:
+      https://SEU-USUARIO.github.io/terco/colorscan/
+3. Toque no menu (⋮) → "Adicionar à tela inicial" / "Instalar aplicativo",
+   ou use o botão "⬇️ Instalar aplicativo" na tela inicial do próprio app.
+4. Pronto: o ícone aparece na tela inicial e o app passa a funcionar
+   OFFLINE (a primeira visita baixa tudo para o cache).
+
+------------------------------------------------------------------
+OPÇÃO 2 — NO COMPUTADOR, SEM INTERNET (para testar)
+------------------------------------------------------------------
+Pré-requisito: Python instalado (https://python.org — no Windows, marque
+"Add Python to PATH" na instalação).
+
+1. Extraia este ZIP em uma pasta.
+2. Dê dois cliques em:
+      Windows ........ iniciar-servidor.bat
+      Mac/Linux ...... iniciar-servidor.sh
+3. O Chrome abrirá em http://localhost:8765 — permita o acesso à câmera.
+4. Para instalar como aplicativo: clique no ícone de instalação na barra
+   de endereço (⊕/monitor com seta) ou menu (⋮) → "Transmitir, salvar e
+   compartilhar" → "Instalar página como aplicativo".
+
+Observação: o app foi desenhado para smartphone (câmera traseira). No
+computador ele usa a webcam disponível — útil para testar, mas a leitura
+de cor de verdade deve ser feita no celular, junto ao veículo.
+
+------------------------------------------------------------------
+CARTÃO DE CALIBRAÇÃO
+------------------------------------------------------------------
+Imprima assets/reference-card.pdf (papel fosco, escala 100%) e use-o na
+etapa "Calibrar com cartão" para máxima precisão. Uma folha branca comum
+também funciona — o app detecta automaticamente.
