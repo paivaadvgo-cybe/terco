@@ -36,8 +36,10 @@ e abra `http://localhost:8000/`.
 
 ## Como usar
 
-1. Apoie o celular a cerca de 1,5 m, na altura do peito, com a câmera
-   traseira apontada para você.
+1. Apoie o celular a cerca de 1,5 m, na altura do peito, **com a tela virada
+   para você** — o aplicativo usa a câmera frontal, para que você se veja na
+   tela junto com a bateria e consiga mirar. Dá para trocar para a traseira
+   pelo botão de câmera, útil se estiver espelhando a tela num televisor.
 2. Toque em **Iniciar câmera** e libere a permissão.
 3. Bata no ar, para baixo e com firmeza. Movimentos lentos não tocam — é
    proposital.

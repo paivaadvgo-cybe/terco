@@ -378,6 +378,9 @@ body[data-apresentacao="1"] #sair-apresentacao{ display:inline-flex; }
     <button class="icone-btn" id="b-calibrar" aria-label="Calibrar posições" aria-pressed="false" title="Calibrar">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
     </button>
+    <button class="icone-btn" id="b-camera" aria-label="Trocar entre câmera frontal e traseira" aria-pressed="false" title="Trocar de câmera">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5V7a2 2 0 0 1 2-2h2.2l1.2-2h7.2l1.2 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9"/><circle cx="12.5" cy="12" r="3.2"/><path d="M6 14l-2.5 2.5L6 19"/><path d="M3.5 16.5H8"/></svg>
+    </button>
     <button class="icone-btn" id="b-kits" aria-label="Escolher kit" title="Kits">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="14" rx="8" ry="3.4"/><path d="M4 14v3.4c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4V14"/><ellipse cx="6.5" cy="6" rx="4.5" ry="1.4"/><ellipse cx="17" cy="4.6" rx="4" ry="1.2"/></svg>
     </button>
@@ -464,7 +467,7 @@ body[data-apresentacao="1"] #sair-apresentacao{ display:inline-flex; }
     <button class="interruptor" id="c-contraste" aria-pressed="false">Alto contraste <span class="luz"></span></button>
     <button class="interruptor" id="c-maos" aria-pressed="true">Mostrar mãos detectadas <span class="luz"></span></button>
     <button class="interruptor" id="c-hud" aria-pressed="true">Mostrar FPS e diagnóstico <span class="luz"></span></button>
-    <button class="interruptor" id="c-espelho" aria-pressed="false">Espelhar imagem <span class="luz"></span></button>
+    <button class="interruptor" id="c-espelho" aria-pressed="false">Espelhar imagem (automático na frontal) <span class="luz"></span></button>
     <button class="interruptor" id="c-som-ui" aria-pressed="true">Feedback sonoro dos botões <span class="luz"></span></button>
     <button class="interruptor" id="c-vibrar" aria-pressed="true">Vibrar ao acertar <span class="luz"></span></button>
 
@@ -704,6 +707,7 @@ const AJUSTES_PADRAO = Object.freeze({
   mostrarMaos:true,
   mostrarHUD:true,
   espelhar:false,
+  cameraTraseira:false,   // frontal por padrão: é preciso ver a tela para mirar
   somUI:true,
   vibrar:true,
   bpm:90,
@@ -1708,22 +1712,35 @@ class Visao {
     this._cv = { escala:1, dx:0, dy:0, lv:1, av:1, lt:1, at:1 };
   }
 
-  /** Abre a câmera: traseira primeiro, frontal como alternativa. */
-  async abrirCamera(){
+  /**
+   * Abre a câmera.
+   *
+   * O padrão é a FRONTAL, e a razão é simples: para tocar é preciso ver a
+   * bateria e as próprias mãos na tela, mirando as peças. Com a câmera
+   * traseira apontada para o corpo, a tela fica virada para o outro lado —
+   * o usuário toca às cegas, e não tem como calibrar nada. A traseira
+   * continua disponível para quem espelha a tela num televisor ou deixa
+   * alguém assistindo de frente; por isso a troca é um botão, não um
+   * caminho sem volta.
+   */
+  async abrirCamera(preferirTraseira){
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
       throw new Error('Este navegador não permite acesso à câmera. Tente o Chrome ou o Samsung Internet.');
     }
+    const lado = preferirTraseira ? 'environment' : 'user';
+    const outro = preferirTraseira ? 'user' : 'environment';
     const tentativas = [
-      { video:{ facingMode:{ exact:'environment' }, width:{ ideal:1280 }, height:{ ideal:720 }, frameRate:{ ideal:60, min:24 } }, audio:false },
-      { video:{ facingMode:'environment', width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false },
-      { video:{ facingMode:'user', width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false },
+      { video:{ facingMode:{ exact:lado }, width:{ ideal:1280 }, height:{ ideal:720 }, frameRate:{ ideal:60, min:24 } }, audio:false },
+      { video:{ facingMode:lado, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false },
+      { video:{ facingMode:outro, width:{ ideal:1280 }, height:{ ideal:720 } }, audio:false },
       { video:true, audio:false }
     ];
     let ultimoErro = null;
     for(let i = 0; i < tentativas.length; i++){
       try{
         this.stream = await navigator.mediaDevices.getUserMedia(tentativas[i]);
-        this.frontal = i >= 2;
+        // As duas primeiras tentativas são o lado pedido; a terceira é o outro.
+        this.frontal = i >= 2 ? (outro === 'user') : (lado === 'user');
         // Confirma pelo rótulo da trilha quando o navegador informa.
         const trilha = this.stream.getVideoTracks()[0];
         const cfg = trilha.getSettings ? trilha.getSettings() : {};
@@ -2239,11 +2256,11 @@ class Demo {
 const PASSOS_AJUDA = [
   {
     titulo:'1. Onde colocar o celular',
-    texto:'Apoie o aparelho a mais ou menos um metro e meio de você, na altura do peito, com a câmera traseira apontada para o seu corpo. Um suporte, um copo ou uma pilha de livros resolvem.'
+    texto:'Apoie o aparelho a mais ou menos um metro e meio de você, na altura do peito, com a TELA virada para você. É a câmera frontal que o aplicativo usa — assim você se vê na tela, junto com a bateria, e consegue mirar. Um suporte, um copo ou uma pilha de livros resolvem.'
   },
   {
     titulo:'2. Enquadre as mãos',
-    texto:'Estenda os braços e confira se as duas mãos aparecem na tela com folga, inclusive no ponto mais alto do movimento. Fundo limpo e luz na frente do corpo ajudam muito a detecção.'
+    texto:'Você aparece na tela como num espelho: a mão direita fica do lado direito. Estenda os braços e confira se as duas mãos cabem na tela com folga, inclusive no ponto mais alto do movimento. Fundo limpo e luz de frente ajudam muito a detecção.'
   },
   {
     titulo:'3. Toque com o pulso',
@@ -2251,7 +2268,7 @@ const PASSOS_AJUDA = [
   },
   {
     titulo:'4. Calibre do seu jeito',
-    texto:'No botão de calibração, arraste cada peça para onde o seu braço alcança sem esforço. Toque numa peça para escolhê‑la e mude o tamanho. Tudo fica salvo para a próxima vez.'
+    texto:'No botão de calibração, arraste cada peça para onde o seu braço alcança sem esforço. Toque numa peça para escolhê‑la e mude o tamanho. Tudo fica salvo para a próxima vez, e cada posição da tela (em pé ou deitada) guarda o seu arranjo.'
   }
 ];
 
@@ -2323,6 +2340,8 @@ class Tutorial {
     c.beginPath(); c.moveTo(cx, solo + 22); c.lineTo(L * 0.72, solo + 22); c.stroke(); c.setLineDash([]);
     c.fillStyle = '#EDEFF5'; c.font = '600 20px system-ui, sans-serif'; c.textAlign = 'center';
     c.fillText('≈ 1,5 m', (cx + L * 0.72) / 2, solo + 46);
+    c.font = '600 17px system-ui, sans-serif'; c.fillStyle = '#35E0C8';
+    c.fillText('tela virada para você', cx, solo - 140);
   }
 
   /* Cena 2: enquadramento das mãos. */
@@ -2641,6 +2660,7 @@ const App = {
     /* --- barras --- */
     on('#b-voltar', 'click', () => this.voltarInicio());
     on('#b-calibrar', 'click', () => this.calibrando ? this.fecharPaineis() : this.abrirPainel('#painel-calib'));
+    on('#b-camera', 'click', () => this.trocarCamera());
     on('#b-kits', 'click', () => this.abrirPainel('#painel-kits'));
     on('#b-config', 'click', () => this.abrirPainel('#painel-config'));
     on('#b-metronomo', 'click', () => this.abrirPainel('#painel-treino'));
@@ -2812,17 +2832,12 @@ const App = {
     await this.prepararSessao();
     this.avisar('Abrindo a câmera…', 4000);
     try{
-      await this.visao.abrirCamera();
+      await this.visao.abrirCamera(this.estado.ajustes.cameraTraseira);
     }catch(e){
       this.mostrarErroCamera(e.message);
       return;
     }
-    // Espelhamento automático na câmera frontal (senão a mão direita
-    // aparece do lado errado).
-    if(this.visao.frontal && !this.estado.ajustes.espelhar){
-      this.estado.ajustes.espelhar = true;
-      this.aplicarAjustes();
-    }
+    this.ajustarEspelho();
 
     this.mostrarTela('app');
     this.modo = 'camera';
@@ -2838,6 +2853,52 @@ const App = {
     }else{
       this.avisar('Sem reconhecimento de mãos — toque na tela para tocar.', 6000);
     }
+  },
+
+  /**
+   * A câmera frontal precisa ser espelhada, a traseira não.
+   *
+   * Sem espelho na frontal, a imagem funciona como a de outra pessoa olhando
+   * para você: levantar a mão direita move o desenho para o lado esquerdo da
+   * tela. Ninguém consegue mirar assim. Com espelho, a tela vira um espelho
+   * mesmo, e o gesto vai para onde o olho espera. Na traseira o problema não
+   * existe: a câmera já olha na mesma direção que você.
+   */
+  ajustarEspelho(){
+    const querEspelho = this.visao.frontal;
+    if(this.estado.ajustes.espelhar !== querEspelho){
+      this.estado.ajustes.espelhar = querEspelho;
+      this.aplicarAjustes();
+    }
+  },
+
+  /**
+   * Troca entre a câmera frontal e a traseira sem sair do modo de execução.
+   * O modelo de mãos já está carregado e continua servindo: só a fonte de
+   * vídeo muda.
+   */
+  async trocarCamera(){
+    if(this.modo !== 'camera') return;
+    const traseira = !this.estado.ajustes.cameraTraseira;
+    this.avisar('Trocando de câmera…', 2000);
+    this.visao.encerrar();
+    try{
+      await this.visao.abrirCamera(traseira);
+    }catch(e){
+      // Não conseguiu a outra: volta para a que estava, sem deixar o usuário
+      // numa tela preta.
+      try{ await this.visao.abrirCamera(!traseira); }
+      catch(e2){ this.mostrarErroCamera(e.message); return; }
+      this.avisar('Este aparelho só tem uma câmera', 2600);
+      this.ajustarEspelho();
+      return;
+    }
+    this.estado.ajustes.cameraTraseira = this.visao.frontal ? false : true;
+    this.ajustarEspelho();
+    this.aoRedimensionar();
+    U.$('#b-camera').setAttribute('aria-pressed', String(this.estado.ajustes.cameraTraseira));
+    this.avisar(this.visao.frontal ? 'Câmera frontal — você se vê na tela' : 'Câmera traseira', 2600);
+    this.salvar();
   },
 
   /** Entra no modo demonstração (não usa câmera). */
