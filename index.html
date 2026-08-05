@@ -219,22 +219,38 @@ input[type=range]:focus-visible{ outline:3px solid var(--realce); outline-offset
   pointer-events:none;
 }
 #barra-sup>*{ pointer-events:auto; }
+#barra-sup .esticar{ display:none; }   /* rótulos já ocupam a largura toda */
 #barra-inf{
   position:absolute; z-index:30; bottom:0; left:0; right:0;
   padding:.5rem calc(.6rem + var(--seg-dir)) calc(.6rem + var(--seg-inf)) calc(.6rem + var(--seg-esq));
-  display:flex; align-items:center; justify-content:center; gap:.45rem; flex-wrap:wrap;
+  display:flex; align-items:center; justify-content:center; gap:.4rem; flex-wrap:nowrap;
   background:linear-gradient(0deg, rgba(0,0,0,.65), transparent);
   pointer-events:none;
 }
 #barra-inf>*{ pointer-events:auto; }
+/* Três botões de texto precisam caber lado a lado mesmo num aparelho
+   estreito: antes o terceiro quebrava para uma segunda linha e ficava por
+   cima do bumbo. */
+#barra-inf .btn{ flex:1 1 0; min-width:0; padding:.7em .4em; font-size:.9rem; }
 
 .icone-btn{
-  width:var(--toque); height:var(--toque); min-height:0; padding:0; border-radius:14px;
-  background:rgba(10,12,18,.62); border:1px solid var(--borda);
-  display:inline-flex; align-items:center; justify-content:center; cursor:pointer;
+  width:var(--toque); min-width:0; height:auto; min-height:var(--toque);
+  padding:.3rem .1rem .25rem; border-radius:14px;
+  background:rgba(10,12,18,.72); border:1px solid var(--borda);
+  display:inline-flex; flex-direction:column; align-items:center; justify-content:center;
+  gap:.12rem; cursor:pointer; flex:1 1 0;
   backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
 }
-.icone-btn svg{ width:26px; height:26px; }
+.icone-btn svg{ width:24px; height:24px; flex:0 0 auto; }
+/* Rótulo pequeno debaixo de cada ícone: sem ele, um desenho como o das
+   setas de calibração é adivinhação. Encolhe em telas bem estreitas, mas o
+   alvo de toque continua com a altura mínima de sempre. */
+.icone-btn .rot{
+  font-size:.56rem; font-weight:700; letter-spacing:.01em; line-height:1;
+  color:var(--tinta-fraca); white-space:nowrap;
+}
+.icone-btn[aria-pressed="true"] .rot{ color:var(--tinta); }
+@media (max-width:340px){ .icone-btn .rot{ display:none; } }
 .icone-btn[aria-pressed="true"]{ background:rgba(53,224,200,.22); border-color:var(--realce); }
 .icone-btn.rec[aria-pressed="true"]{ background:rgba(255,92,108,.28); border-color:var(--perigo); animation:pulsar 1.4s infinite; }
 @keyframes pulsar{ 50%{ box-shadow:0 0 0 8px rgba(255,92,108,.12); } }
@@ -410,25 +426,32 @@ body[data-apresentacao="1"] #sair-apresentacao{ display:inline-flex; }
   <div id="barra-sup" hidden>
     <button class="icone-btn" id="b-voltar" aria-label="Voltar ao início" title="Início">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <span class="rot">Início</span>
     </button>
     <button class="icone-btn" id="b-calibrar" aria-label="Calibrar posições" aria-pressed="false" title="Calibrar">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1"/><circle cx="12" cy="12" r="3.2"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="12" rx="6.4" ry="4"/><path d="M12 2.2l2 2.2h-4l2-2.2zM12 21.8l2-2.2h-4l2 2.2zM2.2 12l2.2-2v4l-2.2-2zM21.8 12l-2.2-2v4l2.2-2z" fill="currentColor" stroke="none"/></svg>
+    <span class="rot">Calibrar</span>
     </button>
     <button class="icone-btn" id="b-camera" aria-label="Trocar entre câmera frontal e traseira" aria-pressed="false" title="Trocar de câmera">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8.5V7a2 2 0 0 1 2-2h2.2l1.2-2h7.2l1.2 2H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9"/><circle cx="12.5" cy="12" r="3.2"/><path d="M6 14l-2.5 2.5L6 19"/><path d="M3.5 16.5H8"/></svg>
+    <span class="rot">Câmera</span>
     </button>
     <button class="icone-btn" id="b-kits" aria-label="Escolher kit" title="Kits">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="14" rx="8" ry="3.4"/><path d="M4 14v3.4c0 1.9 3.6 3.4 8 3.4s8-1.5 8-3.4V14"/><ellipse cx="6.5" cy="6" rx="4.5" ry="1.4"/><ellipse cx="17" cy="4.6" rx="4" ry="1.2"/></svg>
+    <span class="rot">Kit</span>
     </button>
     <div class="esticar"></div>
     <button class="icone-btn rec" id="b-rec" aria-label="Gravar" aria-pressed="false" title="Gravar">
       <svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="7"/></svg>
+    <span class="rot">Gravar</span>
     </button>
     <button class="icone-btn" id="b-metronomo" aria-label="Modo treino e metrônomo" aria-pressed="false" title="Metrônomo">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6l4 18H5L9 3z"/><path d="M12 21L17 7"/></svg>
+    <span class="rot">Ritmo</span>
     </button>
     <button class="icone-btn" id="b-config" aria-label="Configurações" title="Configurações">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.6 1.6 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.6 1.6 0 0 0-1.8-.3 1.6 1.6 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9 19.4a1.6 1.6 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.6 1.6 0 0 0 .3-1.8 1.6 1.6 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.6 1.6 0 0 0 4.6 9a1.6 1.6 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.6 1.6 0 0 0 1.8.3H9a1.6 1.6 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.5 1.6 1.6 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.6 1.6 0 0 0-.3 1.8V9a1.6 1.6 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.5 1z"/></svg>
+    <span class="rot">Ajustes</span>
     </button>
   </div>
 
@@ -1755,6 +1778,15 @@ class Visao {
     this.carregando = false;
     this.etapa = 'parada';   // parada | biblioteca | modelo | pronta | falhou
     this.qualidadeReduzida = false;
+    this.delegate = '';
+    this.maosBrutas = 0;         // mãos que o MediaPipe devolveu no último quadro
+    this._deteccoes = 0;         // quantas detecções já rodaram
+    this._jaViuMao = false;      // alguma vez encontrou uma mão nesta sessão
+    this._tentouCPU = false;
+    this._ultimaDeteccao = 0;
+    this._temRVFC = false;
+    this._quadroNovo = false;
+    this._mod = null; this._arquivos = null;
     // Geometria do "object-fit: cover" do vídeo dentro da tela.
     this._cv = { escala:1, dx:0, dy:0, lv:1, av:1, lt:1, at:1 };
   }
@@ -1800,6 +1832,7 @@ class Visao {
     this.video.srcObject = this.stream;
     this.video.muted = true;
     await this.video.play().catch(() => {});
+    this._ligarAvisoDeQuadro();
     // Espera as dimensões reais chegarem (senão o mapeamento sai errado).
     if(!this.video.videoWidth){
       await new Promise(res => {
@@ -1843,6 +1876,8 @@ class Visao {
       const mod = await import(MP_MODULO);
       this.etapa = 'modelo';
       const arquivos = await mod.FilesetResolver.forVisionTasks(MP_WASM);
+      // Guardados para uma eventual recriação na CPU, sem baixar nada de novo.
+      this._mod = mod; this._arquivos = arquivos;
       // GPU primeiro; se o driver recusar, cai para CPU sem quebrar.
       try{
         this.detector = await mod.HandLandmarker.createFromOptions(arquivos, {
@@ -1850,6 +1885,7 @@ class Visao {
           runningMode:'VIDEO', numHands:2,
           minHandDetectionConfidence:0.45, minHandPresenceConfidence:0.45, minTrackingConfidence:0.45
         });
+        this.delegate = 'GPU';
       }catch(eGpu){
         console.warn('[AirDrums] GPU indisponível, usando CPU', eGpu);
         this.detector = await mod.HandLandmarker.createFromOptions(arquivos, {
@@ -1857,6 +1893,8 @@ class Visao {
           runningMode:'VIDEO', numHands:2,
           minHandDetectionConfidence:0.45, minHandPresenceConfidence:0.45, minTrackingConfidence:0.45
         });
+        this.delegate = 'CPU';
+        this._tentouCPU = true;
       }
       this.pronta = true;
       this.carregando = false;
@@ -1914,15 +1952,79 @@ class Visao {
    */
   detectar(){
     if(!this.detector || this.video.readyState < 2) return null;
-    const t = this.video.currentTime;
-    if(t === this.ultimoTempo) return null;
-    this.ultimoTempo = t;
-    this._carimbo = Math.max(performance.now(), this._carimbo + 1);
+
+    const agora = performance.now();
+    if(this._temRVFC){
+      // Caminho bom: o navegador avisa quando há quadro novo de verdade.
+      if(!this._quadroNovo) return null;
+      this._quadroNovo = false;
+    }else{
+      // Sem esse aviso, processa no ritmo da tela com um piso de intervalo.
+      // NÃO se usa `video.currentTime` como sinal de quadro novo: em vários
+      // navegadores Android ele simplesmente não avança num stream de câmera
+      // ao vivo, e a detecção rodava uma única vez na vida — deixando o
+      // aplicativo parado, com a última medição congelada no diagnóstico.
+      if(agora - this._ultimaDeteccao < 12) return null;
+    }
+    this._ultimaDeteccao = agora;
+    this._carimbo = Math.max(agora, this._carimbo + 1);
+
     try{
-      return this.detector.detectForVideo(this.video, this._carimbo);
+      const res = this.detector.detectForVideo(this.video, this._carimbo);
+      this.maosBrutas = res && res.landmarks ? res.landmarks.length : 0;
+      this._deteccoes++;
+      if(this.maosBrutas > 0) this._jaViuMao = true;
+      return res;
     }catch(e){
       console.warn('[AirDrums] falha na detecção', e);
       return null;
+    }
+  }
+
+  /**
+   * Assina `requestVideoFrameCallback`, que dispara exatamente uma vez por
+   * quadro apresentado do vídeo. É o sinal correto para "há imagem nova":
+   * evita gastar bateria reprocessando o mesmo quadro quando a tela roda a
+   * 60 Hz e a câmera entrega 30, e ao mesmo tempo não perde quadro nenhum.
+   * Onde a API não existe, o laço cai no ritmo da tela.
+   */
+  _ligarAvisoDeQuadro(){
+    if(typeof this.video.requestVideoFrameCallback !== 'function') return;
+    this._temRVFC = true;
+    const proximo = () => {
+      if(!this.stream) { this._temRVFC = false; return; }
+      this._quadroNovo = true;
+      this.video.requestVideoFrameCallback(proximo);
+    };
+    this.video.requestVideoFrameCallback(proximo);
+  }
+
+  /**
+   * Recria o detector na CPU.
+   *
+   * Existe porque há aparelhos Android em que o delegate de GPU inicializa
+   * sem reclamar e depois nunca devolve uma detecção — uma falha silenciosa
+   * que o `try/catch` da criação não pega. Se rodamos bastante tempo sem
+   * jamais ver uma mão, vale trocar o motor em vez de deixar o usuário
+   * achando que ele é que está fazendo algo errado.
+   */
+  async recriarEmCPU(){
+    if(this._tentouCPU || !this._mod || !this._arquivos) return false;
+    this._tentouCPU = true;
+    try{
+      const novo = await this._mod.HandLandmarker.createFromOptions(this._arquivos, {
+        baseOptions:{ modelAssetPath: MP_MODELO, delegate:'CPU' },
+        runningMode:'VIDEO', numHands:2,
+        minHandDetectionConfidence:0.4, minHandPresenceConfidence:0.4, minTrackingConfidence:0.4
+      });
+      const antigo = this.detector;
+      this.detector = novo;
+      this.delegate = 'CPU';
+      if(antigo && antigo.close) U.seguro(() => antigo.close(), 'fechar detector');
+      return true;
+    }catch(e){
+      console.warn('[AirDrums] CPU também falhou', e);
+      return false;
     }
   }
 
@@ -2585,7 +2687,7 @@ const App = {
 
   // Medições do diagnóstico.
   fps: 0, _quadros: 0, _fpsT: 0, _inicioSessao: 0,
-  _semMaosDesde: 0, _estadoVisao: '',
+  _semMaosDesde: 0, _estadoVisao: '', _avisouLatencia: false,
   msDeteccao: 0,
   precisao: 0,
   _ultimoT: 0,
@@ -3288,6 +3390,14 @@ const App = {
         // 25 FPS. Baixamos a resolução da câmera uma única vez, depois de
         // alguns segundos de amostra — antes disso a média ainda está poluída
         // pelo custo de aquecimento do modelo.
+        // Rodou bastante e nunca viu mão nenhuma: provavelmente o delegate de
+        // GPU está devolvendo vazio em silêncio. Troca para CPU uma vez.
+        if(!this.visao._jaViuMao && !this.visao._tentouCPU && this.visao._deteccoes > 90){
+          this.visao.recriarEmCPU().then(ok => {
+            if(ok) this.avisar('Trocando o motor de reconhecimento…', 3000);
+          });
+        }
+
         if(this.msDeteccao > 40 && !this.visao.qualidadeReduzida && t - this._inicioSessao > 4){
           this.visao.reduzirQualidade().then(ok => {
             if(ok) this.avisar('Resolução reduzida para manter a resposta rápida', 3200);
@@ -3319,6 +3429,7 @@ const App = {
       this._fpsT = t;
       this.atualizarHUD();
       this.atualizarEstadoVisao(t);
+      this.conferirLatencia();
       if(this.gravador.gravando && !U.$('#painel-rec').hidden) this.atualizarPainelRec();
     }
   },
@@ -3379,9 +3490,11 @@ const App = {
     if(hud.hidden) return;
     const lat = this.motor.pronto ? this.motor.latenciaMs + this.estado.ajustes.latencia : 0;
     const maos = this.detector.maos.filter(m => m.ativa).length;
+    const v = this.visao;
     hud.innerHTML =
-      `<b>${this.fps.toFixed(0)}</b> FPS · visão <b>${this.msDeteccao.toFixed(1)}</b> ms<br>` +
-      `latência <b>${lat.toFixed(0)}</b> ms · mãos <b>${maos}</b><br>` +
+      `<b>${this.fps.toFixed(0)}</b> FPS · visão <b>${this.msDeteccao.toFixed(1)}</b> ms` +
+      (v.delegate ? ` (${v.delegate})` : '') + '<br>' +
+      `latência <b>${lat.toFixed(0)}</b> ms · mãos <b>${maos}</b>/<b>${v.maosBrutas}</b><br>` +
       `precisão <b>${(this.precisao * 100).toFixed(0)}</b>% · kit <b>${KITS[this.estado.ajustes.kit].nome}</b>` +
       (this.metronomo.ativo ? ` · <b>${this.estado.ajustes.bpm}</b> BPM` : '');
   },
@@ -3436,6 +3549,24 @@ const App = {
       el.dataset.e = estado;
       el.innerHTML = '<span class="pt"></span><span>' + texto + '</span>';
     }
+  },
+
+  /**
+   * Avisa uma vez se a saída de áudio estiver muito atrasada.
+   *
+   * Fone Bluetooth costuma somar de 150 a 300 ms entre o disparo e o som. É
+   * imperceptível assistindo a um vídeo e inviável numa bateria: a batida
+   * chega bem depois de a mão ter parado, e a pessoa conclui que o
+   * reconhecimento é que está lento. Como não dá para consertar por
+   * software, resta dizer o que está havendo.
+   */
+  conferirLatencia(){
+    if(this._avisouLatencia || !this.motor.pronto) return;
+    const ms = this.motor.latenciaMs;
+    if(ms < 120) return;
+    this._avisouLatencia = true;
+    this.avisar('Áudio com ' + ms.toFixed(0) + ' ms de atraso — típico de fone Bluetooth. ' +
+                'Use o alto‑falante ou um fone com fio para tocar no tempo.', 7000);
   },
 
   /** Nova tentativa de carregar o modelo, a partir do indicador. */
