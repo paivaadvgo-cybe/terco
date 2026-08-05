@@ -1,166 +1,66 @@
-# Santo Terço
+# AirDrums AI
 
-Aplicativo para rezar o Santo Terço. Funciona sem internet, sem conta, sem
-anúncios e sem enviar nada para lugar nenhum.
+Bateria virtual tocada no ar. A câmera do celular enxerga as mãos, e cada
+movimento sobre uma peça invisível dispara o som correspondente.
 
----
+Tudo acontece dentro do aparelho: não há servidor, conta, nuvem nem envio de
+imagem. Depois de instalado, funciona sem internet.
 
-# Como publicar no GitHub Pages
+## Arquivos
 
-Passo a passo completo. Se você nunca usou o GitHub, siga na ordem — não é
-preciso instalar nada nem saber programar. Leva uns dez minutos.
+| Arquivo      | O que é |
+|--------------|---------|
+| `index.html` | O aplicativo inteiro — interface, áudio, visão computacional, manifesto e ícones. |
+| `sw.js`      | Service worker: guarda o app e o modelo de mãos para uso sem internet. |
+| `terco/`     | O aplicativo **Santo Terço**, que antes ocupava a raiz. Continua funcionando, agora em `/terco/`. |
 
-## 1. Criar a conta
+O aplicativo é um arquivo só, como pedido. O `sw.js` existe porque os
+navegadores exigem que um service worker seja um `.js` servido pelo mesmo
+domínio — não pode morar dentro do HTML. Sem ele o app funciona igual; só não
+fica disponível offline. O manifesto e o ícone não são arquivos: são gerados
+em tempo de execução (ou servidos pelo próprio service worker).
 
-Se ainda não tem, entre em **github.com** e crie uma conta gratuita. Guarde o
-nome de usuário que escolher: ele vai aparecer no endereço do aplicativo.
+## Como publicar
 
-## 2. Criar o repositório
+Os dois arquivos são estáticos. Coloque-os em qualquer endereço **https://**
+— por exemplo o GitHub Pages deste repositório. A câmera só funciona em
+conexão segura (https ou `localhost`).
 
-1. Depois de entrar, clique no **+** no canto superior direito e escolha
-   **New repository**.
-2. Em **Repository name**, escreva `terco`.
-3. Deixe marcado **Public**. Precisa ser público para o Pages funcionar na
-   conta gratuita.
-4. **Não** marque nada em "Add a README file" nem nas outras caixas.
-5. Clique em **Create repository**.
-
-## 3. Enviar os arquivos
-
-Na página que abrir, procure o link **uploading an existing file**.
-
-1. Abra a pasta `publicar` no seu computador.
-2. Selecione **tudo o que está dentro dela** — não a pasta em si, mas o
-   conteúdo: `index.html`, `manifest.json`, `sw.js`, `escuta-local.js`,
-   `README.md`, e a pasta `icones`.
-3. Arraste tudo para a área de upload do GitHub.
-4. Espere as barras de progresso terminarem.
-5. Lá embaixo, clique no botão verde **Commit changes**.
-
-> **Atenção ao arquivo `.nojekyll`.** Ele é invisível em algumas
-> configurações do Windows e do Mac, e o upload pelo navegador às vezes o
-> ignora. Se ele não aparecer na lista de arquivos do repositório, crie-o
-> à mão: clique em **Add file → Create new file**, escreva `.nojekyll` como
-> nome, deixe o conteúdo vazio e clique em **Commit changes**. Sem ele, o
-> GitHub pode processar os arquivos de um jeito que atrapalha.
-
-## 4. Ligar o GitHub Pages
-
-1. No repositório, clique em **Settings** (a engrenagem, no topo).
-2. No menu da esquerda, clique em **Pages**.
-3. Em **Source**, escolha **Deploy from a branch**.
-4. Em **Branch**, escolha `main` e a pasta `/ (root)`.
-5. Clique em **Save**.
-
-Espere de um a cinco minutos. Recarregue a página de Settings → Pages: vai
-aparecer o endereço, no formato
+Para testar na sua máquina:
 
 ```
-https://SEU-USUARIO.github.io/terco/
+python3 -m http.server 8000
 ```
 
-Esse é o endereço do aplicativo. Anote e teste no celular.
+e abra `http://localhost:8000/`.
 
-## 5. Instalar no celular
+## Como usar
 
-1. Abra o endereço no **Chrome** do Android ou no **Safari** do iPhone.
-2. **Android:** toque nos três pontinhos e escolha *Instalar aplicativo* ou
-   *Adicionar à tela inicial*.
-3. **iPhone:** toque no botão de compartilhar (o quadrado com a seta) e
-   escolha *Adicionar à Tela de Início*.
+1. Apoie o celular a cerca de 1,5 m, na altura do peito, com a câmera
+   traseira apontada para você.
+2. Toque em **Iniciar câmera** e libere a permissão.
+3. Bata no ar, para baixo e com firmeza. Movimentos lentos não tocam — é
+   proposital.
+4. Em **Calibrar**, arraste cada peça para onde o seu braço alcança. As
+   posições são salvas sozinhas, e cada orientação da tela guarda a sua.
 
-Depois de instalado, o ícone fica na tela do celular e o aplicativo abre em
-tela cheia, sem a barra do navegador — e funciona sem internet.
+Sem câmera disponível, o **Demo** mostra o funcionamento e é possível tocar
+encostando o dedo nas peças (ou pelo teclado: `Q W A S D F J` e espaço).
 
----
+## O que tem dentro
 
-# Como atualizar depois
-
-Quando houver uma versão nova do `index.html`:
-
-1. No repositório, clique em **Add file → Upload files** e envie o arquivo
-   novo por cima do antigo.
-2. **Importante:** abra o arquivo `sw.js` no GitHub, clique no lápis para
-   editar e mude o número da linha
-
-   ```js
-   const CACHE = "santo-terco-v1";
-   ```
-
-   para `"santo-terco-v2"`, depois `v3`, e assim por diante.
-
-Esse número é o que faz os celulares que já instalaram irem buscar a versão
-nova. Sem mudá-lo, quem já usava continua vendo a versão antiga, guardada no
-próprio aparelho — e você vai achar que a atualização não funcionou.
-
----
-
-# O que funciona em cada situação
-
-| Como a pessoa abre | O que funciona |
-|---|---|
-| Pelo endereço publicado (`https://`) | Tudo |
-| Arquivo salvo no aparelho, aberto com duplo clique | Terço completo, imagens, voz e Modo Direção |
-
-As três funções que usam microfone — acompanhar pela voz, reconhecer dentro do
-aparelho e transcrever comentários — **só funcionam pelo endereço publicado**.
-Não é limitação do aplicativo: o navegador não libera o microfone para um
-arquivo aberto direto do aparelho, e não há como contornar. Nessa situação o
-aplicativo mostra as opções desabilitadas, com a explicação na tela.
-
----
-
-# Os arquivos
-
-| Arquivo | Para que serve |
-|---|---|
-| `index.html` | O aplicativo inteiro. Sozinho, já reza o terço completo. |
-| `manifest.json` | Faz o navegador oferecer "instalar na tela inicial". |
-| `sw.js` | Faz funcionar sem internet depois do primeiro acesso. |
-| `icones/` | Ícone do aplicativo na tela do celular. |
-| `escuta-local.js` | Opcional. Só é carregado se a pessoa ligar o reconhecimento dentro do aparelho. Se você apagar, tudo o mais continua igual. |
-| `.nojekyll` | Arquivo vazio que evita o GitHub processar os arquivos indevidamente. |
-
----
-
-# Para mandar por WhatsApp
-
-Se quiser dar o terço para alguém sem depender de internet nem de endereço,
-mande apenas o `index.html`. A pessoa salva no celular ou no computador, abre,
-e reza. Não instala nada, não cria conta, não precisa de rede.
-
----
-
-# Privacidade
-
-O aplicativo não usa contas, não tem anúncios, não coleta estatísticas e não
-manda nada para servidor nenhum. Tudo o que ele guarda — o terço em andamento,
-o histórico e as preferências — fica só no navegador de quem está usando.
-
-Há três exceções, todas desligadas por padrão e todas avisadas com clareza na
-própria tela antes de ligar:
-
-- **Acompanhar pela voz** usa o reconhecimento de fala do navegador, que no
-  Chrome envia o áudio para servidores do Google.
-- **Reconhecer dentro do aparelho** baixa um modelo uma única vez e depois não
-  envia áudio nenhum para lugar nenhum.
-- **Transcrever comentários** usa uma chave de API do próprio usuário e envia
-  áudio para o provedor que ele escolher.
-
----
-
-# Conferência pastoral pendente
-
-Os textos das orações seguem as versões mais difundidas no Brasil, mas alguns
-pontos merecem conferência com um sacerdote ou catequista antes de uma
-divulgação ampla:
-
-- a redação do **Glória ao Pai** (forma curta ou longa), do **Oferecimento** e
-  da **Oração final**, que variam entre comunidades;
-- as **vinte meditações**, que são texto novo e são lidas em voz alta quando a
-  locução completa está ligada;
-- a **fórmula falada do anúncio** de cada mistério;
-- os **emblemas da Assunção e da Visitação**, os dois de iconografia menos
-  consagrada entre os vinte;
-- a **tabela de variantes regionais** usada pelo acompanhamento por voz, que
-  precisa incluir as formas rezadas na sua comunidade para acompanhar bem.
+- **Detecção** — MediaPipe Hands (Tasks Vision), duas mãos, com posição,
+  velocidade, direção e aceleração. GPU quando disponível, CPU como reserva.
+- **Golpe** — cruzamento exato entre o trajeto da mão e a região da peça, com
+  rearme por histerese, intervalo mínimo configurável e uma peça por mão a
+  cada quadro. A força do som vem da velocidade do movimento.
+- **Áudio** — WebAudio puro, sintetizado na hora (nenhum arquivo de som),
+  mixer por peça com panorama estéreo, compressor e limitador.
+- **Kits** — Rock, Jazz, Metal, Pop e Eletrônica.
+- **Treino** — metrônomo de 40 a 240 BPM, compasso ajustável, contagem antes
+  de começar e marcação manual de andamento.
+- **Gravação** — grava as batidas, reproduz e exporta em WAV (PCM 16 bits,
+  estéreo, 44,1 kHz), renderizado no próprio aparelho.
+- **Acessibilidade** — alto contraste, modo daltônico (a forma do traço
+  também distingue as peças), texto redimensionável, alvos grandes, retorno
+  visual, sonoro e por vibração.
