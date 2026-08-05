@@ -243,13 +243,49 @@ input[type=range]:focus-visible{ outline:3px solid var(--realce); outline-offset
 
 /* Etiqueta central de estado (kit atual, BPM, contagem) */
 #hud{
-  position:absolute; z-index:29; top: calc(.55rem + var(--seg-sup) + var(--toque) + .5rem); left: calc(.7rem + var(--seg-esq));
+  position:absolute; z-index:29;
+  bottom: calc(.6rem + var(--seg-inf) + var(--toque) + 1.1rem);
+  left: calc(.7rem + var(--seg-esq));
   font-size:.7rem; line-height:1.5; color:var(--tinta-fraca); font-variant-numeric:tabular-nums;
   background:rgba(6,7,11,.55); border:1px solid var(--borda); border-radius:10px; padding:.4rem .55rem;
   pointer-events:none; backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
 }
 #hud b{ color:var(--tinta); font-weight:700; }
 #hud[hidden]{ display:none; }
+
+/* --------------------------------------------------------------------------
+   Indicador do estado da detecção
+   -------------------------------------------------------------------------- */
+#estado-visao{
+  position:absolute; z-index:32;
+  top: calc(.55rem + var(--seg-sup) + var(--toque) + .5rem);
+  left:50%; transform:translateX(-50%);
+  display:flex; align-items:center; gap:.5rem;
+  max-width: min(90vw, 30rem);
+  padding:.5rem .85rem; border-radius:999px;
+  font-size:.86rem; font-weight:700; line-height:1.25; text-align:left;
+  background:rgba(6,7,11,.82); color:var(--tinta);
+  border:1.5px solid var(--borda);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  cursor:default; font-family:inherit;
+}
+#estado-visao[hidden]{ display:none; }
+#estado-visao .pt{
+  width:11px; height:11px; border-radius:50%; flex:0 0 auto;
+  background:var(--tinta-fraca);
+}
+#estado-visao small{ display:block; font-size:.75rem; font-weight:500; color:var(--tinta-fraca); }
+#estado-visao[data-e="ok"]      { border-color:rgba(53,224,200,.75); background:rgba(6,40,35,.86); }
+#estado-visao[data-e="ok"] .pt  { background:var(--realce); box-shadow:0 0 10px var(--realce); }
+#estado-visao[data-e="procurando"]     { border-color:rgba(255,209,102,.6); }
+#estado-visao[data-e="procurando"] .pt { background:#FFD166; animation:respirar 1.3s infinite; }
+#estado-visao[data-e="carregando"] .pt { background:#8CE7FF; animation:respirar 1s infinite; }
+#estado-visao[data-e="falhou"]     { border-color:rgba(255,92,108,.7); background:rgba(46,10,14,.9); cursor:pointer; }
+#estado-visao[data-e="falhou"] .pt { background:var(--perigo); }
+@keyframes respirar{ 50%{ opacity:.25; } }
+
+/* No modo apresentação o indicador some junto com o resto da interface. */
+body[data-apresentacao="1"] #estado-visao{ display:none; }
 
 #aviso{
   position:absolute; z-index:35; left:50%; top:50%; transform:translate(-50%,-50%);
@@ -405,6 +441,11 @@ body[data-apresentacao="1"] #sair-apresentacao{ display:inline-flex; }
   <button class="icone-btn" id="sair-apresentacao" aria-label="Sair do modo apresentação">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
   </button>
+
+  <!-- Estado da detecção: sempre visível durante a execução, porque é a
+       única maneira de o usuário distinguir "não achei suas mãos" de
+       "o reconhecimento nem chegou a carregar". -->
+  <button id="estado-visao" hidden aria-live="polite"></button>
 
   <div id="hud" hidden></div>
   <div id="aviso" hidden></div>
@@ -1688,6 +1729,10 @@ class DetectorGolpes {
    ========================================================================== */
 
 /* Ligações do esqueleto da mão (pares de índices dos 21 marcos). */
+/* Marcos que fecham o polígono da palma, e as pontas dos cinco dedos. */
+const PALMA = [0, 1, 2, 5, 9, 13, 17];
+const PONTAS = [4, 8, 12, 16, 20];
+
 const LIGACOES = [
   [0,1],[1,2],[2,3],[3,4],
   [0,5],[5,6],[6,7],[7,8],
@@ -1707,6 +1752,8 @@ class Visao {
     this._carimbo = 0;              // carimbo de tempo monotônico do MediaPipe
     this.confianca = 0;
     this.erroModelo = null;
+    this.carregando = false;
+    this.etapa = 'parada';   // parada | biblioteca | modelo | pronta | falhou
     this.qualidadeReduzida = false;
     // Geometria do "object-fit: cover" do vídeo dentro da tela.
     this._cv = { escala:1, dx:0, dy:0, lv:1, av:1, lt:1, at:1 };
@@ -1778,11 +1825,23 @@ class Visao {
     return new Error((e && e.message) || 'Falha desconhecida ao abrir a câmera.');
   }
 
-  /** Carrega o MediaPipe sob demanda (import dinâmico, sem travar o app). */
+  /**
+   * Carrega o MediaPipe sob demanda (import dinâmico, sem travar o app).
+   *
+   * Cada etapa marca `this.etapa` porque o carregamento é a parte demorada e
+   * arriscada da inicialização: são alguns megabytes de runtime e quase oito
+   * do modelo. Sem esse rastro, uma falha de rede vira uma tela que
+   * simplesmente não reconhece nada, indistinguível de uma mão fora do
+   * enquadramento.
+   */
   async carregarModelo(){
     if(this.detector) return true;
+    this.carregando = true;
+    this.erroModelo = null;
     try{
+      this.etapa = 'biblioteca';
       const mod = await import(MP_MODULO);
+      this.etapa = 'modelo';
       const arquivos = await mod.FilesetResolver.forVisionTasks(MP_WASM);
       // GPU primeiro; se o driver recusar, cai para CPU sem quebrar.
       try{
@@ -1800,9 +1859,13 @@ class Visao {
         });
       }
       this.pronta = true;
+      this.carregando = false;
+      this.etapa = 'pronta';
       return true;
     }catch(e){
       this.erroModelo = e;
+      this.carregando = false;
+      this.etapa = 'falhou';
       console.warn('[AirDrums] modelo de mãos indisponível', e);
       return false;
     }
@@ -2049,7 +2112,15 @@ class Renderizador {
     }
   }
 
-  /** Esqueleto das mãos + ponto de impacto + vetor de velocidade. */
+  /**
+   * Desenha a mão detectada por cima da imagem da câmera.
+   *
+   * Este desenho não é enfeite: é a prova, para quem está tocando, de que o
+   * aplicativo está de fato enxergando. Por isso é deliberadamente forte —
+   * palma preenchida, traço grosso com halo, juntas visíveis e a lateral
+   * escrita ao lado do pulso. A versão anterior usava linhas de um pixel e
+   * meio a 55% de opacidade: no vidro de um celular, ao sol, sumia.
+   */
   _desenharMaos(maos){
     const c = this.ctx;
     const menor = Math.min(this.l, this.a);
@@ -2059,22 +2130,61 @@ class Renderizador {
       const cor = mao.indice === 0 ? '#35E0C8' : '#FF8A3D';
 
       if(mao.temMarcos){
-        c.lineWidth = Math.max(1.5, menor * 0.0035);
-        c.strokeStyle = this._rgba(cor, 0.55);
-        c.beginPath();
-        for(let i = 0; i < LIGACOES.length; i++){
-          const a = LIGACOES[i][0] * 2, b = LIGACOES[i][1] * 2;
-          c.moveTo(this.px(mao.marcos[a]), this.py(mao.marcos[a+1]));
-          c.lineTo(this.px(mao.marcos[b]), this.py(mao.marcos[b+1]));
-        }
-        c.stroke();
+        const X = i => this.px(mao.marcos[i * 2]);
+        const Y = i => this.py(mao.marcos[i * 2 + 1]);
 
-        c.fillStyle = this._rgba(cor, 0.85);
+        // Palma preenchida: dá corpo à mão e a torna visível de relance.
+        c.beginPath();
+        for(let k = 0; k < PALMA.length; k++){
+          const i = PALMA[k];
+          if(k === 0) c.moveTo(X(i), Y(i)); else c.lineTo(X(i), Y(i));
+        }
+        c.closePath();
+        c.fillStyle = this._rgba(cor, 0.22);
+        c.fill();
+
+        // Duas passadas no esqueleto: halo largo e translúcido por baixo,
+        // traço firme por cima. Legível tanto sobre roupa clara quanto escura.
+        c.lineCap = 'round'; c.lineJoin = 'round';
+        for(let passada = 0; passada < 2; passada++){
+          c.lineWidth = passada === 0 ? menor * 0.022 : menor * 0.009;
+          c.strokeStyle = this._rgba(cor, passada === 0 ? 0.18 : 0.95);
+          c.beginPath();
+          for(let i = 0; i < LIGACOES.length; i++){
+            const a = LIGACOES[i][0], b = LIGACOES[i][1];
+            c.moveTo(X(a), Y(a));
+            c.lineTo(X(b), Y(b));
+          }
+          c.stroke();
+        }
+        c.lineCap = 'butt'; c.lineJoin = 'miter';
+
+        // Juntas.
+        c.fillStyle = this._rgba(cor, 0.95);
         for(let i = 0; i < 21; i++){
           c.beginPath();
-          c.arc(this.px(mao.marcos[i*2]), this.py(mao.marcos[i*2+1]), menor * 0.006, 0, Math.PI * 2);
+          c.arc(X(i), Y(i), menor * 0.0085, 0, Math.PI * 2);
           c.fill();
         }
+        // Pontas dos dedos em branco: referência de onde a baqueta bateria.
+        c.fillStyle = '#ffffff';
+        for(let k = 0; k < PONTAS.length; k++){
+          const i = PONTAS[k];
+          c.beginPath();
+          c.arc(X(i), Y(i), menor * 0.011, 0, Math.PI * 2);
+          c.fill();
+        }
+
+        // Qual mão é esta, escrito ao lado do pulso.
+        const tam = Math.max(11, menor * 0.030);
+        c.font = `700 ${tam}px system-ui, sans-serif`;
+        c.textAlign = 'center'; c.textBaseline = 'middle';
+        const rotulo = mao.indice === 0 ? 'ESQUERDA' : 'DIREITA';
+        const rx = X(0), ry = Y(0) + tam * 1.5;
+        c.fillStyle = this._rgba('#000000', 0.6);
+        c.fillText(rotulo, rx + 1, ry + 1);
+        c.fillStyle = this._rgba(cor, 1);
+        c.fillText(rotulo, rx, ry);
       }
 
       // Ponto de impacto: cresce com a velocidade.
@@ -2475,6 +2585,7 @@ const App = {
 
   // Medições do diagnóstico.
   fps: 0, _quadros: 0, _fpsT: 0, _inicioSessao: 0,
+  _semMaosDesde: 0, _estadoVisao: '',
   msDeteccao: 0,
   precisao: 0,
   _ultimoT: 0,
@@ -2660,6 +2771,7 @@ const App = {
     /* --- barras --- */
     on('#b-voltar', 'click', () => this.voltarInicio());
     on('#b-calibrar', 'click', () => this.calibrando ? this.fecharPaineis() : this.abrirPainel('#painel-calib'));
+    on('#estado-visao', 'click', () => this.tentarModeloDeNovo());
     on('#b-camera', 'click', () => this.trocarCamera());
     on('#b-kits', 'click', () => this.abrirPainel('#painel-kits'));
     on('#b-config', 'click', () => this.abrirPainel('#painel-config'));
@@ -2848,11 +2960,10 @@ const App = {
 
     this.avisar('Carregando o reconhecimento de mãos…', 6000);
     const ok = await this.visao.carregarModelo();
-    if(ok){
-      this.avisar('Pronto! Toque no ar.', 2600);
-    }else{
-      this.avisar('Sem reconhecimento de mãos — toque na tela para tocar.', 6000);
-    }
+    // O resultado, daqui em diante, é contado pelo indicador permanente de
+    // estado — que não some depois de alguns segundos como um aviso.
+    if(ok) this.avisar('Pronto! Toque no ar.', 2200);
+    this.atualizarEstadoVisao(U.agora());
   },
 
   /**
@@ -2952,6 +3063,7 @@ const App = {
     U.$('#barra-sup').hidden = qual !== 'app';
     U.$('#barra-inf').hidden = qual !== 'app';
     U.$('#hud').hidden = qual !== 'app' || !this.estado.ajustes.mostrarHUD;
+    if(qual !== 'app') U.$('#estado-visao').hidden = true;
   },
 
   mostrarErroCamera(msg){
@@ -3206,6 +3318,7 @@ const App = {
       this._quadros = 0;
       this._fpsT = t;
       this.atualizarHUD();
+      this.atualizarEstadoVisao(t);
       if(this.gravador.gravando && !U.$('#painel-rec').hidden) this.atualizarPainelRec();
     }
   },
@@ -3271,6 +3384,66 @@ const App = {
       `latência <b>${lat.toFixed(0)}</b> ms · mãos <b>${maos}</b><br>` +
       `precisão <b>${(this.precisao * 100).toFixed(0)}</b>% · kit <b>${KITS[this.estado.ajustes.kit].nome}</b>` +
       (this.metronomo.ativo ? ` · <b>${this.estado.ajustes.bpm}</b> BPM` : '');
+  },
+
+  /**
+   * Escreve o estado da detecção no indicador permanente.
+   *
+   * É a resposta para "está funcionando?". Sem isto, o aplicativo tem três
+   * situações que na tela são idênticas — o modelo ainda baixando, o modelo
+   * que falhou, e o modelo funcionando sem enxergar ninguém — e o usuário
+   * não tem como saber em qual delas está nem o que fazer a respeito.
+   */
+  atualizarEstadoVisao(t){
+    const el = U.$('#estado-visao');
+    if(this.modo !== 'camera'){ el.hidden = true; return; }
+    el.hidden = false;
+
+    const v = this.visao;
+    let estado, texto;
+
+    if(v.carregando){
+      estado = 'carregando';
+      texto = v.etapa === 'modelo'
+        ? 'Baixando o reconhecimento de mãos…<small>São alguns megabytes. Só na primeira vez.</small>'
+        : 'Preparando o reconhecimento…';
+    }else if(!v.pronta){
+      estado = 'falhou';
+      texto = 'Reconhecimento indisponível<small>Toque aqui para tentar de novo. Precisa de internet só nesta primeira vez.</small>';
+    }else{
+      const maos = this.detector.maos.filter(m => m.ativa);
+      if(maos.length === 0){
+        estado = 'procurando';
+        // O tempo sem ver nada vira conselho: as causas mais comuns, na
+        // ordem em que valem a pena ser tentadas.
+        if(this._semMaosDesde === 0) this._semMaosDesde = t;
+        const s = t - this._semMaosDesde;
+        texto = 'Procurando suas mãos…' + (
+          s > 12 ? '<small>Tente mais luz de frente, ou aproxime‑se um pouco.</small>' :
+          s > 5  ? '<small>Levante as mãos abertas, dentro da tela.</small>' : '');
+      }else{
+        this._semMaosDesde = 0;
+        estado = 'ok';
+        const nomes = maos.map(m => m.indice === 0 ? 'esquerda' : 'direita');
+        texto = maos.length === 2
+          ? 'Vejo as suas duas mãos'
+          : 'Vejo a sua mão ' + nomes[0];
+      }
+    }
+
+    if(this._estadoVisao !== estado + texto){
+      this._estadoVisao = estado + texto;
+      el.dataset.e = estado;
+      el.innerHTML = '<span class="pt"></span><span>' + texto + '</span>';
+    }
+  },
+
+  /** Nova tentativa de carregar o modelo, a partir do indicador. */
+  async tentarModeloDeNovo(){
+    if(this.visao.carregando || this.visao.pronta) return;
+    this.avisar('Tentando carregar o reconhecimento…', 3000);
+    const ok = await this.visao.carregarModelo();
+    this.avisar(ok ? 'Pronto! Toque no ar.' : 'Ainda não consegui. Verifique a internet.', 3200);
   },
 
   /** Mensagem passageira no centro da tela. */
