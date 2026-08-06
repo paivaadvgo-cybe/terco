@@ -81,7 +81,7 @@ body{ overflow:hidden; position:fixed; inset:0; }
   position:absolute; inset:0; width:100%; height:100%;
   object-fit: cover; background:#000;
   transform: scaleX(1); transform-origin:center;
-  opacity:.85;                       /* deixa o traço vetorial sobressair */
+  opacity:.72;                       /* ajustável: ver "Imagem da câmera" */
 }
 #video.espelhado{ transform: scaleX(-1); }
 #tela{ position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none; }
@@ -524,6 +524,11 @@ body[data-apresentacao="1"] #sair-apresentacao{ display:inline-flex; }
       <input type="range" id="c-brilho" min="0.5" max="1.4" step="0.02">
     </div>
     <div class="campo">
+      <label for="c-video">Imagem da câmera <span class="valor" id="v-video"></span></label>
+      <input type="range" id="c-video" min="0.15" max="1" step="0.05">
+      <p class="dica">Diminua para a bateria se destacar mais; aumente para enxergar melhor o ambiente.</p>
+    </div>
+    <div class="campo">
       <label for="c-escala">Tamanho do texto <span class="valor" id="v-escala"></span></label>
       <input type="range" id="c-escala" min="0.85" max="1.4" step="0.05">
     </div>
@@ -765,6 +770,7 @@ const AJUSTES_PADRAO = Object.freeze({
   debounce:110,            // ms
   latencia:0,              // ms adicionais
   brilho:1.0,
+  opacidadeVideo:0.72,   // a imagem não pode competir com as peças
   escalaUI:1.0,
   daltonico:false,
   altoContraste:false,
@@ -777,7 +783,8 @@ const AJUSTES_PADRAO = Object.freeze({
   bpm:90,
   compasso:4,
   volumeMetronomo:0.5,
-  contagemRegressiva:true
+  contagemRegressiva:true,
+  jaViuDicaArraste:false
 });
 
 /* Velocidade que corresponde ao golpe mais forte (volume máximo). */
@@ -2072,6 +2079,7 @@ class Renderizador {
     this.mostrarMaos = true;
     this.calibrando = false;
     this.pecaSelecionada = null;
+    this.pecaArrastando = null;
     this.piscarMetronomo = 0;
     this.numeroMetronomo = 0;
   }
@@ -2139,34 +2147,60 @@ class Renderizador {
       c.save();
       c.translate(cx, cy);
 
+      // Uma peça que precisa ser vista por cima de vídeo qualquer — parede
+      // clara, roupa fluorescente, contraluz — não pode depender só da cor.
+      // A construção abaixo é sempre a mesma: um fundo escuro que garante
+      // contraste, o preenchimento colorido por cima, e o contorno em duas
+      // passadas (escura larga, clara estreita) para não sumir nem no claro
+      // nem no escuro.
+      const arrastando = this.pecaArrastando === p;
+      const lift = arrastando ? 1.07 : 1;
+      if(lift !== 1) c.scale(lift, lift);
+
+      // Sombra projetada: é o que faz a peça parecer flutuar acima da imagem.
+      c.beginPath();
+      c.ellipse(0, ry * 0.30, rx * 1.02, ry * 1.02, 0, 0, Math.PI * 2);
+      c.fillStyle = this._rgba('#000000', arrastando ? 0.5 : 0.34);
+      c.fill();
+
       // Halo de impacto: gradiente radial (barato) em vez de shadowBlur.
       if(p.brilho > 0.01){
-        const g = c.createRadialGradient(0, 0, rx * 0.2, 0, 0, rx * 1.7);
-        g.addColorStop(0, this._rgba(cor, 0.42 * p.brilho * (0.5 + p.forca * 0.5)));
+        const g = c.createRadialGradient(0, 0, rx * 0.2, 0, 0, rx * 1.8);
+        g.addColorStop(0, this._rgba(cor, 0.55 * p.brilho * (0.5 + p.forca * 0.5)));
         g.addColorStop(1, this._rgba(cor, 0));
         c.fillStyle = g;
         c.beginPath();
-        c.ellipse(0, 0, rx * 1.7, ry * 1.9, 0, 0, Math.PI * 2);
+        c.ellipse(0, 0, rx * 1.8, ry * 2.0, 0, 0, Math.PI * 2);
         c.fill();
       }
 
-      // Corpo semitransparente.
       c.beginPath();
       c.ellipse(0, 0, rx, ry, 0, 0, Math.PI * 2);
-      c.fillStyle = this._rgba(cor, 0.10 + p.brilho * 0.30);
+
+      // Fundo escuro: sem ele, a peça desaparece sobre qualquer coisa clara.
+      c.fillStyle = this._rgba('#05070c', 0.46);
+      c.fill();
+      // Corpo colorido, agora com presença real.
+      c.fillStyle = this._rgba(cor, 0.26 + p.brilho * 0.45);
       c.fill();
 
-      // Contorno. No modo daltônico, tambores ficam tracejados e pratos
-      // contínuos — a forma do traço vira uma segunda pista, além da cor.
-      c.lineWidth = Math.max(2, menor * (selecionada ? 0.009 : 0.0055));
-      c.strokeStyle = this._rgba(cor, 0.55 + p.brilho * 0.45);
-      if(this.daltonico && p.tipo !== 'prato'){ c.setLineDash([menor*0.02, menor*0.014]); }
+      // Contorno em duas passadas. No modo daltônico os tambores ficam
+      // tracejados e os pratos contínuos — a forma do traço vira uma segunda
+      // pista, além da cor.
+      const tracejar = this.daltonico && p.tipo !== 'prato';
+      const larg = Math.max(3, menor * (selecionada || arrastando ? 0.011 : 0.008));
+      if(tracejar) c.setLineDash([menor * 0.022, menor * 0.015]);
+      c.lineWidth = larg * 2.1;
+      c.strokeStyle = this._rgba('#000000', 0.5);
+      c.stroke();
+      c.lineWidth = larg;
+      c.strokeStyle = this._rgba(cor, 0.95);
       c.stroke();
       c.setLineDash([]);
 
       // Detalhes por tipo: elipse interna dá a leitura de "peça de bateria".
-      c.lineWidth = Math.max(1, menor * 0.003);
-      c.strokeStyle = this._rgba(cor, 0.28 + p.brilho * 0.3);
+      c.lineWidth = Math.max(1.5, menor * 0.0038);
+      c.strokeStyle = this._rgba(cor, 0.5 + p.brilho * 0.4);
       c.beginPath();
       if(p.tipo === 'prato'){
         c.ellipse(0, 0, rx * 0.45, ry * 0.45, 0, 0, Math.PI * 2);
@@ -2182,20 +2216,23 @@ class Renderizador {
       if(p.anelo > 0.01){
         const k = 1 - p.anelo;
         c.beginPath();
-        c.ellipse(0, 0, rx * (1 + k * 0.75), ry * (1 + k * 0.75), 0, 0, Math.PI * 2);
-        c.lineWidth = Math.max(1.5, menor * 0.006 * p.anelo);
-        c.strokeStyle = this._rgba(cor, 0.55 * p.anelo);
+        c.ellipse(0, 0, rx * (1 + k * 0.8), ry * (1 + k * 0.8), 0, 0, Math.PI * 2);
+        c.lineWidth = Math.max(2, menor * 0.008 * p.anelo);
+        c.strokeStyle = this._rgba(cor, 0.7 * p.anelo);
         c.stroke();
       }
 
-      // Nome da peça.
-      const tam = Math.max(11, menor * 0.032);
-      c.font = `700 ${tam}px system-ui, sans-serif`;
+      // Nome da peça, sobre uma placa escura: texto solto sobre vídeo é
+      // ilegível na metade das cenas.
+      const tam = Math.max(12, menor * 0.034);
+      c.font = `800 ${tam}px system-ui, sans-serif`;
       c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.fillStyle = this._rgba('#000000', 0.55);
-      c.fillText(p.nome, 0, ry + tam * 0.95 + 1);
-      c.fillStyle = this._rgba(cor, 0.85 + p.brilho * 0.15);
-      c.fillText(p.nome, 0, ry + tam * 0.95);
+      const nome = p.nome.toUpperCase();
+      const larguraTexto = c.measureText(nome).width;
+      const py = ry + tam * 1.0;
+      this._placa(c, -larguraTexto/2 - tam*0.38, py - tam*0.62, larguraTexto + tam*0.76, tam*1.24, tam*0.62);
+      c.fillStyle = this._rgba(cor, 1);
+      c.fillText(nome, 0, py);
 
       // Alça de arraste durante a calibração.
       if(this.calibrando){
@@ -2323,6 +2360,22 @@ class Renderizador {
     c.strokeStyle = this._rgba(forte ? '#35E0C8' : '#FFFFFF', a * (forte ? 0.9 : 0.45));
     c.lineWidth = Math.max(4, Math.min(this.l, this.a) * 0.012) * a;
     c.strokeRect(c.lineWidth/2, c.lineWidth/2, this.l - c.lineWidth, this.a - c.lineWidth);
+  }
+
+  /** Placa arredondada escura, usada atrás de texto sobre a imagem. */
+  _placa(c, x, y, l, a, r){
+    c.beginPath();
+    if(c.roundRect) c.roundRect(x, y, l, a, r);
+    else{
+      c.moveTo(x + r, y);
+      c.arcTo(x + l, y, x + l, y + a, r);
+      c.arcTo(x + l, y + a, x, y + a, r);
+      c.arcTo(x, y + a, x, y, r);
+      c.arcTo(x, y, x + l, y, r);
+      c.closePath();
+    }
+    c.fillStyle = this._rgba('#05070c', 0.7);
+    c.fill();
   }
 
   /** #RRGGBB + alfa -> rgba(). */
@@ -2480,7 +2533,7 @@ const PASSOS_AJUDA = [
   },
   {
     titulo:'4. Calibre do seu jeito',
-    texto:'No botão de calibração, arraste cada peça para onde o seu braço alcança sem esforço. Toque numa peça para escolhê‑la e mude o tamanho. Tudo fica salvo para a próxima vez, e cada posição da tela (em pé ou deitada) guarda o seu arranjo.'
+    texto:'Segure o dedo sobre qualquer peça por um instante: ela solta e passa a seguir o seu dedo. Largue onde o braço alcança sem esforço. Um toque rápido, em vez de segurar, toca o som da peça. No botão Calibrar dá para mudar também o tamanho de cada uma. Tudo fica salvo, e cada posição da tela (em pé ou deitada) guarda o seu próprio arranjo.'
   }
 ];
 
@@ -2749,7 +2802,9 @@ const App = {
     this.render.daltonico = a.daltonico;
     this.render.mostrarMaos = a.mostrarMaos;
 
-    U.$('#video').classList.toggle('espelhado', a.espelhar);
+    const vid = U.$('#video');
+    vid.classList.toggle('espelhado', a.espelhar);
+    vid.style.opacity = a.opacidadeVideo;
     U.$('#hud').hidden = !a.mostrarHUD || this.modo === 'inicio';
 
     this.sincronizarControles();
@@ -2781,6 +2836,7 @@ const App = {
       ['#c-vol', a.volume, '#v-vol', v => (v * 100).toFixed(0) + '%'],
       ['#c-lat', a.latencia, '#v-lat', v => v.toFixed(0) + ' ms'],
       ['#c-brilho', a.brilho, '#v-brilho', v => (v * 100).toFixed(0) + '%'],
+      ['#c-video', a.opacidadeVideo, '#v-video', v => (v * 100).toFixed(0) + '%'],
       ['#c-escala', a.escalaUI, '#v-escala', v => (v * 100).toFixed(0) + '%'],
       ['#c-bpm', a.bpm, '#v-bpm', v => v.toFixed(0) + ' BPM'],
       ['#c-compasso', a.compasso, '#v-compasso', v => v.toFixed(0) + '/4'],
@@ -2892,7 +2948,7 @@ const App = {
     const desl = [
       ['#c-sens','sensibilidade'], ['#c-velmin','velocidadeMinima'], ['#c-area','tamanhoAreas'],
       ['#c-debounce','debounce'], ['#c-vol','volume'], ['#c-lat','latencia'],
-      ['#c-brilho','brilho'], ['#c-escala','escalaUI'],
+      ['#c-brilho','brilho'], ['#c-video','opacidadeVideo'], ['#c-escala','escalaUI'],
       ['#c-bpm','bpm'], ['#c-compasso','compasso'], ['#c-vol-metro','volumeMetronomo']
     ];
     for(const [sel, chave] of desl){
@@ -2971,39 +3027,87 @@ const App = {
       this.kitVirtual.restaurar(); this.salvar(); this.avisar('Posições restauradas');
     });
 
-    /* --- ponteiro sobre a tela: arrastar (calibração) ou tocar (fallback) --- */
+    /* ------------------------------------------------------------------
+       Ponteiro sobre a tela.
+
+       Três gestos convivem no mesmo canvas:
+         · toque curto numa peça  → toca o som (acessibilidade e alternativa
+           quando a câmera não estiver reconhecendo);
+         · toque longo numa peça  → solta a peça, que passa a seguir o dedo
+           até ser largada onde o usuário quiser;
+         · em modo calibração     → o arraste começa na hora, sem espera.
+
+       O toque longo é o que permite reposicionar a bateria sem precisar
+       descobrir um botão antes.
+       ------------------------------------------------------------------ */
     const tela = U.$('#tela');
-    let arrastando = null;
+    const ESPERA_ARRASTE = 400;        // ms de pressão até a peça soltar
+    const TOLERANCIA = 0.035;          // quanto o dedo pode escorregar antes
+    let pendente = null;               // toque aguardando virar arraste
+    let arrastando = null;             // peça presa ao dedo
+    let temporizador = 0;
+
     const posNorm = e => {
       const r = tela.getBoundingClientRect();
       return { x:(e.clientX - r.left) / r.width, y:(e.clientY - r.top) / r.height };
     };
+    const soltarPeca = () => {
+      if(!arrastando) return;
+      arrastando = null;
+      this.render.pecaArrastando = null;
+      this.salvar();
+    };
+    const comecarArraste = peca => {
+      arrastando = peca;
+      this.render.pecaArrastando = peca;
+      this.selecionarPeca(peca);
+      if(this.estado.ajustes.vibrar) U.vibrar(28);
+      this.bipeUI(920, 0.08);
+      this.avisar('Solte onde ficar melhor', 1600);
+    };
+
     tela.addEventListener('pointerdown', e => {
       if(this.modo === 'inicio') return;
       const p = posNorm(e);
       const peca = this.kitVirtual.maisProxima(p.x, p.y, tela.clientWidth, tela.clientHeight);
       if(!peca) return;
-      if(this.calibrando){
-        arrastando = peca;
-        this.selecionarPeca(peca);
-        tela.setPointerCapture(e.pointerId);
-      }else{
-        // Toque direto na peça: acessibilidade e alternativa quando a câmera
-        // não estiver disponível.
-        this.aoGolpe(peca, 0.8, null, false);
-      }
       e.preventDefault();
+      tela.setPointerCapture(e.pointerId);
+
+      if(this.calibrando){ comecarArraste(peca); return; }
+
+      pendente = { peca, x:p.x, y:p.y };
+      clearTimeout(temporizador);
+      temporizador = setTimeout(() => {
+        if(pendente){ comecarArraste(pendente.peca); pendente = null; }
+      }, ESPERA_ARRASTE);
     });
+
     tela.addEventListener('pointermove', e => {
-      if(!arrastando) return;
       const p = posNorm(e);
-      arrastando.x = U.limitar(p.x, 0.05, 0.95);
-      arrastando.y = U.limitar(p.y, 0.05, 0.95);
-      e.preventDefault();
+      if(arrastando){
+        arrastando.x = U.limitar(p.x, 0.05, 0.95);
+        arrastando.y = U.limitar(p.y, 0.05, 0.95);
+        e.preventDefault();
+        return;
+      }
+      // Escorregou antes de completar a espera: não era toque longo.
+      if(pendente && Math.hypot(p.x - pendente.x, p.y - pendente.y) > TOLERANCIA){
+        clearTimeout(temporizador);
+        pendente = null;
+      }
     });
-    const soltar = () => { if(arrastando){ arrastando = null; this.salvar(); } };
-    tela.addEventListener('pointerup', soltar);
-    tela.addEventListener('pointercancel', soltar);
+
+    const terminar = () => {
+      clearTimeout(temporizador);
+      if(arrastando){ soltarPeca(); }
+      else if(pendente){ this.aoGolpe(pendente.peca, 0.8, null, false); }
+      pendente = null;
+    };
+    tela.addEventListener('pointerup', terminar);
+    tela.addEventListener('pointercancel', () => {
+      clearTimeout(temporizador); pendente = null; soltarPeca();
+    });
 
     /* --- teclado: útil no desktop e para acessibilidade --- */
     window.addEventListener('keydown', e => {
@@ -3059,6 +3163,13 @@ const App = {
     U.$('#b-demo-2').setAttribute('aria-pressed', 'false');
     this.aoRedimensionar();
     this.ligarLaco();
+
+    // Ensinado uma vez só: um aviso repetido a cada abertura vira ruído.
+    if(!this.estado.ajustes.jaViuDicaArraste){
+      this.estado.ajustes.jaViuDicaArraste = true;
+      this.salvar();
+      setTimeout(() => this.avisar('Segure o dedo numa peça para movê‑la pela tela', 5000), 3000);
+    }
 
     this.avisar('Carregando o reconhecimento de mãos…', 6000);
     const ok = await this.visao.carregarModelo();
