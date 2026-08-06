@@ -494,7 +494,7 @@ body[data-apresentacao="1"] #sair-apresentacao{ display:inline-flex; }
     </div>
     <div class="campo">
       <label for="c-velmin">Velocidade mínima <span class="valor" id="v-velmin"></span></label>
-      <input type="range" id="c-velmin" min="0.25" max="3" step="0.05">
+      <input type="range" id="c-velmin" min="0.15" max="1.6" step="0.05">
       <p class="dica">Força mínima do golpe para a peça soar. Aumente se estiver disparando sozinho.</p>
     </div>
     <div class="campo">
@@ -765,7 +765,11 @@ const AJUSTES_PADRAO = Object.freeze({
   kit:'rock',
   volume:0.85,
   sensibilidade:1.0,
-  velocidadeMinima:0.85,   // unidades de tela por segundo
+  /* Telas por segundo, na montagem de referência. Traduzindo: com o campo
+     de visão de ~1,7 m que uma câmera frontal cobre a 1,5 m, 0,5 equivale à
+     mão a ~0,85 m/s. Uma batida de verdade vai de 1,5 a 3 m/s, bem acima;
+     recolocar a mão sem intenção de tocar fica abaixo. */
+  velocidadeMinima:0.5,
   tamanhoAreas:1.0,
   debounce:110,            // ms
   latencia:0,              // ms adicionais
@@ -788,7 +792,19 @@ const AJUSTES_PADRAO = Object.freeze({
 });
 
 /* Velocidade que corresponde ao golpe mais forte (volume máximo). */
-const VELOCIDADE_MAXIMA = 4.0;
+const VELOCIDADE_MAXIMA = 2.0;   // referência apenas para o desenho
+
+/* Tempo após o qual uma peça volta a aceitar golpes de qualquer jeito, mesmo
+   que a mão nunca tenha saído da região nem subido de forma perceptível. */
+const REARME_MAXIMO = 0.32;
+
+/* Tamanho aparente da palma, em alturas de tela, na montagem de referência:
+   celular a ~1,5 m, câmera frontal comum. Serve de régua para o limiar de
+   velocidade — ver DetectorGolpes.processar. */
+const ESCALA_REFERENCIA = 0.06;
+
+/* Quantas vezes o limiar corresponde ao golpe mais forte (volume máximo). */
+const FATOR_VELOCIDADE_MAXIMA = 5;
 
 /* ==========================================================================
    2. UTILIDADES
@@ -1622,11 +1638,24 @@ class Mao {
     // 21 marcos reaproveitados quadro a quadro (sem alocação).
     this.marcos = new Float32Array(42);
     this.temMarcos = false;
+    // Último rastro antes de perder o rastreamento, para retomar o movimento.
+    this._sumiuX = 0; this._sumiuY = 0; this._sumiuT = -10;
+    // Tamanho aparente da palma na tela (marco 0 ao 9), suavizado. É a régua
+    // que traduz "movimento de bateria" em pixels, a qualquer distância.
+    this.escala = ESCALA_REFERENCIA;
+    this.pico = 0;                     // maior velocidade recente (diagnóstico)
     for(const p of PECAS){ this.armado[p.id] = true; this.ultimo[p.id] = -10; }
   }
 
-  /** Zera o rastro (usado quando a mão some do quadro). */
+  /**
+   * Zera o rastro (usado quando a mão some do quadro).
+   *
+   * Guarda a última posição conhecida: uma mão que sumiu por três quadros
+   * quase sempre é a mesma mão, no meio do mesmo movimento, e não uma mão
+   * nova surgindo do nada.
+   */
   perder(){
+    if(this.ativa){ this._sumiuX = this.x; this._sumiuY = this.y; this._sumiuT = this.t; }
     this.ativa = false; this.temMarcos = false;
     this.vx = this.vy = this.vel = 0;
     for(const p of PECAS) this.armado[p.id] = true;
@@ -1638,6 +1667,25 @@ class Mao {
    */
   atualizar(x, y, t){
     if(!this.ativa){
+      const lacuna = t - this._sumiuT;
+      // Reaquisição rápida: retoma o movimento em vez de recomeçar do zero.
+      //
+      // É a correção de um problema concreto. Justamente no golpe forte a mão
+      // borra na imagem e o rastreador a perde por dois ou três quadros; ela
+      // reaparece já sobre a peça. Zerando a velocidade nessa reaquisição, o
+      // golpe mais firme era o que tinha menos chance de soar — a pessoa
+      // batia com vontade e não saía som nenhum.
+      if(lacuna > 0 && lacuna < 0.3){
+        const dt = U.limitar(lacuna, 1 / 240, 0.3);
+        this.px = this._sumiuX; this.py = this._sumiuY;
+        this.x = x; this.y = y;
+        this.vx = U.limitar((x - this.px) / dt, -12, 12);
+        this.vy = U.limitar((y - this.py) / dt, -12, 12);
+        this.vel = Math.hypot(this.vx, this.vy);
+        this.ax = this.ay = 0;
+        this.t = t; this.ativa = true;
+        return;
+      }
       this.x = this.px = x; this.y = this.py = y;
       this.vx = this.vy = this.vel = 0; this.t = t; this.ativa = true;
       return;
@@ -1647,13 +1695,18 @@ class Mao {
     this.x = x; this.y = y;
     const vxNovo = (x - this.px) / dt;
     const vyNovo = (y - this.py) / dt;
-    const k = 0.55;                       // peso da amostra nova
+    // Suavização assimétrica: acompanha depressa quando a mão acelera e
+    // alisa quando ela desacelera. Um filtro simétrico corta justamente o
+    // pico do golpe, que é a informação que interessa.
     const vxAnt = this.vx, vyAnt = this.vy;
+    const acelerando = Math.hypot(vxNovo, vyNovo) > Math.hypot(vxAnt, vyAnt);
+    const k = acelerando ? 0.85 : 0.45;
     this.vx = U.lerp(vxAnt, vxNovo, k);
     this.vy = U.lerp(vyAnt, vyNovo, k);
     this.ax = (this.vx - vxAnt) / dt;
     this.ay = (this.vy - vyAnt) / dt;
     this.vel = Math.hypot(this.vx, this.vy);
+    if(this.vel > this.pico) this.pico = this.vel;
     this.t = t;
   }
 }
@@ -1682,7 +1735,17 @@ class DetectorGolpes {
   processar(mao, t){
     if(!mao.ativa) return;
 
-    const velMin = this.velocidadeMinima / U.limitar(this.sensibilidade, 0.2, 3);
+    // O limiar acompanha o tamanho aparente da mão.
+    //
+    // Sem isso, o mesmo gesto vale números completamente diferentes conforme
+    // a distância: a 1,5 m da câmera um golpe honesto de 25 cm percorre menos
+    // de um décimo da altura da tela, e um limiar fixo pensado para a mão
+    // perto simplesmente engole a maioria das batidas — a pessoa bate, bate,
+    // e não sai som. Medindo em palmas por segundo em vez de telas por
+    // segundo, o mesmo movimento vale o mesmo de perto e de longe.
+    const proporcao = U.limitar(mao.escala / ESCALA_REFERENCIA, 0.45, 2.2);
+    const velMin = this.velocidadeMinima * proporcao / U.limitar(this.sensibilidade, 0.2, 3);
+    const velMax = velMin * FATOR_VELOCIDADE_MAXIMA;
     const descendo = mao.vy > 0;
     const lt = this.larguraTela, at = this.alturaTela;
 
@@ -1691,9 +1754,15 @@ class DetectorGolpes {
     for(let i = 0; i < this.kit.pecas.length; i++){
       const peca = this.kit.pecas[i];
 
-      // (b) Rearme por histerese: fora da área ampliada, ou subindo.
+      // (b) Rearme por histerese: fora da área ampliada, ou subindo — mais
+      // uma válvula de tempo. Sem ela, uma mão que fica dentro da região e
+      // não chega a subir de forma clara trava a peça para sempre: o usuário
+      // bate uma vez, insiste, e não sai mais som. O limiar de velocidade
+      // continua sendo a defesa contra disparo acidental; o rearme só volta
+      // a permitir que a peça seja avaliada.
       const distAgora = this.kit.distancia(peca, mao.x, mao.y, lt, at);
-      if(distAgora > 1.25 || mao.vy < -0.15) mao.armado[peca.id] = true;
+      if(distAgora > 1.25 || mao.vy < -0.15 ||
+         t - mao.ultimo[peca.id] > REARME_MAXIMO) mao.armado[peca.id] = true;
 
       if(!mao.armado[peca.id]) continue;
       if(t - mao.ultimo[peca.id] < this.debounce) continue;
@@ -1719,7 +1788,7 @@ class DetectorGolpes {
 
     // Força: proporção entre a velocidade e a faixa útil, com curva suave
     // (raiz) para dar mais resolução aos toques fracos.
-    const bruto = U.norm(mao.vel, velMin, VELOCIDADE_MAXIMA);
+    const bruto = U.norm(mao.vel, velMin, velMax);
     const forca = U.limitar(0.18 + Math.sqrt(bruto) * 0.88, 0.08, 1);
 
     mao.armado[alvo.id] = false;
@@ -1778,7 +1847,6 @@ class Visao {
     this.detector = null;
     this.pronta = false;
     this.frontal = false;
-    this.ultimoTempo = -1;
     this._carimbo = 0;              // carimbo de tempo monotônico do MediaPipe
     this.confianca = 0;
     this.erroModelo = null;
@@ -2740,7 +2808,7 @@ const App = {
 
   // Medições do diagnóstico.
   fps: 0, _quadros: 0, _fpsT: 0, _inicioSessao: 0,
-  _semMaosDesde: 0, _estadoVisao: '', _avisouLatencia: false,
+  _semMaosDesde: 0, _estadoVisao: '', _avisouLatencia: false, _picoMostrado: 0,
   msDeteccao: 0,
   precisao: 0,
   _ultimoT: 0,
@@ -3586,6 +3654,10 @@ const App = {
         mao.marcos[k*2 + 1] = this.visao.paraTelaY(marcos[k].y);
       }
       mao.temMarcos = true;
+      // Palma: do pulso (marco 0) à base do dedo médio (marco 9). Cresce
+      // quando a pessoa se aproxima da câmera e encolhe quando se afasta.
+      const palma = Math.hypot(mao.marcos[18] - mao.marcos[0], mao.marcos[19] - mao.marcos[1]);
+      if(palma > 0.005) mao.escala = U.lerp(mao.escala, palma, 0.2);
       mao.atualizar(mao.marcos[18], mao.marcos[19], t);   // marco 9 = índices 18,19
     }
 
@@ -3606,6 +3678,8 @@ const App = {
       `<b>${this.fps.toFixed(0)}</b> FPS · visão <b>${this.msDeteccao.toFixed(1)}</b> ms` +
       (v.delegate ? ` (${v.delegate})` : '') + '<br>' +
       `latência <b>${lat.toFixed(0)}</b> ms · mãos <b>${maos}</b>/<b>${v.maosBrutas}</b><br>` +
+      `golpe <b>${this.velocidadeAtual().toFixed(1)}</b> · pico <b>${this.picoRecente().toFixed(1)}</b> ` +
+      `· mínimo <b>${this.limiarEfetivo().toFixed(1)}</b><br>` +
       `precisão <b>${(this.precisao * 100).toFixed(0)}</b>% · kit <b>${KITS[this.estado.ajustes.kit].nome}</b>` +
       (this.metronomo.ativo ? ` · <b>${this.estado.ajustes.bpm}</b> BPM` : '');
   },
@@ -3686,6 +3760,39 @@ const App = {
     this.avisar('Tentando carregar o reconhecimento…', 3000);
     const ok = await this.visao.carregarModelo();
     this.avisar(ok ? 'Pronto! Toque no ar.' : 'Ainda não consegui. Verifique a internet.', 3200);
+  },
+
+  /**
+   * Limiar de velocidade realmente em vigor, já corrigido pelo tamanho
+   * aparente da mão. É o número contra o qual comparar o "pico" ao lado:
+   * se o pico não passa dele, nenhum som sai — e a saída é aumentar a
+   * sensibilidade ou chegar mais perto da câmera.
+   */
+  limiarEfetivo(){
+    const a = this.estado.ajustes;
+    let escala = ESCALA_REFERENCIA;
+    for(const m of this.detector.maos) if(m.ativa && m.temMarcos){ escala = m.escala; break; }
+    const proporcao = U.limitar(escala / ESCALA_REFERENCIA, 0.45, 2.2);
+    return a.velocidadeMinima * proporcao / U.limitar(a.sensibilidade, 0.2, 3);
+  },
+
+  /** Maior velocidade instantânea entre as mãos ativas. */
+  velocidadeAtual(){
+    let v = 0;
+    for(const m of this.detector.maos) if(m.ativa && m.vel > v) v = m.vel;
+    return v;
+  },
+
+  /**
+   * Pico de velocidade do último segundo, zerado a cada leitura do
+   * diagnóstico. É o número que responde "meus golpes estão fortes o
+   * bastante?" — basta compará-lo com o mínimo exibido ao lado.
+   */
+  picoRecente(){
+    let v = 0;
+    for(const m of this.detector.maos){ if(m.pico > v) v = m.pico; m.pico = 0; }
+    if(v > this._picoMostrado || v > 0) this._picoMostrado = Math.max(v, this._picoMostrado * 0.6);
+    return this._picoMostrado;
   },
 
   /** Mensagem passageira no centro da tela. */
