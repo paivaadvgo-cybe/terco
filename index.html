@@ -274,6 +274,9 @@ input[type=range]:focus-visible{ outline:3px solid var(--realce); outline-offset
    -------------------------------------------------------------------------- */
 #estado-visao{
   position:absolute; z-index:32;
+  /* Só recebe toque no estado em que há o que fazer com ele. Nos demais é
+     apenas um informe, e engolir o toque impediria de tocar a peça embaixo. */
+  pointer-events:none;
   top: calc(.55rem + var(--seg-sup) + var(--toque) + .5rem);
   left:50%; transform:translateX(-50%);
   display:flex; align-items:center; gap:.5rem;
@@ -296,7 +299,8 @@ input[type=range]:focus-visible{ outline:3px solid var(--realce); outline-offset
 #estado-visao[data-e="procurando"]     { border-color:rgba(255,209,102,.6); }
 #estado-visao[data-e="procurando"] .pt { background:#FFD166; animation:respirar 1.3s infinite; }
 #estado-visao[data-e="carregando"] .pt { background:#8CE7FF; animation:respirar 1s infinite; }
-#estado-visao[data-e="falhou"]     { border-color:rgba(255,92,108,.7); background:rgba(46,10,14,.9); cursor:pointer; }
+#estado-visao[data-e="falhou"]     { border-color:rgba(255,92,108,.7); background:rgba(46,10,14,.9);
+                                     cursor:pointer; pointer-events:auto; }
 #estado-visao[data-e="falhou"] .pt { background:var(--perigo); }
 @keyframes respirar{ 50%{ opacity:.25; } }
 
@@ -797,6 +801,13 @@ const VELOCIDADE_MAXIMA = 2.0;   // referência apenas para o desenho
 /* Tempo após o qual uma peça volta a aceitar golpes de qualquer jeito, mesmo
    que a mão nunca tenha saído da região nem subido de forma perceptível. */
 const REARME_MAXIMO = 0.32;
+
+/* Uma mão não toca dois instrumentos diferentes em menos que isto. Com a mão
+   inteira valendo como contato, um único golpe atravessa a região de mais de
+   uma peça — os dedos raspam o tom no caminho da caixa — e sem esta trava
+   sairia um chiado de duas peças em vez de uma batida. Não limita rufo: golpes
+   repetidos na MESMA peça são regidos pelo intervalo configurável, maior. */
+const COOLDOWN_MAO = 0.08;
 
 /* Tamanho aparente da palma, em alturas de tela, na montagem de referência:
    celular a ~1,5 m, câmera frontal comum. Serve de régua para o limiar de
@@ -1635,6 +1646,7 @@ class Mao {
     this.t = 0;                        // instante da última amostra
     this.armado = Object.create(null); // id da peça -> pronta para disparar
     this.ultimo = Object.create(null); // id da peça -> instante do último golpe
+    this.ultimoQualquer = -10;         // instante do último golpe, em qualquer peça
     // 21 marcos reaproveitados quadro a quadro (sem alocação).
     this.marcos = new Float32Array(42);
     this.temMarcos = false;
@@ -1760,8 +1772,15 @@ class DetectorGolpes {
       // bate uma vez, insiste, e não sai mais som. O limiar de velocidade
       // continua sendo a defesa contra disparo acidental; o rearme só volta
       // a permitir que a peça seja avaliada.
-      const distAgora = this.kit.distancia(peca, mao.x, mao.y, lt, at);
-      if(distAgora > 1.25 || mao.vy < -0.15 ||
+      // A mão inteira conta como contato, não um ponto dela.
+      //
+      // Antes, só a base do dedo médio valia: era preciso acertar a peça com
+      // aquele ponto específico, e uma batida em que a peça passava entre os
+      // dedos ou sob a palma não soava. Agora vale o marco mais próximo entre
+      // os vinte e um — dedos, nós, pulso. Bater com qualquer parte da mão
+      // toca, que é como um instrumento se comporta.
+      const distAgora = this._distanciaMao(mao, peca, lt, at);
+      if(distAgora > 1.35 || mao.vy < -0.15 ||
          t - mao.ultimo[peca.id] > REARME_MAXIMO) mao.armado[peca.id] = true;
 
       if(!mao.armado[peca.id]) continue;
@@ -1778,13 +1797,16 @@ class DetectorGolpes {
       // decidida, pelo miolo. Raspar a borda de passagem, a caminho de outra
       // peça, não conta — é o que separa o alvo do que ficou no caminho.
       const cruzou = this.kit.distanciaSegmento(peca, mao.px, mao.py, mao.x, mao.y, lt, at);
-      if(cruzou > 1) continue;
+      const contato = Math.min(distAgora, cruzou);
+      if(contato > 1) continue;
       if(distAgora > 1 && cruzou > 0.6) continue;
 
-      if(distAgora < alvoDist){ alvoDist = distAgora; alvo = peca; }
+      if(contato < alvoDist){ alvoDist = contato; alvo = peca; }
     }
 
     if(!alvo) return;
+    // Um golpe, um som: ver COOLDOWN_MAO.
+    if(t - mao.ultimoQualquer < COOLDOWN_MAO) return;
 
     // Força: proporção entre a velocidade e a faixa útil, com curva suave
     // (raiz) para dar mais resolução aos toques fracos.
@@ -1793,11 +1815,45 @@ class DetectorGolpes {
 
     mao.armado[alvo.id] = false;
     mao.ultimo[alvo.id] = t;
+    mao.ultimoQualquer = t;
 
     // Chimbal aberto quando a mão passa de raspão, na horizontal.
     const aberto = alvo.id === 'chimbal' && Math.abs(mao.vx) > Math.abs(mao.vy);
 
     if(this.aoGolpe) this.aoGolpe(alvo, forca, mao, aberto);
+  }
+
+  /**
+   * Menor distância entre a mão e a peça, em raios da peça.
+   *
+   * Percorre os vinte e um marcos e devolve o mais próximo — a mão passa a
+   * ser uma superfície de contato, e não um ponto. Quando não há marcos
+   * (modo demonstração, toque na tela), cai no ponto de referência.
+   */
+  _distanciaMao(mao, peca, lt, at){
+    if(!mao.temMarcos) return this.kit.distancia(peca, mao.x, mao.y, lt, at);
+
+    // Só conta a parte da mão que vai à frente do movimento.
+    //
+    // Qualquer parte da mão pode tocar — dedos, nós, pulso —, mas apenas a
+    // que lidera o golpe. Sem essa distinção, uma mão descendo com os dedos
+    // apontados para cima varre com as pontas a peça que está ACIMA do alvo,
+    // no caminho, e sai som de duas peças numa batida só. É a diferença
+    // entre a face de uma baqueta e o cabo dela.
+    let ux = 0, uy = 0;
+    const v = Math.hypot(mao.vx, mao.vy);
+    if(v > 0.05){ ux = mao.vx / v; uy = mao.vy / v; }
+
+    let menor = Infinity;
+    for(let i = 0; i < 21; i++){
+      const mx = mao.marcos[i*2], my = mao.marcos[i*2+1];
+      // Projeção do marco sobre a direção do movimento, em relação à palma:
+      // negativa significa que o marco vem atrás e não é quem bate.
+      if(v > 0.05 && (mx - mao.x) * ux + (my - mao.y) * uy < -mao.escala * 0.25) continue;
+      const d = this.kit.distancia(peca, mx, my, lt, at);
+      if(d < menor){ menor = d; if(menor <= 0.001) break; }
+    }
+    return menor === Infinity ? this.kit.distancia(peca, mao.x, mao.y, lt, at) : menor;
   }
 
   /**
@@ -3144,6 +3200,12 @@ const App = {
 
       if(this.calibrando){ comecarArraste(peca); return; }
 
+      // O som sai já no encostar, não ao soltar. Esperar o dedo levantar
+      // acrescentava a duração inteira do toque à latência, e um toque um
+      // pouco mais demorado virava arraste sem tocar nada — de fora, parecia
+      // que o aplicativo tinha ignorado o toque.
+      this.aoGolpe(peca, 0.8, null, false);
+
       pendente = { peca, x:p.x, y:p.y };
       clearTimeout(temporizador);
       temporizador = setTimeout(() => {
@@ -3168,8 +3230,7 @@ const App = {
 
     const terminar = () => {
       clearTimeout(temporizador);
-      if(arrastando){ soltarPeca(); }
-      else if(pendente){ this.aoGolpe(pendente.peca, 0.8, null, false); }
+      if(arrastando) soltarPeca();      // o som já saiu no encostar
       pendente = null;
     };
     tela.addEventListener('pointerup', terminar);
