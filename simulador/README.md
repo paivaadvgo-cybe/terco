@@ -22,8 +22,9 @@ em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 | 4 | Motor SAC | concluída |
 | 5 | Testes do SAC | concluída |
 | 6 | Motor PRICE | concluída |
-| 7 | Testes do PRICE | concluída — 49 passando ao todo |
-| 8–15 | Encargos, indexadores, produtos, interface, PWA, equivalência | aguardando |
+| 7 | Testes do PRICE | concluída |
+| 8 | Encargos: TAC, IOF, FGI, FAMPE, FUNDEQ, garantias | concluída — 80 passando ao todo |
+| 9–15 | Indexadores, produtos, interface, PWA, equivalência | aguardando |
 
 ```
 cd simulador && npm test
@@ -38,7 +39,9 @@ cd simulador && npm test
 | `documentacao/MATRIZ_EXCEL_APLICATIVO.md` | Cada regra, com origem, destino e status |
 | `documentacao/PLANO_DE_TESTES.md` | Casos de teste e âncoras extraídas da planilha |
 | `dados/PARAMETROS_FINANCEIROS.json` | Taxas, prazos, limites e fatores, com unidade explícita |
-| `js/engine/` | Motor: SAC, taxas, calendário, arredondamento, erros |
+| `js/engine/` | Motor: SAC, PRICE, taxas, calendário, arredondamento, erros |
+| `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
+| `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |
 | `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |
 | `ferramentas/extrair_parametros.py` | Gera o JSON de parâmetros a partir da planilha |

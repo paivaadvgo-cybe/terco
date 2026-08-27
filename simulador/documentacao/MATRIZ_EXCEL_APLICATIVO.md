@@ -7,10 +7,9 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 7 concluídas. SAC e PRICE estão implementados e validados — o SAC
-contra os seis casos âncora extraídos da planilha, valor a valor, e o PRICE
-contra a única âncora que existe. Encargos, indexadores, produtos e interface
-seguem em `MAPEADO`.
+Fases 1 a 8 concluídas. SAC, PRICE e os encargos estão implementados e
+validados contra as células da planilha, valor a valor. Indexadores, produtos e
+interface seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -52,31 +51,31 @@ seguem em `MAPEADO`.
 |---|---|---|---|---|---|---|
 | doze células | `F15`/`G15`/`I15` | Escada da TAC padrão | R$ | `calcularTAC(v, {variante:'padrao'})` | `encargos/tac` | VALIDADO |
 | Giro Puro | `F15` | Variante com fator `1,015`, só nessa aba | R$ | `calcularTAC(v, {variante:'giroPuro'})` | `encargos/tac` | VALIDADO · ABERTO-02 |
-| todas | `AC24` | IOF adicional, 0,38% do valor liberado | decimal | `iof.aliquotaAdicional` | `encargos/iof` | MAPEADO |
-| todas | `AC25` | IOF diário normal, 0,0041% ao dia | decimal/dia | `iof.aliquotaNormal` | `encargos/iof` | MAPEADO |
-| todas | `AC26` | IOF diário simples, 0,00137% ao dia | decimal/dia | `iof.aliquotaSimples` | `encargos/iof` | MAPEADO |
-| todas | `AG30:AG…` | `min(dias,365) × aliquota × amortizacaoBase` | R$ | `iof.porParcela()` | `encargos/iof` | MAPEADO |
-| todas | `AF24` | Simples se valor ≤ 30.000; senão normal; zero se não incide | R$ | `iof.total()` | `encargos/iof` | MAPEADO |
-| todas | `F16` | IOF financiado multiplica por `1,03` | R$ | `iof.aplicarFinanciamento()` | `encargos/iof` | MAPEADO |
-| todas | `AD30:AD…` | Base do IOF é o valor **solicitado** | R$ | `iof.base` | `encargos/iof` | MAPEADO |
+| todas | `AC24` | IOF adicional, 0,38% do valor liberado | decimal | `PARAMETROS_IOF.aliquotaAdicional` | `encargos/iof` | VALIDADO |
+| todas | `AC25` | IOF diário normal, 0,0041% ao dia | decimal/dia | `PARAMETROS_IOF.aliquotaDiariaNormal` | `encargos/iof` | VALIDADO |
+| todas | `AC26` | IOF diário simples, 0,00137% ao dia | decimal/dia | `PARAMETROS_IOF.aliquotaDiariaSimples` | `encargos/iof` | VALIDADO |
+| todas | `AG30:AG…` | `min(dias,365) × aliquota × amortizacaoBase` | R$ | `iofDaParcela()` | `encargos/iof` | VALIDADO |
+| todas | `AF24` | Simples se valor ≤ 30.000; senão normal; zero se não incide | R$ | `calcularIOF()` | `encargos/iof` | VALIDADO · ABERTO-08 |
+| todas | `F16` | IOF financiado multiplica por `1,03` | R$ | `calcularIOF({financiado:true})` | `encargos/iof` | VALIDADO |
+| todas | `AD30:AD…` | Base do IOF é o valor **solicitado** | R$ | `calcularIOF()` | `encargos/iof` | VALIDADO |
 | todas | `AB30:AB…` | Datas de trinta em trinta dias | data | `gerarVencimentos(d, n, '30dias')` | `calendario` | IMPLEMENTADO |
 
 ## 4. Garantias
 
 | Aba | Campo Excel | Regra identificada | Unidade | Regra JavaScript | Motor | Status |
 |---|---|---|---|---|---|---|
-| Fator K | `F9:G110` | Fator K por prazo, 3 a 103 meses | decimal | `buscarFatorK(prazo)` | `encargos/fgi` | MAPEADO |
-| Fator K | `I25` | `XLOOKUP` exato, sem interpolação | — | busca exata, erro se ausente | `encargos/fgi` | MAPEADO |
-| Fator K | linha 100 | Prazo 84 repetido com fator divergente | decimal | primeira ocorrência prevalece | `encargos/fgi` | ABERTO-04 |
+| Fator K | `F9:G110` | Fator K por prazo, 3 a 103 meses | decimal | `buscarFatorK(prazo)` | `encargos/fgi` | VALIDADO |
+| Fator K | `I25` | `XLOOKUP` exato, sem interpolação | — | `FATOR_K_NAO_ENCONTRADO` | `encargos/fgi` | VALIDADO |
+| Fator K | linha 100 | Prazo 84 repetido com fator divergente | decimal | primeira ocorrência prevalece | `encargos/fgi` | VALIDADO · ABERTO-04 |
 | Fator K | tabela | Sem fator acima de 103 meses | — | `FATOR_K_NAO_ENCONTRADO` | `encargos/fgi` | ABERTO-05 |
-| Fator K | `I30` | `(K × VL × %G × P)/(1 − K × %G × P)` | R$ | `calcularFGI()` | `encargos/fgi` | MAPEADO |
-| Fator K | `I26` | `VL = valorSolicitado + TAC + IOF` | R$ | `fgi.baseVL()` | `encargos/fgi` | MAPEADO |
-| todas | `M21` | FAMPE: `valor × %G × 0,001 × prazo` | R$ | `calcularFAMPE()` | `encargos/fampe` | MAPEADO |
-| todas | `M23` | FUNDEQ: fórmula idêntica à do FAMPE | R$ | `calcularFUNDEQ()` | `encargos/garantias` | MAPEADO |
-| todas | `M24` | Seleção da modalidade por `L24` | — | `garantias.selecionar()` | `encargos/garantias` | MAPEADO |
+| Fator K | `I30` | `(K × VL × %G × P)/(1 − K × %G × P)` | R$ | `calcularFGI()` | `encargos/fgi` | VALIDADO |
+| Fator K | `I26` | `VL = valorSolicitado + TAC + IOF` | R$ | `calcularFGI().baseVL` | `encargos/fgi` | VALIDADO |
+| todas | `M21` | FAMPE: `valor × %G × 0,001 × prazo` | R$ | `calcularFAMPE()` | `encargos/fampe` | VALIDADO |
+| todas | `M23` | FUNDEQ: fórmula idêntica à do FAMPE | R$ | `calcularFUNDEQ()` | `encargos/garantias` | VALIDADO |
+| todas | `M24` | Seleção da modalidade por `L24` | — | `calcularGarantia()` | `encargos/garantias` | VALIDADO |
 | todas | `E19`/`F19` | Percentual garantido, mínimo 0,2 | decimal | `entrada.percentualGarantido` | `encargos/garantias` | MAPEADO |
-| todas | `B19` | `max(maiorPrestacao × 3; 2.424,00)` | R$ | `totais.maiorParcela × 3` | `encargos/garantias` | MAPEADO |
-| todas | `D19` | `(valor − parteGarantida) × 1,5 / 0,7` | R$ | `calcularAlienacaoImovel()` | `encargos/garantias` | MAPEADO |
+| todas | `B19` | `max(maiorPrestacao × 3; 2.424,00)` | R$ | `calcularRendaParaAval()` | `encargos/garantias` | VALIDADO |
+| todas | `D19` | `(valor − parteGarantida) × 1,5 / 0,7`, em quatro formas | R$ | `calcularAlienacaoImovel()` | `encargos/garantias` | VALIDADO |
 
 ## 5. Taxas e indexadores
 
@@ -235,8 +234,12 @@ vazias. Ver §10 do mapa de regras.
 
 **Possível inconsistência.** Um prazo acima do preenchimento produz um total
 que corresponde a menos parcelas do que o contrato tem, **sem sinal nenhum de
-erro**. Em `Linhas Giro Puro` com prazo 60, o total soma 48 parcelas. O total
-do IOF normal soma no máximo 54 parcelas em qualquer aba.
+erro**. Em `Linhas Giro Puro` com prazo 60, o total das prestações soma 48
+parcelas. O IOF é mais estreito ainda: `AE25` vale R$ 676,50, que corresponde
+às 42 parcelas amortizantes cujas linhas foram preenchidas, contra R$ 876,03
+das 54 que o contrato tem. O motor reproduz os R$ 676,50 exatos quando a soma é
+truncada na parcela 48, o que confirma que a divergência é só o truncamento e
+nada mais — e o teste afirma as duas coisas.
 
 **Sugestão.** No aplicativo o cronograma é gerado por laço e o total soma o que
 foi gerado, de modo que o problema não se reproduz. A divergência contra a
