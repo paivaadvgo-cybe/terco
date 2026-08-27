@@ -149,8 +149,10 @@ Os mesmos cenários SAC-01 a SAC-09, mais:
 | PRICE-01 | Prestação constante | Todas as prestações iguais, a menos de 0,01 |
 | PRICE-02 | Amortização crescente | Cada amortização maior que a anterior |
 | PRICE-03 | Taxa zero | `PMT = VP/n`, sem divisão por zero |
-| PRICE-04 | Âncora `AL18` | `PMT(0,017859866497962784; 60; −100.000)` = 2.729,684637819343 |
-| PRICE-05 | Última parcela | Saldo final a menos de 0,01 de zero |
+| PRICE-04 | Âncora `AL18` | `PMT(0,017859866497962784; 60; −100.000)` = 2.729,6846378193432, com tolerância de 1e-9 — a rotina interna do Excel arredonda o último bit de outro jeito, e a diferença é de três quartos de um ULP |
+| PRICE-05 | Última parcela | Saldo final a menos de 1e-6 de zero — sem arredondamento intermediário, o erro acumulado em 240 parcelas não passa de 10⁻⁹ |
+| PRICE-06 | Carência capitalizada | O juro da primeira parcela amortizante incide sobre o saldo crescido |
+| PRICE-07 | Base divergente e indexador | `PARAMETRO_INCOMPATIVEL`, em vez de inventar regra |
 
 ## 6. Encargos
 

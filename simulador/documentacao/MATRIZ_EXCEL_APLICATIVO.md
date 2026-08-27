@@ -7,9 +7,10 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 5 concluídas. O motor SAC está implementado e validado contra os
-seis casos âncora extraídos da planilha, valor a valor; encargos, indexadores,
-produtos e interface seguem em `MAPEADO`.
+Fases 1 a 7 concluídas. SAC e PRICE estão implementados e validados — o SAC
+contra os seis casos âncora extraídos da planilha, valor a valor, e o PRICE
+contra a única âncora que existe. Encargos, indexadores, produtos e interface
+seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -100,8 +101,8 @@ produtos e interface seguem em `MAPEADO`.
 | mensais | `AK22` | `IRR` do fluxo sem bônus | decimal | `calcularTIR(fluxoSemBonus)` | `tir` | MAPEADO |
 | Giro Puro | `AK24` | Fluxo sem bônus usa `D15`, que está vazia | — | — | `tir` | ABERTO-06 |
 | mensais | `AJ23` | Fluxo parte de `−valorSolicitado` | R$ | `fluxo.inicial` | `tir` | MAPEADO |
-| Investimento | `AL18` | `PMT(TIR; prazo; −valorSolicitado)` | R$ | âncora do teste do PRICE | `price` | MAPEADO |
-| — | — | Cronograma PRICE completo | — | `price.gerarCronograma()` | `price` | EXTENSAO |
+| Investimento | `AL18` | `PMT(TIR; prazo; −valorSolicitado)` | R$ | `calcularPMT()` | `price` | VALIDADO |
+| — | — | Cronograma PRICE completo | — | `gerarCronogramaPRICE()` | `price` | EXTENSAO · IMPLEMENTADO |
 | — | — | Comparador SAC × PRICE | — | `ui/comparador` | — | EXTENSAO |
 | mensais | `AL17:AR19` | Receita, despesa e margem da instituição | R$ | não migrado | — | fora de escopo |
 | FCO | `BB16:BD18` | idem | R$ | não migrado | — | fora de escopo |

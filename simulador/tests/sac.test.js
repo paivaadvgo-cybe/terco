@@ -72,6 +72,12 @@ test('SAC-03 · carência capitalizada: saldo cresce e nada é pago', () => {
   perto(r.premissas.saldoAoFimDaCarencia, 100000 * 1.0165 ** 6, 'saldo ao fim da carência');
   perto(naParcela(r, 7).amortizacao, r.premissas.saldoAoFimDaCarencia / 54,
     'a amortização divide o saldo capitalizado, não o valor financiado');
+  // Regressão: o juro da primeira parcela amortizante incide sobre o saldo já
+  // crescido. Quando esse acompanhamento falhava, ele saía calculado sobre o
+  // valor financiado original e ninguém percebia — a amortização fecha o saldo
+  // sozinha, então só o juro ficava errado.
+  perto(naParcela(r, 7).juros, r.premissas.saldoAoFimDaCarencia * 0.0165,
+    'o juro da parcela 7 incide sobre o saldo capitalizado');
   perto(r.totais.saldoResidual, 0, 'saldo final', TOLERANCIA_SALDO);
 });
 

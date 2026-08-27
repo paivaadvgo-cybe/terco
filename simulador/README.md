@@ -7,11 +7,12 @@ referência de validação.
 
 ## Estado
 
-**Fases 1 a 5 concluídas.** O motor SAC reproduz a planilha valor a valor nos
+**Fases 1 a 7 concluídas.** O motor SAC reproduz a planilha valor a valor nos
 seis casos âncora — inclusive o resíduo de R$ 389,72 que a troca de base da
-amortização provoca, e o ruído de ponto flutuante junto. Treze pontos da
-planilha não podem virar código sem decisão; estão em
-`documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
+amortização provoca, e o ruído de ponto flutuante junto. O PRICE, que é
+extensão e não migração, bate com a única âncora que a planilha oferece a menos
+de um ULP. Treze pontos da planilha não podem virar código sem decisão; estão
+em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 
 | Fase | Entrega | Estado |
 |---|---|---|
@@ -19,8 +20,10 @@ planilha não podem virar código sem decisão; estão em
 | 2 | Mapa de regras | concluída |
 | 3 | Banco de parâmetros | concluída |
 | 4 | Motor SAC | concluída |
-| 5 | Testes do SAC | concluída — 34 passando |
-| 6–15 | PRICE, encargos, indexadores, produtos, interface, PWA, equivalência | aguardando |
+| 5 | Testes do SAC | concluída |
+| 6 | Motor PRICE | concluída |
+| 7 | Testes do PRICE | concluída — 49 passando ao todo |
+| 8–15 | Encargos, indexadores, produtos, interface, PWA, equivalência | aguardando |
 
 ```
 cd simulador && npm test

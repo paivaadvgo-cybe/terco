@@ -160,9 +160,33 @@ Com carência de juros pagos, o PRICE começa a amortizar depois dela, e `n` é 
 número de parcelas amortizantes. Com `i = 0`, a fórmula degenera: nesse caso
 `PMT = VP / n`.
 
+Com carência de juros pagos, o principal que a prestação amortiza é o valor
+financiado; com juros capitalizados, é o saldo ao fim da carência. Nos dois
+casos é o saldo que existirá quando a amortização começar.
+
+Por ser extensão, este motor admite só o que tem sentido financeiro fechado, e
+**recusa o resto em vez de inventar**:
+
+- **Base de amortização diferente do saldo.** No SAC isso é ABERTO-07, e é
+  reproduzido porque a planilha faz assim. No PRICE não haveria nem essa
+  desculpa: a prestação seria calculada sobre um principal e o saldo correria
+  sobre outro, deixando resíduo sem nenhum comportamento existente a imitar.
+- **Indexador.** Um segundo componente variável tornaria a prestação não
+  constante, e não há na planilha nenhum cronograma assim para dizer como.
+
+Os dois casos devolvem `PARAMETRO_INCOMPATIVEL`.
+
 A única âncora que a planilha oferece é `Linhas Investimento!AL18`, que calcula
-`PMT(TIR do fluxo com bônus; prazo; −valorSolicitado)`. O teste de equivalência
-do PRICE compara contra essa célula, e apenas contra ela.
+`PMT(TIR do fluxo com bônus; prazo; −valorSolicitado)` e vale
+2.729,6846378193432. A fórmula acima devolve 2.729,6846378193436 — quatro
+décimos de bilionésimo de real acima, três quartos de um ULP. É a rotina
+interna do Excel arredondando o último bit de outro jeito, não divergência de
+regra, e persegui-la seria perseguir ruído binário. O teste usa tolerância de
+1e-9, quatro ordens de grandeza acima da diferença.
+
+O saldo final fecha sozinho: sem arredondamento intermediário, o erro
+acumulado em 240 parcelas fica na casa de 10⁻⁹. Não há ajuste de última
+parcela, porque não há o que ajustar.
 
 ## 6. Encargos
 
