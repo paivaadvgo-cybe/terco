@@ -7,12 +7,15 @@ referência de validação.
 
 ## Estado
 
-**Fases 1 a 7 concluídas.** O motor SAC reproduz a planilha valor a valor nos
+**Fases 1 a 10 concluídas — o motor está completo.** O motor SAC reproduz a planilha valor a valor nos
 seis casos âncora — inclusive o resíduo de R$ 389,72 que a troca de base da
 amortização provoca, e o ruído de ponto flutuante junto. O PRICE, que é
 extensão e não migração, bate com a única âncora que a planilha oferece a menos
-de um ULP. Treze pontos da planilha não podem virar código sem decisão; estão
-em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
+de um ULP. As nove famílias de crédito estão parametrizadas, e três linhas não
+podem ser simuladas — duas porque a célula que escolheria a taxa contém `#REF!`
+e uma porque a tabela oficial a lista sem preço. Quatorze pontos da planilha
+não podem virar código sem decisão; estão em
+`documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 
 | Fase | Entrega | Estado |
 |---|---|---|
@@ -24,8 +27,9 @@ em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 | 6 | Motor PRICE | concluída |
 | 7 | Testes do PRICE | concluída |
 | 8 | Encargos: TAC, IOF, FGI, FAMPE, FUNDEQ, garantias | concluída |
-| 9 | Indexadores: INPC, TR, SELIC | concluída — 91 passando ao todo |
-| 10–15 | Produtos, interface, comparador, relatórios, PWA, equivalência | aguardando |
+| 9 | Indexadores: INPC, TR, SELIC | concluída |
+| 10 | Produtos: nove famílias, TIR e a simulação completa | concluída — 109 passando ao todo |
+| 11–15 | Interface, comparador, relatórios, PWA, equivalência | aguardando |
 
 ```
 cd simulador && npm test
@@ -43,6 +47,7 @@ cd simulador && npm test
 | `js/engine/` | Motor: SAC, PRICE, taxas, calendário, arredondamento, erros |
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
 | `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
+| `js/produtos/` | As nove famílias de linha de crédito, e a simulação de ponta a ponta |
 | `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |
 | `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |

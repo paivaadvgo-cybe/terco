@@ -1781,18 +1781,6 @@ export const PARAMETROS = Object.freeze(
           "prazoMaximo": null,
           "carenciaMaxima": null,
           "limite": null
-        },
-        {
-          "nome": "GF Turismo Capital Fixo",
-          "origemLinha": 14,
-          "taxaCheia": {
-            "valor": 0.05,
-            "unidade": "anual",
-            "tipo": "efetiva"
-          },
-          "prazoMaximo": 240.0,
-          "carenciaMaxima": 60.0,
-          "limite": 2000000.0
         }
       ]
     },
@@ -1965,15 +1953,6 @@ export const PARAMETROS = Object.freeze(
           "prazoMaximo": 96.0,
           "carenciaMaxima": 6.0,
           "limite": 100000.0
-        },
-        {
-          "nome": "LINHA",
-          "origemLinha": 15,
-          "taxaCheia": null,
-          "taxaBonus": null,
-          "prazoMaximo": null,
-          "carenciaMaxima": null,
-          "limite": null
         }
       ]
     },
@@ -2083,15 +2062,6 @@ export const PARAMETROS = Object.freeze(
           "prazoMaximo": 96.0,
           "carenciaMaxima": 6.0,
           "limite": 100000.0
-        },
-        {
-          "nome": "LINHA",
-          "origemLinha": 15,
-          "taxaCheia": null,
-          "taxaBonus": null,
-          "prazoMaximo": null,
-          "carenciaMaxima": null,
-          "limite": null
         }
       ]
     },
@@ -2153,17 +2123,6 @@ export const PARAMETROS = Object.freeze(
           "prazoMaximo": 240.0,
           "carenciaMaxima": 120.0,
           "limite": 2000000.0
-        },
-        {
-          "nome": "LINHA",
-          "origemLinha": 15,
-          "taxaCheia": null,
-          "taxaBonus": null,
-          "taxaCG1": null,
-          "taxaCG2": null,
-          "prazoMaximo": null,
-          "carenciaMaxima": null,
-          "limite": null
         }
       ]
     }

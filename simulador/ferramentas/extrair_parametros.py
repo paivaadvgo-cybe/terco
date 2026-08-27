@@ -100,12 +100,19 @@ def numero(valor):
 
 
 def extrair_linhas(ws, layout):
+    """Lê a tabela de linhas até o primeiro buraco.
+
+    Parar no primeiro nome vazio, em vez de varrer uma faixa fixa, é o que
+    impede de recolher o cabeçalho de uma segunda tabela mais abaixo — a aba
+    'Produtor Empreendedor' tem uma dessas na linha 15, e ela entrava como se
+    fosse uma linha de crédito chamada "LINHA".
+    """
     cfg = LAYOUTS[layout]
     linhas = []
     for lin in range(cfg["cabecalho"] + 1, cfg["cabecalho"] + 12):
         nome = ws[f"{cfg['colunas']['nome']}{lin}"].value
         if not isinstance(nome, str) or not nome.strip():
-            continue
+            break
         registro = {"nome": nome.strip(), "origemLinha": lin}
         for campo, col in cfg["colunas"].items():
             if campo == "nome":

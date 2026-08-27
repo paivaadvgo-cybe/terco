@@ -7,9 +7,9 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 9 concluídas. SAC, PRICE, encargos e indexadores estão implementados
-e validados contra as células da planilha, valor a valor. Produtos e interface
-seguem em `MAPEADO`.
+Fases 1 a 10 concluídas. O motor está completo: SAC, PRICE, encargos,
+indexadores, TIR e as nove famílias de produto, validados contra as células da
+planilha, valor a valor. A interface e o PWA seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -21,9 +21,11 @@ seguem em `MAPEADO`.
 | todas | `D15` | Taxa cheia, selecionada pela linha | ver §4 do mapa | `taxaCheia` | `juros` | MAPEADO |
 | todas | `D16` | Taxa com bônus; é a que remunera | ver §4 do mapa | `taxaAplicada` | `juros` | MAPEADO |
 | todas | `D17` | Data da proposta, `=TODAY()` | data | `entrada.dataProposta` | `calendario` | MAPEADO |
-| todas | `E23` | Valor financiado, tabela-verdade de 11 ramos | R$ | `comporValorFinanciado()` | `fluxo` | ABERTO-01 |
-| Giro Puro | `C6:C12` | Taxa por linha e classe de garantia (`J4`, `K4`) | % a.m. | `selecionarTaxa()` | `juros` | ABERTO-03 |
-| demais | `C6:C12` | idem | decimal a.m. | `selecionarTaxa()` | `juros` | MAPEADO |
+| todas | `E23` | Valor financiado, tabela-verdade de 11 ramos | R$ | composição regular em `simular()` | `produtos` | IMPLEMENTADO · ABERTO-01 |
+| Giro Puro | `C6:C12` | Taxa por linha e classe de garantia (`J4`, `K4`) | % a.m. | taxas vêm da `Tabela de Encargos` | `produtos` | VALIDADO · ABERTO-03 |
+| demais | `C6:C12` | idem | decimal a.m. | `simular()` resolve pela linha | `produtos` | VALIDADO |
+| FINEP | `O4:O6` | Porte I e II contra porte III | decimal a.a. | `obterLinha(…, {porte})` | `produtos/finep` | VALIDADO |
+| Produtor | `BG21` | A linha 2 aciona a carência capitalizada | booleano | `tratamentoCarenciaPorLinha` | `produtos/rural` | VALIDADO |
 
 ## 2. Cronograma
 
@@ -98,10 +100,10 @@ seguem em `MAPEADO`.
 
 | Aba | Campo Excel | Regra identificada | Unidade | Regra JavaScript | Motor | Status |
 |---|---|---|---|---|---|---|
-| mensais | `AJ22` | `IRR` do fluxo com bônus | decimal | `calcularTIR(fluxoComBonus)` | `tir` | MAPEADO |
-| mensais | `AK22` | `IRR` do fluxo sem bônus | decimal | `calcularTIR(fluxoSemBonus)` | `tir` | MAPEADO |
+| mensais | `AJ22` | `IRR` do fluxo com bônus | decimal | `calcularTIR(montarFluxo(...))` | `tir` | VALIDADO |
+| mensais | `AK22` | `IRR` do fluxo sem bônus, com a taxa cheia | decimal | `simular().tirSemBonus` | `tir` | VALIDADO |
 | Giro Puro | `AK24` | Fluxo sem bônus usa `D15`, que está vazia | — | — | `tir` | ABERTO-06 |
-| mensais | `AJ23` | Fluxo parte de `−valorSolicitado` | R$ | `fluxo.inicial` | `tir` | MAPEADO |
+| mensais | `AJ23` | Fluxo parte de `−valorSolicitado` | R$ | `montarFluxo()` | `tir` | VALIDADO |
 | Investimento | `AL18` | `PMT(TIR; prazo; −valorSolicitado)` | R$ | `calcularPMT()` | `price` | VALIDADO |
 | — | — | Cronograma PRICE completo | — | `gerarCronogramaPRICE()` | `price` | EXTENSAO · IMPLEMENTADO |
 | — | — | Comparador SAC × PRICE | — | `ui/comparador` | — | EXTENSAO |
@@ -343,3 +345,31 @@ coerente descrito na especificação — pagamento a cada `p` meses, contado des
 a liberação, com juros e amortização no mesmo ritmo — e as linhas de FCO são
 simuladas com periodicidade mensal, que é o estado salvo e o único caminho que
 a planilha exercita. Aguarda autorização.
+
+### ABERTO-14 · Uma linha sem taxa, e uma aba de linhas que a tabela não conhece
+
+**Regra encontrada.** A `Tabela de Encargos` traz, na linha 34,
+`GoiásFomento Microcrédito Produtivo - Capital de Giro`, com prazo de até 36
+meses, carência de até 3 e limite de R$ 21.000 — mas **as duas células de taxa,
+`C34` e `E34`, estão vazias**. A linha existe na tabela oficial e não tem preço.
+
+**Observação técnica.** Há um segundo desencontro na mesma família. A aba
+`Mais Crédito` tem a sua própria tabela de cinco linhas — `Mais Crédito Aval do
+FUNDEQ`, `Mais Crédito com parceria - Juro Zero e Aval`, `Mais Crédito
+Equalização de Juros FUNDEQ`, `GoiásFomento Giro - VIP IMCF` e `GoiásFomento
+Giro Consorciado` — e **nenhuma delas aparece na `Tabela de Encargos`**. As
+duas linhas de Microcrédito que a tabela oficial lista, por sua vez, aparecem
+como `N11` nas abas de Giro Puro e Mais Crédito e como `N12` na de
+Investimento, com taxas que também não conferem: 2,06% ao mês na aba de
+Investimento contra 1,916% na tabela.
+
+**Possível inconsistência.** Não se sabe qual conjunto de linhas é o vigente
+para esta família, nem qual é a taxa do Microcrédito Produtivo para capital de
+giro. Uma tabela de encargos com vigência declarada que lista uma linha sem
+preço é, em si, o achado.
+
+**Sugestão.** Preencher `C34` e `E34`, e conciliar a tabela oficial com a
+tabela interna da aba `Mais Crédito`. Aguarda autorização. Enquanto isso, a
+linha sem taxa está marcada como indisponível e a simulação devolve
+`TAXA_NAO_PARAMETRIZADA` em vez de calcular com taxa zero — que é o que um
+`0` na célula produziria, e passaria por resultado.
