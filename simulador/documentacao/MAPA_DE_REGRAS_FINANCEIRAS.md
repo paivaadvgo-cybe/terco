@@ -254,9 +254,12 @@ garantia (`J16`). É uma tabela-verdade de onze ramos:
 
 ## 6. TAC
 
-A escada da TAC aparece duas vezes, com formas diferentes.
+A escada da TAC é a mesma em doze das treze células que a calculam:
 
-**Forma de referência** (`I15`), a escada limpa:
+**Escada padrão** — `Linhas Investimento!F15`, `Linhas Transportes!F15`,
+`Mais Crédito!F15`, `FCO Empresarial!G15`, `FCO Rural!G15`,
+`Linhas Fungetur!G15`, `Linhas FINEP!G15`, `Produtor Empreendedor!G15` e as
+células `I15` de referência:
 
 ```
 valor ≤ 3.000                    →  R$ 50,00
@@ -265,7 +268,8 @@ valor ≤ 3.000                    →  R$ 50,00
 valor > 100.000                  →  R$ 2.000,00 + 0,5% do valor
 ```
 
-**Forma aplicada** (`F15`), que é a que entra no valor financiado:
+**Variante de `Linhas Giro Puro`** (`F15`) — e só dessa aba. Nenhuma outra
+célula de TAC da planilha tem o fator `1,015`:
 
 ```
 se TAC descontada:
@@ -286,7 +290,11 @@ se TAC financiada:
 > o teto de R$ 420,00 que o próprio teste pretende impor: em R$ 14.000, o teste
 > dá 420,00 e passa, mas o valor cobrado é R$ 426,30. O fator `1,015` também
 > aparece na faixa dos 3% mas não nas faixas de 2% e 0,5% do mesmo ramo.
-> Ver ABERTO-02.
+>
+> E a variante existe numa aba só. As outras doze células que calculam TAC —
+> inclusive a `I15` da própria `Linhas Giro Puro`, que fica ao lado da `F15` e
+> dá R$ 1.200,00 onde a `F15` dá R$ 1.218,00 — usam a escada padrão. Não há na
+> planilha nada que diga qual das duas é a regra. Ver ABERTO-02.
 
 ## 7. IOF
 

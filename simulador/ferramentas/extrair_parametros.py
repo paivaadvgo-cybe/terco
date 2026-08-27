@@ -14,6 +14,7 @@ Uso:
 """
 
 import json
+import os
 import re
 import sys
 
@@ -251,6 +252,30 @@ def principal(caminho, saida):
 
     with open(saida, "w", encoding="utf-8") as fh:
         json.dump(parametros, fh, ensure_ascii=False, indent=2)
+
+    # O mesmo conteúdo sai também como módulo ES, que é o que o motor importa.
+    # Importar o .json exigiria atributos de importação, e um PWA que precisa
+    # funcionar offline em qualquer navegador não deve depender disso. O JSON
+    # continua sendo o artefato de auditoria, legível sem executar nada.
+    modulo = saida.replace("dados/PARAMETROS_FINANCEIROS.json", "js/data/parametros.js")
+    os.makedirs(os.path.dirname(modulo), exist_ok=True)
+    with open(modulo, "w", encoding="utf-8") as fh:
+        fh.write(
+            "/**\n"
+            " * Parâmetros financeiros — GERADO, não editar à mão.\n"
+            " *\n"
+            " * Sai de `ferramentas/extrair_parametros.py`, que lê a planilha de\n"
+            " * referência. Para mudar um valor aqui, muda-se a planilha e roda-se o\n"
+            " * extrator de novo; assim a origem de cada número continua rastreável.\n"
+            " *\n"
+            " * Toda taxa vem com a unidade em que a planilha a escreveu. A conversão\n"
+            " * para o período de cálculo é do motor, e cada família de produto\n"
+            " * converte de um jeito.\n"
+            " */\n\n"
+            "export const PARAMETROS = Object.freeze(\n"
+        )
+        json.dump(parametros, fh, ensure_ascii=False, indent=2)
+        fh.write("\n);\n\nexport default PARAMETROS;\n")
 
     n = sum(len(v["linhas"]) for v in parametros["linhasPorAba"].values())
     print(f"grupos na Tabela de Encargos: {len(parametros['tabelaDeEncargos'])}")

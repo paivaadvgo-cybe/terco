@@ -50,8 +50,8 @@ seguem em `MAPEADO`.
 
 | Aba | Campo Excel | Regra identificada | Unidade | Regra JavaScript | Motor | Status |
 |---|---|---|---|---|---|---|
-| todas | `I15` | Escada da TAC, forma de referência | R$ | `calcularTAC(v, p, "referencia")` | `encargos/tac` | MAPEADO |
-| todas | `F15` | Escada da TAC aplicada, com fator `1,015` | R$ | `calcularTAC(v, p, "planilha")` | `encargos/tac` | ABERTO-02 |
+| doze células | `F15`/`G15`/`I15` | Escada da TAC padrão | R$ | `calcularTAC(v, {variante:'padrao'})` | `encargos/tac` | VALIDADO |
+| Giro Puro | `F15` | Variante com fator `1,015`, só nessa aba | R$ | `calcularTAC(v, {variante:'giroPuro'})` | `encargos/tac` | VALIDADO · ABERTO-02 |
 | todas | `AC24` | IOF adicional, 0,38% do valor liberado | decimal | `iof.aliquotaAdicional` | `encargos/iof` | MAPEADO |
 | todas | `AC25` | IOF diário normal, 0,0041% ao dia | decimal/dia | `iof.aliquotaNormal` | `encargos/iof` | MAPEADO |
 | todas | `AC26` | IOF diário simples, 0,00137% ao dia | decimal/dia | `iof.aliquotaSimples` | `encargos/iof` | MAPEADO |
@@ -130,16 +130,23 @@ outros dez ramos indica. Aguarda autorização.
 
 ### ABERTO-02 · Teto da TAC testado sobre base diferente da cobrada
 
-**Regra encontrada.** No ramo da TAC descontada, faixa de R$ 3.000,01 a
-R$ 21.000: testa `valor × 0,03 ≤ 420` e cobra `valor × 1,015 × 0,03`.
+**Regra encontrada.** Em `Linhas Giro Puro!F15`, ramo da TAC descontada, faixa
+de R$ 3.000,01 a R$ 21.000: testa `valor × 0,03 ≤ 420` e cobra
+`valor × 1,015 × 0,03`.
 
 **Observação técnica.** O fator `1,015` aparece na faixa de 3% mas não nas
-faixas de 2% e 0,5% do mesmo ramo.
+faixas de 2% e 0,5% do mesmo ramo. E a variante existe numa aba só: as outras
+doze células que calculam TAC usam a escada padrão, inclusive a `I15` da
+própria `Linhas Giro Puro`, que fica ao lado da `F15` e dá R$ 1.200,00 onde a
+`F15` dá R$ 1.218,00.
 
 **Possível inconsistência.** O teto de R$ 420,00 pode ser ultrapassado: em
 R$ 14.000 o teste passa com 420,00 e a cobrança é R$ 426,30.
 
-**Sugestão.** Testar e cobrar sobre a mesma base. Aguarda autorização.
+**Sugestão.** Testar e cobrar sobre a mesma base — ou, mais provável, adotar a
+escada padrão também em `Linhas Giro Puro`, já que ela é o que as outras onze
+abas fazem. Aguarda autorização; o motor tem as duas variantes e nenhuma é
+padrão implícito.
 
 ### ABERTO-03 · `Linhas Giro Puro` guarda taxas em pontos percentuais
 

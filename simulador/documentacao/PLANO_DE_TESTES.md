@@ -163,12 +163,12 @@ Os mesmos cenários SAC-01 a SAC-09, mais:
 | R$ 1,00 | fixo | 50,0000 | 50,0000 |
 | R$ 100,00 | fixo | 50,0000 | 50,0000 |
 | R$ 3.000,00 | fixo, borda superior | 50,0000 | 50,0000 |
-| R$ 3.000,01 | 3% | 90,0003 | 91,3503 |
+| R$ 3.000,01 | 3% | 90,0003 | 91,35030 |
 | R$ 14.000,00 | 3%, onde o teto encosta | 420,0000 | **426,3000** |
 | R$ 21.000,00 | 3% travado no teto | 420,0000 | 420,0000 |
 | R$ 21.000,01 | 2% | 420,0002 | 420,0002 |
 | R$ 100.000,00 | 2%, borda superior | 2.000,0000 | 2.000,0000 |
-| R$ 100.000,01 | fixo mais percentual | 2.500,0001 | 2.500,0001 |
+| R$ 100.000,01 | fixo mais percentual | 2.500,00005 | 2.500,00005 |
 | R$ 2.000.000,00 | teto das linhas | 12.000,0000 | 12.000,0000 |
 
 O caso de R$ 14.000,00 é o que demonstra ABERTO-02: o teste do teto passa com
