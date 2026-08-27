@@ -11,9 +11,15 @@ simulador/tests/
 ├── sac.test.js            SAC nas suas quatro variantes
 ├── price.test.js          PRICE, incluindo a âncora AL18
 ├── encargos.test.js       TAC, IOF, FGI, FAMPE, FUNDEQ, aval, alienação
+├── indexadores.test.js    INPC, TR, SELIC e a composição que a planilha usa
 ├── produtos.test.js       Cada linha de crédito, com os seus limites
 └── equivalencia.test.js   Planilha × aplicativo, valor a valor
 ```
+
+`indexadores.test.js` também não estava no plano, e existe por um risco que
+não é de aritmética: o item 18 do escopo descreve a composição como uma soma
+que a planilha não faz, e um teste que fixe isso é o que impede a fórmula
+genérica de voltar por engano numa manutenção futura.
 
 `base.test.js` não estava no plano original. Foi acrescentado porque é nas
 primitivas que os erros silenciosos nascem: uma taxa lida como 2,17 em vez de
@@ -262,6 +268,7 @@ Segue as fases do escopo. Cada fase só avança com a anterior verde:
 Fase 4-5    base.test.js e sac.test.js
 Fase 6-7    price.test.js
 Fase 8      encargos.test.js
-Fase 9-10   produtos.test.js
+Fase 9      indexadores.test.js
+Fase 10     produtos.test.js
 Fase 15     equivalencia.test.js
 ```

@@ -23,8 +23,9 @@ em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 | 5 | Testes do SAC | concluída |
 | 6 | Motor PRICE | concluída |
 | 7 | Testes do PRICE | concluída |
-| 8 | Encargos: TAC, IOF, FGI, FAMPE, FUNDEQ, garantias | concluída — 80 passando ao todo |
-| 9–15 | Indexadores, produtos, interface, PWA, equivalência | aguardando |
+| 8 | Encargos: TAC, IOF, FGI, FAMPE, FUNDEQ, garantias | concluída |
+| 9 | Indexadores: INPC, TR, SELIC | concluída — 91 passando ao todo |
+| 10–15 | Produtos, interface, comparador, relatórios, PWA, equivalência | aguardando |
 
 ```
 cd simulador && npm test
@@ -41,6 +42,7 @@ cd simulador && npm test
 | `dados/PARAMETROS_FINANCEIROS.json` | Taxas, prazos, limites e fatores, com unidade explícita |
 | `js/engine/` | Motor: SAC, PRICE, taxas, calendário, arredondamento, erros |
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
+| `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
 | `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |
 | `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |

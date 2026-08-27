@@ -7,9 +7,9 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 8 concluídas. SAC, PRICE e os encargos estão implementados e
-validados contra as células da planilha, valor a valor. Indexadores, produtos e
-interface seguem em `MAPEADO`.
+Fases 1 a 9 concluídas. SAC, PRICE, encargos e indexadores estão implementados
+e validados contra as células da planilha, valor a valor. Produtos e interface
+seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -87,8 +87,10 @@ interface seguem em `MAPEADO`.
 | Encargos | `C53:F62` | FCO: par prioritário / não prioritário | decimal a.a. | `fco.selecionarPorMunicipio()` | `produtos/fco` | MAPEADO |
 | FCO | `C23` | `(1 + anual)^(1/12) − 1` | — | `paraMensal(t, 'mensalComposta')` | `juros` | VALIDADO |
 | Fungetur | `C24` | `(1 + anual)^(22/252) − 1` | — | `paraMensal(t, 'diasUteis')` | `juros` | VALIDADO |
-| Fungetur | `D16` | Indexador rotulado `INPC` na aba, `SELIC` na tabela | decimal a.a. | `indexador` | `indexadores` | ABERTO-09 |
-| FINEP | `D16` | TR | decimal a.a. | `indexador` | `indexadores/tr` | MAPEADO |
+| Fungetur | `D16` | Indexador digitado; rótulo e valor divergem da tabela | decimal a.a. | `resolverIndexador('SELIC', {valor})` | `indexadores/selic` | VALIDADO · ABERTO-09 |
+| FINEP | `D16` | TR digitada; o valor diverge da tabela | decimal a.a. | `resolverIndexador('TR', {valor})` | `indexadores/tr` | VALIDADO · ABERTO-09 |
+| — | — | INPC, sem nenhum valor na planilha | — | `INPC.referencia = null` | `indexadores/inpc` | EXTENSAO · IMPLEMENTADO |
+| — | — | Composição «taxa base + indexador» do item 18 do escopo | — | não implementada; ver ABERTO-09 | `indexadores` | ABERTO-09 |
 | FCO | `O4` | Rótulo diz `TAXA (a.m.)`, valores são anuais | decimal a.a. | unidade explícita nos parâmetros | `data/parametros` | ABERTO-10 |
 | Encargos | `C65:C68` | Cálculo auxiliar de spread, sem rótulo nem uso | decimal | não migrado | — | ABERTO-11 |
 
@@ -246,18 +248,40 @@ foi gerado, de modo que o problema não se reproduz. A divergência contra a
 planilha em prazos longos é esperada e está tratada no plano de testes.
 Aguarda autorização para considerar o comportamento da planilha um defeito.
 
-### ABERTO-09 · Indexador do Fungetur rotulado de dois jeitos
+### ABERTO-09 · Os indexadores divergem entre a aba e a tabela, nas duas linhas
 
-**Regra encontrada.** A aba `Linhas Fungetur` rotula `D16` como `INPC`; a
-`Tabela de Encargos` rotula a mesma coluna como `Taxa SELIC (ao ano)`, com
-13,75%. O valor salvo em `D16` é 10%.
+**Regra encontrada.** Duas famílias usam indexador, e nas duas o valor que a
+aba aplica não é o que a `Tabela de Encargos` traz:
 
-**Observação técnica.** Nenhum dos dois rótulos corresponde ao valor salvo.
+| | Rótulo na aba | Valor na aba | Rótulo na tabela | Valor na tabela |
+|---|---|---|---|---|
+| Fungetur | `INPC` | 10% a.a. | `Taxa SELIC (ao ano)` | 13,75% a.a. |
+| FINEP | `TAXA REFERENCIAL TR` | 1,07% a.a. | `Taxa Referencial (ao ano)` | 1,19% a.a. |
 
-**Possível inconsistência.** Não se sabe qual indexador rege as linhas Fungetur.
+**Observação técnica.** Os dois valores das abas são **digitados à mão**. A
+coluna que existiria para buscar o indexador por linha — `P`, rotulada `SELIC`
+no Fungetur e `TR` no FINEP — está vazia nas duas abas; a única célula com
+fórmula ali é `Linhas FINEP!P7`, que resolve para zero justamente porque as
+células que ela consulta não têm nada. Não há, portanto, nenhuma ligação entre
+a tabela oficial e o número que entra na conta.
 
-**Sugestão.** Confirmar com a área gestora. O aplicativo exige o indexador
-informado e registra qual foi usado. Aguarda autorização.
+**Possível inconsistência.** No Fungetur não se sabe nem qual índice rege a
+linha: a aba diz INPC, a tabela diz Selic, e o valor salvo não é nenhum dos
+dois. No FINEP o nome bate, mas o número não. Em ambos, uma taxa de mercado
+defasada produz simulação plausível e errada, sem sinal nenhum.
+
+**Observação sobre o item 18 do escopo.** Ele descreve a arquitetura como
+«taxa base + indexador = taxa aplicável». **A planilha não faz essa soma.** Nas
+32.580 fórmulas não há uma única que some a taxa fixa com o indexador; onde há
+indexador, ele é um segundo componente de juros, cobrado à parte e ainda
+entrando na base do juro fixo do mesmo período. Somar as duas taxas dá outro
+número — no CASO 005, milhares de reais de diferença já na primeira parcela.
+A soma não foi implementada, e há teste fixando isso.
+
+**Sugestão.** Confirmar com a área gestora qual índice rege o Fungetur e de
+onde o valor vigente deve vir. O aplicativo exige o indexador informado a cada
+simulação, oferece o valor da tabela como sugestão anotada com a origem, e
+guarda qual foi usado. Aguarda autorização.
 
 ### ABERTO-10 · Cabeçalho do FCO diz `a.m.` sobre valores anuais
 

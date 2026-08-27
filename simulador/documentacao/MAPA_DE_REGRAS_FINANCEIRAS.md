@@ -423,7 +423,26 @@ número de parcelas que o prazo pedir. A regra é a fórmula; o limite de linhas
 é acidente de planilha. A consequência para os testes de equivalência está
 registrada em `PLANO_DE_TESTES.md`.
 
-## 11. Blocos fora do escopo do simulador
+## 11. Indexadores
+
+Duas famílias usam indexador: Fungetur e FINEP. Em nenhuma delas ele é somado à
+taxa base — é um segundo componente de juros, com a fórmula da seção 3.2.
+
+O valor não é buscado em lugar nenhum. As abas têm uma coluna reservada para
+ele — `P`, rotulada `SELIC` no Fungetur e `TR` no FINEP —, mas ela está vazia
+nas duas; a única célula com fórmula ali é `Linhas FINEP!P7`, que resolve para
+zero porque as células que consulta não têm nada. O número que entra na conta é
+digitado numa célula única, `D16`, e não confere com a `Tabela de Encargos`:
+
+| | Rótulo na aba | Valor na aba | Rótulo na tabela | Valor na tabela |
+|---|---|---|---|---|
+| Fungetur | `INPC` | 10% a.a. | `Taxa SELIC (ao ano)` | 13,75% a.a. |
+| FINEP | `TAXA REFERENCIAL TR` | 1,07% a.a. | `Taxa Referencial (ao ano)` | 1,19% a.a. |
+
+O INPC aparece uma única vez em toda a planilha, e só como rótulo: não há valor
+de INPC em lugar nenhum do arquivo. Ver ABERTO-09.
+
+## 12. Blocos fora do escopo do simulador
 
 As colunas `AL`–`AR` das abas mensais e `BB`–`BD` das abas de FCO calculam
 receita, despesa e margem da operação para a instituição — não são encargos do
@@ -431,7 +450,7 @@ cliente e não entram no cronograma. Ficam registradas aqui para que não sejam
 confundidas com encargos, e não serão migradas ao MVP.
 
 
-## 12. Arredondamento
+## 13. Arredondamento
 
 **A planilha não arredonda em momento algum do cálculo.** Não há `ARRED`,
 `ROUND`, `TRUNC`, `TETO` nem `MOEDA` em nenhuma das 32.580 fórmulas; as seis

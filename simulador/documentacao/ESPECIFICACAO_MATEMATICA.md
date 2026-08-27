@@ -144,6 +144,14 @@ O juro do indexador entra na base do juro fixo do mesmo período, e não é
 somado ao saldo. É a regra da planilha, e está registrada como observação no
 mapa de regras.
 
+**A taxa base e o indexador não são somados.** O item 18 do escopo descreve a
+arquitetura como «taxa base + indexador = taxa aplicável», mas nenhuma das
+32.580 fórmulas da planilha faz essa soma: os dois são componentes separados,
+como acima. Adotar a soma trocaria a regra existente por uma genérica, e daria
+outro número — no CASO 005, milhares de reais de diferença já na primeira
+parcela. Por isso `composicao` vale `componenteSeparado` nos três indexadores e
+não há modo de soma implementado.
+
 ## 5. Motor PRICE
 
 Não existe cronograma PRICE na planilha. O motor implementa o modelo canônico,
