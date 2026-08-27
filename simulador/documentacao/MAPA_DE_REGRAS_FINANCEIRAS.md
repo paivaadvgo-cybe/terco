@@ -147,7 +147,22 @@ amortizacao(n) = valorFinanciado / (prazo − carência) × p
 
 Nos demais meses não há pagamento. A taxa mensal vem da taxa anual por
 `(1 + taxaAnual)^(1/12) − 1`. A planilha valida que carência e prazo sejam
-múltiplos inteiros do período (`AL21`, `AL22`).
+múltiplos inteiros do período (`AL21`, `AL22`) — e é essa validação que revela
+o ritmo: se a carência precisa ser múltipla do período, é porque o pagamento
+periódico já corre durante ela, pagando só o juro acumulado.
+
+> **Inconsistência registrada.** A periodicidade chega ao cronograma pela
+> metade. A coluna de juros a consulta, mas a **coluna de amortização não**:
+> `D` divide sempre por mês, `E$23/(prazo − carência)`, e as colunas `AU:AZ`,
+> que calculam a amortização acumulada do período, só são lidas na primeira
+> linha do cronograma. Escolher pagamento semestral produz juros semestrais e
+> amortização mensal.
+>
+> Há ainda um segundo seletor, `AN18`, sem rótulo na planilha. Quando
+> verdadeiro, os juros são periódicos durante a carência e voltam a ser
+> mensais depois dela; quando falso, são periódicos o tempo todo. No estado
+> salvo `AN18` é verdadeiro e `AN17` é 1, de modo que os dois caminhos
+> coincidem e a diferença não aparece. Ver ABERTO-13.
 
 ### 3.4 Capitalização na carência (Produtor Empreendedor, linha 2)
 

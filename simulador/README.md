@@ -7,17 +7,24 @@ referência de validação.
 
 ## Estado
 
-**Fase 1 concluída — auditoria.** Nenhuma linha do motor foi escrita ainda, e
-isso é deliberado: o escopo determina compreender e documentar antes de
-implementar, e a auditoria encontrou doze pontos que não podem virar código sem
-decisão. Estão em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
+**Fases 1 a 5 concluídas.** O motor SAC reproduz a planilha valor a valor nos
+seis casos âncora — inclusive o resíduo de R$ 389,72 que a troca de base da
+amortização provoca, e o ruído de ponto flutuante junto. Treze pontos da
+planilha não podem virar código sem decisão; estão em
+`documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 
 | Fase | Entrega | Estado |
 |---|---|---|
 | 1 | Auditoria da planilha | concluída |
 | 2 | Mapa de regras | concluída |
 | 3 | Banco de parâmetros | concluída |
-| 4–15 | Motor, encargos, produtos, interface, PWA, equivalência | aguardando |
+| 4 | Motor SAC | concluída |
+| 5 | Testes do SAC | concluída — 34 passando |
+| 6–15 | PRICE, encargos, indexadores, produtos, interface, PWA, equivalência | aguardando |
+
+```
+cd simulador && npm test
+```
 
 ## Onde está o quê
 
@@ -28,6 +35,8 @@ decisão. Estão em `documentacao/MATRIZ_EXCEL_APLICATIVO.md`, na seção 7.
 | `documentacao/MATRIZ_EXCEL_APLICATIVO.md` | Cada regra, com origem, destino e status |
 | `documentacao/PLANO_DE_TESTES.md` | Casos de teste e âncoras extraídas da planilha |
 | `dados/PARAMETROS_FINANCEIROS.json` | Taxas, prazos, limites e fatores, com unidade explícita |
+| `js/engine/` | Motor: SAC, taxas, calendário, arredondamento, erros |
+| `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |
 | `ferramentas/extrair_parametros.py` | Gera o JSON de parâmetros a partir da planilha |
 | `referencia/` | A planilha, versionada |

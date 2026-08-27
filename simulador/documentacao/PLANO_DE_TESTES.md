@@ -7,12 +7,18 @@ quando os casos desta lista passam.
 
 ```
 simulador/tests/
+├── base.test.js           Arredondamento, unidade de taxa e calendário
 ├── sac.test.js            SAC nas suas quatro variantes
 ├── price.test.js          PRICE, incluindo a âncora AL18
 ├── encargos.test.js       TAC, IOF, FGI, FAMPE, FUNDEQ, aval, alienação
 ├── produtos.test.js       Cada linha de crédito, com os seus limites
 └── equivalencia.test.js   Planilha × aplicativo, valor a valor
 ```
+
+`base.test.js` não estava no plano original. Foi acrescentado porque é nas
+primitivas que os erros silenciosos nascem: uma taxa lida como 2,17 em vez de
+0,0217 erra por cem vezes sem dar sinal, e sai mais barato pegar isso ali do
+que dentro de um cronograma de duzentas parcelas.
 
 Sem dependência externa: `node --test`, que já vem no Node 18 e adiante. O
 aplicativo é estático e não tem etapa de build; os testes rodam com
@@ -251,7 +257,7 @@ Fora essas duas, qualquer divergência reprova.
 Segue as fases do escopo. Cada fase só avança com a anterior verde:
 
 ```
-Fase 4-5    sac.test.js
+Fase 4-5    base.test.js e sac.test.js
 Fase 6-7    price.test.js
 Fase 8      encargos.test.js
 Fase 9-10   produtos.test.js

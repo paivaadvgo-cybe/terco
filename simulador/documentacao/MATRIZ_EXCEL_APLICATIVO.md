@@ -7,8 +7,9 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Na data desta versão, a Fase 1 está concluída e nenhuma regra está
-implementada: todo o quadro está em `MAPEADO`, `ABERTO` ou `EXTENSAO`.
+Fases 1 a 5 concluídas. O motor SAC está implementado e validado contra os
+seis casos âncora extraídos da planilha, valor a valor; encargos, indexadores,
+produtos e interface seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -28,20 +29,20 @@ implementada: todo o quadro está em `MAPEADO`, `ABERTO` ou `EXTENSAO`.
 
 | Aba | Campo Excel | Regra identificada | Unidade | Regra JavaScript | Motor | Status |
 |---|---|---|---|---|---|---|
-| todas | `A24:A…` | Contador, para quando passa do prazo | inteiro | laço até `prazo` | `fluxo` | MAPEADO |
-| todas | `B24:B…` | Regime: carência até `B16`, depois amortização | texto | `parcela.regime` | `fluxo` | MAPEADO |
-| mensais | `C24:C…` | `juros = saldoAnterior × taxa` | R$ | `sac.juros()` | `sac` | MAPEADO |
-| mensais | `D24:D…` | `0` na carência; senão `base/(prazo−carência)` | R$ | `sac.amortizacao()` | `sac` | ABERTO-07 |
-| mensais | `E24:E…` | `saldo = saldoAnterior − amortizacao` | R$ | `sac.saldo()` | `sac` | MAPEADO |
-| mensais | `F24:F…` | `prestacao = amortizacao + juros` | R$ | `sac.prestacao()` | `sac` | MAPEADO |
-| Fungetur | `C24:C…` | `((1+fixa)^(22/252)−1) × (saldo + jurosIndexador)` | R$ | `sacIndexado.jurosFixo()` | `sac` | MAPEADO |
-| Fungetur | `D24:D…` | `((1+SELIC)^(22/252)−1) × saldo` | R$ | `sacIndexado.jurosIndexador()` | `indexadores/selic` | MAPEADO |
-| FINEP | `C24`, `D24` | idem, com TR no lugar da SELIC | R$ | idem | `indexadores/tr` | MAPEADO |
-| FCO | `AN:AR` | Juros por periodicidade: `saldo(n−p) × ((1+i)^p − 1)` | R$ | `sacPeriodico.juros()` | `sac` | MAPEADO |
-| FCO | `AV:AZ` | Amortização por periodicidade: `base/(prazo−car) × p` | R$ | `sacPeriodico.amortizacao()` | `sac` | MAPEADO |
-| FCO | `AL21`, `AL22` | Prazo e carência múltiplos inteiros do período | booleano | `validarPeriodicidade()` | `sac` | MAPEADO |
-| Produtor | `BG24:BG…` | Carência capitaliza: `saldo × (1+i)`; nada é pago | R$ | `sac.carenciaCapitalizada()` | `sac` | MAPEADO |
-| Produtor | `BH23` | Saldo ao fim da carência, por `XLOOKUP` | R$ | `saldoAoFimCarencia` | `sac` | MAPEADO |
+| todas | `A24:A…` | Contador, para quando passa do prazo | inteiro | laço até `prazo` | `sac` | VALIDADO |
+| todas | `B24:B…` | Regime: carência até `B16`, depois amortização | texto | `parcela.regime` | `sac` | VALIDADO |
+| mensais | `C24:C…` | `juros = saldoAnterior × taxa` | R$ | `gerarCronogramaSAC` | `sac` | VALIDADO |
+| mensais | `D24:D…` | `0` na carência; senão `base/(prazo−carência)` | R$ | `baseAmortizacao: 'planilha'` | `sac` | VALIDADO · ABERTO-07 |
+| mensais | `E24:E…` | `saldo = saldoAnterior − amortizacao` | R$ | `gerarCronogramaSAC` | `sac` | VALIDADO |
+| mensais | `F24:F…` | `prestacao = amortizacao + juros` | R$ | `gerarCronogramaSAC` | `sac` | VALIDADO |
+| Fungetur | `C24:C…` | `((1+fixa)^(22/252)−1) × (saldo + jurosIndexador)` | R$ | `convencaoTaxa: 'diasUteis'` | `sac` | VALIDADO |
+| Fungetur | `D24:D…` | `((1+SELIC)^(22/252)−1) × saldo` | R$ | `taxaIndexador` | `sac` | VALIDADO |
+| FINEP | `C24`, `D24` | idem, com TR no lugar da SELIC | R$ | idem | `sac` | VALIDADO |
+| FCO | `AN:AR` | Juros por periodicidade: `saldo(n−p) × ((1+i)^p − 1)` | R$ | `periodicidade` | `sac` | IMPLEMENTADO · ABERTO-13 |
+| FCO | `AV:AZ` | Amortização por periodicidade: `base/(prazo−car) × p` | R$ | `periodicidade` | `sac` | IMPLEMENTADO · ABERTO-13 |
+| FCO | `AL21`, `AL22` | Prazo e carência múltiplos inteiros do período | booleano | `PERIODICIDADE_INCOMPATIVEL` | `sac` | IMPLEMENTADO |
+| Produtor | `BG24:BG…` | Carência capitaliza: `saldo × (1+i)`; nada é pago | R$ | `tratamentoCarencia: 'capitalizados'` | `sac` | VALIDADO |
+| Produtor | `BH23` | Saldo ao fim da carência, por `XLOOKUP` | R$ | `premissas.saldoAoFimDaCarencia` | `sac` | VALIDADO |
 | todas | `C22`, `D22`, `F22` | Totais por soma de faixa fixa de linhas | R$ | soma do cronograma gerado | `fluxo` | ABERTO-08 |
 
 ## 3. Encargos
@@ -57,7 +58,7 @@ implementada: todo o quadro está em `MAPEADO`, `ABERTO` ou `EXTENSAO`.
 | todas | `AF24` | Simples se valor ≤ 30.000; senão normal; zero se não incide | R$ | `iof.total()` | `encargos/iof` | MAPEADO |
 | todas | `F16` | IOF financiado multiplica por `1,03` | R$ | `iof.aplicarFinanciamento()` | `encargos/iof` | MAPEADO |
 | todas | `AD30:AD…` | Base do IOF é o valor **solicitado** | R$ | `iof.base` | `encargos/iof` | MAPEADO |
-| todas | `AB30:AB…` | Datas de trinta em trinta dias | data | `calendario.vencimentos()` | `calendario` | MAPEADO |
+| todas | `AB30:AB…` | Datas de trinta em trinta dias | data | `gerarVencimentos(d, n, '30dias')` | `calendario` | IMPLEMENTADO |
 
 ## 4. Garantias
 
@@ -73,7 +74,7 @@ implementada: todo o quadro está em `MAPEADO`, `ABERTO` ou `EXTENSAO`.
 | todas | `M23` | FUNDEQ: fórmula idêntica à do FAMPE | R$ | `calcularFUNDEQ()` | `encargos/garantias` | MAPEADO |
 | todas | `M24` | Seleção da modalidade por `L24` | — | `garantias.selecionar()` | `encargos/garantias` | MAPEADO |
 | todas | `E19`/`F19` | Percentual garantido, mínimo 0,2 | decimal | `entrada.percentualGarantido` | `encargos/garantias` | MAPEADO |
-| todas | `B19` | `max(maiorPrestacao × 3; 2.424,00)` | R$ | `calcularRendaParaAval()` | `encargos/garantias` | MAPEADO |
+| todas | `B19` | `max(maiorPrestacao × 3; 2.424,00)` | R$ | `totais.maiorParcela × 3` | `encargos/garantias` | MAPEADO |
 | todas | `D19` | `(valor − parteGarantida) × 1,5 / 0,7` | R$ | `calcularAlienacaoImovel()` | `encargos/garantias` | MAPEADO |
 
 ## 5. Taxas e indexadores
@@ -81,11 +82,11 @@ implementada: todo o quadro está em `MAPEADO`, `ABERTO` ou `EXTENSAO`.
 | Aba | Campo Excel | Regra identificada | Unidade | Regra JavaScript | Motor | Status |
 |---|---|---|---|---|---|---|
 | Encargos | `B5:I62` | Tabela oficial, vigência 16/12/2024 | mista | `PARAMETROS_FINANCEIROS.json` | `data/parametros` | MAPEADO |
-| Encargos | `E5:E17` | Bônus por `taxaCheia × 0,77` — 13 linhas apenas | decimal | `bonus: {tipo:"fator", fator:0.77}` | `juros` | MAPEADO |
-| Encargos | `E20:E24` | Transportes e Microcrédito: bônus tabelado próprio | decimal | `bonus: {tipo:"tabelado"}` | `juros` | MAPEADO |
+| Encargos | `E5:E17` | Bônus por `taxaCheia × 0,77` — 13 linhas apenas | decimal | `aplicarBonus(t, {tipo:'fator'})` | `juros` | IMPLEMENTADO |
+| Encargos | `E20:E24` | Transportes e Microcrédito: bônus tabelado próprio | decimal | `aplicarBonus(t, {tipo:'tabelado'})` | `juros` | IMPLEMENTADO |
 | Encargos | `C53:F62` | FCO: par prioritário / não prioritário | decimal a.a. | `fco.selecionarPorMunicipio()` | `produtos/fco` | MAPEADO |
-| FCO | `C23` | `(1 + anual)^(1/12) − 1` | — | `anualParaMensal()` | `juros` | MAPEADO |
-| Fungetur | `C24` | `(1 + anual)^(22/252) − 1` | — | `anualParaPeriodo()` | `juros` | MAPEADO |
+| FCO | `C23` | `(1 + anual)^(1/12) − 1` | — | `paraMensal(t, 'mensalComposta')` | `juros` | VALIDADO |
+| Fungetur | `C24` | `(1 + anual)^(22/252) − 1` | — | `paraMensal(t, 'diasUteis')` | `juros` | VALIDADO |
 | Fungetur | `D16` | Indexador rotulado `INPC` na aba, `SELIC` na tabela | decimal a.a. | `indexador` | `indexadores` | ABERTO-09 |
 | FINEP | `D16` | TR | decimal a.a. | `indexador` | `indexadores/tr` | MAPEADO |
 | FCO | `O4` | Rótulo diz `TAXA (a.m.)`, valores são anuais | decimal a.a. | unidade explícita nos parâmetros | `data/parametros` | ABERTO-10 |
@@ -283,3 +284,27 @@ perdido, provavelmente por exclusão de linha ou coluna.
 **Sugestão.** Reconstruir a referência a partir da tabela `N:V` da própria aba.
 Como o item 39 do escopo determina, a regra **não** foi implementada por
 dedução. O aplicativo devolve `REGRA_EM_ABERTO`. Aguarda autorização.
+
+### ABERTO-13 · A periodicidade do FCO chega ao cronograma pela metade
+
+**Regra encontrada.** O FCO tem um seletor de periodicidade (`AN17`) com cinco
+opções — mensal, bimestral, trimestral, semestral e anual — e duas famílias de
+colunas que a implementam: `AN:AR` para os juros e `AU:AZ` para a amortização.
+
+**Observação técnica.** A coluna de juros do cronograma consulta `AN:AR`, mas a
+coluna de amortização **não consulta `AU:AZ`**: `D` divide sempre por mês, e
+`AU:AZ` só é lida na primeira linha. Existe ainda um segundo seletor sem
+rótulo, `AN18`: verdadeiro faz os juros serem periódicos na carência e mensais
+depois; falso os mantém periódicos o tempo todo. No estado salvo `AN17` é 1,
+de modo que todos os caminhos coincidem e nada disso aparece.
+
+**Possível inconsistência.** Escolher pagamento semestral produziria juros
+semestrais com amortização mensal — um cronograma que não corresponde a nenhum
+contrato.
+
+**Sugestão.** Ligar a amortização periódica à coluna `D` e eliminar `AN18`, ou
+esclarecer o que ele representa. Enquanto isso, o motor implementa o modelo
+coerente descrito na especificação — pagamento a cada `p` meses, contado desde
+a liberação, com juros e amortização no mesmo ritmo — e as linhas de FCO são
+simuladas com periodicidade mensal, que é o estado salvo e o único caminho que
+a planilha exercita. Aguarda autorização.
