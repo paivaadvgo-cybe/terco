@@ -79,6 +79,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |
 | `ferramentas/extrair_parametros.py` | Gera o JSON de parâmetros a partir da planilha |
 | `ferramentas/gerar_vigentes.mjs` | Recria o conjunto vigente a partir da base extraída |
+| `ferramentas/versionar_casca.mjs` | Carimba na versão do cache o resumo dos arquivos guardados |
 | `referencia/` | A planilha, versionada |
 
 ## Reproduzir a auditoria
@@ -125,6 +126,20 @@ O aplicativo calcula com o vigente. Os testes de equivalência provam o motor
 contra a base extraída — uma taxa alterada por norma não pode derrubar a prova
 de que o motor reproduz a planilha, porque são coisas distintas. A diferença
 entre os dois arquivos é, exatamente, tudo que a administração alterou.
+
+## Publicar uma versão nova
+
+O service worker serve os arquivos **cache primeiro**, e por isso o nome do
+cache precisa mudar sempre que qualquer arquivo guardado mudar — senão a versão
+publicada não chega a quem já visitou o site. Isso deixou de depender de
+memória: o nome é o resumo do próprio conteúdo, e o teste acusa a divergência.
+
+```
+node ferramentas/versionar_casca.mjs --gravar
+```
+
+Rode antes de publicar sempre que tiver mexido em algo da casca. Se esquecer,
+`npm test` reprova com o comando a rodar.
 
 ## Sem internet
 
