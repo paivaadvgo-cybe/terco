@@ -10,14 +10,8 @@
  * 38 do escopo chama de «Indexador não informado».
  */
 
-export const INPC = Object.freeze({
-  codigo: 'INPC',
-  nome: 'Índice Nacional de Preços ao Consumidor',
-  fonte: 'IBGE',
-  unidade: 'anual',
-  composicao: 'componenteSeparado',
-  descricao: 'Índice de inflação medido pelo IBGE para famílias de renda baixa.',
-  referencia: null,
-});
+import { PARAMETROS } from './../data/parametros.js';
+
+export const INPC = PARAMETROS.indexadores.INPC;
 
 export default INPC;

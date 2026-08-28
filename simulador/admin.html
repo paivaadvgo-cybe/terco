@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Painel de administração dos parâmetros do simulador da GoiásFomento.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#0f3d2e">
+<meta name="robots" content="noindex, nofollow">
+<title>Parâmetros — Administração · Simulador GoiásFomento</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%238a4b12'/%3E%3Cpath d='M8 22V10h3.4v9.2H18V22H8zm12.6 0V10H24v12h-3.4z' fill='%23fff'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin">
+
+<header class="topo">
+  <div class="marca">
+    <p class="produto">Parâmetros de crédito</p>
+    <p class="instituicao">GoiásFomento · administração</p>
+  </div>
+  <nav class="menu" aria-label="Seções"></nav>
+</header>
+
+<p id="erro" class="erro" role="alert" hidden></p>
+
+<main id="conteudo"></main>
+
+<footer class="rodape">
+  <p>Esta página altera apenas os parâmetros. As regras de cálculo de cada
+    família de produto — sistema de amortização, tratamento da carência,
+    convenção da taxa — estão no código, com teste, e não se mudam por
+    formulário.</p>
+  <p><a href="./">Voltar ao simulador</a></p>
+</footer>
+
+<script type="module" src="js/admin/painel.js"></script>
+</body>
+</html>

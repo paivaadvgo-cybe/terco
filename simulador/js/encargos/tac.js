@@ -12,20 +12,16 @@
  */
 
 import { erro, exigirNumeroFinito } from './../engine/erros.js';
+import { PARAMETROS } from './../data/parametros.js';
 
 /**
  * A escada padrão, como está em `Linhas Investimento!F15` e em mais onze
  * células. `ate` é o limite superior inclusivo da faixa; `null` é a última.
  */
-export const ESCADA_PADRAO = Object.freeze([
-  Object.freeze({ ate: 3000, tipo: 'fixo', valor: 50 }),
-  Object.freeze({ ate: 21000, tipo: 'percentual', taxa: 0.03, teto: 420 }),
-  Object.freeze({ ate: 100000, tipo: 'percentual', taxa: 0.02 }),
-  Object.freeze({ ate: null, tipo: 'fixoMaisPercentual', fixo: 2000, taxa: 0.005 }),
-]);
+export const ESCADA_PADRAO = PARAMETROS.encargos.tac.escadaPadrao;
 
 /** O fator que só aparece em `Linhas Giro Puro`. */
-export const FATOR_GIRO_PURO = 1.015;
+export const FATOR_GIRO_PURO = PARAMETROS.encargos.tac.fatorGiroPuro;
 
 export const VARIANTES = {
   padrao: 'A escada como doze das treze células da planilha a aplicam',
@@ -60,18 +56,57 @@ function aplicarFaixa(faixa, base) {
  * próprio teste pretende impor. Escrever isso como um caso geral esconderia a
  * assimetria; escrito assim, ela fica à vista.
  */
-function variantéGiroPuro(valor, financiada) {
-  const f = FATOR_GIRO_PURO;
+/**
+ * A forma que `Linhas Giro Puro!F15` escreve, com o fator 1,015 — ver ABERTO-02.
+ *
+ * O fator não entra nas quatro faixas do mesmo jeito, e não entra igual quando
+ * a TAC é financiada e quando não é: na terceira faixa não financiada ele
+ * simplesmente não aparece, e o teto da segunda é testado sobre uma base e
+ * cobrado sobre outra. Essa irregularidade é a inconsistência registrada, e
+ * está reproduzida literalmente.
+ *
+ * O que mudou em relação à transcrição original é só a origem dos números: as
+ * faixas vêm da escada, não de literais. Uma escada alterada pela
+ * administração precisa valer aqui também — deixar estes números fixos faria a
+ * variante continuar cobrando a tabela velha, calada.
+ */
+function variantéGiroPuro(valor, financiada, escada, f) {
+  const forma = conferirFormaDaEscada(escada);
+  const [t1, t2, t3, t4] = forma;
+
   if (!financiada) {
-    if (valor <= 3000) return 50;
-    if (valor <= 21000) return valor * 0.03 <= 420 ? valor * f * 0.03 : 420;
-    if (valor <= 100000) return valor * 0.02;
-    return 2000 + valor * 0.005;
+    if (valor <= t1.ate) return t1.valor;
+    if (valor <= t2.ate) return valor * t2.taxa <= t2.teto ? valor * f * t2.taxa : t2.teto;
+    if (valor <= t3.ate) return valor * t3.taxa;
+    return t4.fixo + valor * t4.taxa;
   }
-  if (valor * f <= 3000) return 50;
-  if (valor * f <= 21000) return valor * f * 0.03 <= 420 ? valor * f * 0.03 : 420;
-  if (valor <= 100000) return valor * f * 0.02;
-  return 2000 + valor * f * 0.005;
+  if (valor * f <= t1.ate) return t1.valor;
+  if (valor * f <= t2.ate) return valor * f * t2.taxa <= t2.teto ? valor * f * t2.taxa : t2.teto;
+  if (valor <= t3.ate) return valor * f * t3.taxa;
+  return t4.fixo + valor * f * t4.taxa;
+}
+
+/**
+ * A variante de Giro Puro só sabe escrever a escada de quatro faixas na forma
+ * exata da planilha. Se a administração publicar outra forma — uma faixa a
+ * mais, um tipo diferente —, a variante não tem como reproduzir a assimetria,
+ * e recusar é a única resposta honesta: calcular assim mesmo devolveria um
+ * número plausível e sem regra por trás.
+ */
+function conferirFormaDaEscada(escada) {
+  const tipos = ['fixo', 'percentual', 'percentual', 'fixoMaisPercentual'];
+  const compativel = escada.length === tipos.length
+    && escada.every((faixa, i) => faixa.tipo === tipos[i])
+    && escada[1].teto !== undefined
+    && escada[3].ate === null;
+  if (!compativel) {
+    erro('PARAMETRO_INCOMPATIVEL',
+      'A variante de TAC de Linhas Giro Puro só reproduz a escada de quatro faixas '
+      + '(fixo, percentual com teto, percentual, fixo mais percentual). A escada vigente '
+      + 'tem outra forma, e a assimetria do fator não tem como ser aplicada a ela.',
+      { escada });
+  }
+  return escada;
 }
 
 /**
@@ -84,7 +119,10 @@ function variantéGiroPuro(valor, financiada) {
  * @param {Array} [opcoes.escada]       Substitui a escada padrão.
  */
 export function calcularTAC(valor, opcoes = {}) {
-  const { variante = 'padrao', financiada = false, escada = ESCADA_PADRAO } = opcoes;
+  const {
+    variante = 'padrao', financiada = false,
+    escada = ESCADA_PADRAO, fatorGiroPuro = FATOR_GIRO_PURO,
+  } = opcoes;
   exigirNumeroFinito(valor, 'VALOR_INVALIDO', 'valor para a TAC');
   if (valor < 0) {
     erro('VALOR_INVALIDO', 'A TAC não incide sobre valor negativo.', { valor });
@@ -92,13 +130,16 @@ export function calcularTAC(valor, opcoes = {}) {
   if (!(variante in VARIANTES)) {
     erro('PARAMETRO_INCOMPATIVEL', `Variante de TAC desconhecida: "${variante}".`, { variante });
   }
-  if (variante === 'giroPuro') return variantéGiroPuro(valor, financiada);
+  if (variante === 'giroPuro') return variantéGiroPuro(valor, financiada, escada, fatorGiroPuro);
   return aplicarFaixa(faixaDe(valor, escada), valor);
 }
 
 /** Memória de cálculo: qual faixa pegou e por quê. */
 export function explicarTAC(valor, opcoes = {}) {
-  const { variante = 'padrao', financiada = false, escada = ESCADA_PADRAO } = opcoes;
+  const {
+    variante = 'padrao', financiada = false,
+    escada = ESCADA_PADRAO, fatorGiroPuro = FATOR_GIRO_PURO,
+  } = opcoes;
   const faixa = faixaDe(valor, escada);
   const valorCalculado = calcularTAC(valor, opcoes);
   const limite = faixa.ate === null ? 'acima da última faixa' : `até ${faixa.ate}`;
@@ -108,7 +149,7 @@ export function explicarTAC(valor, opcoes = {}) {
     financiada,
     faixa: { ...faixa },
     descricao: `Valor de ${valor} cai na faixa ${limite}, do tipo ${faixa.tipo}`
-      + (variante === 'giroPuro' ? `, com o fator ${FATOR_GIRO_PURO} de Linhas Giro Puro` : '')
+      + (variante === 'giroPuro' ? `, com o fator ${fatorGiroPuro} de Linhas Giro Puro` : '')
       + `. TAC = ${valorCalculado}.`,
   };
 }

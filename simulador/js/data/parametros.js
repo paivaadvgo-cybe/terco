@@ -2126,6 +2126,102 @@ export const PARAMETROS = Object.freeze(
         }
       ]
     }
+  },
+  "encargos": {
+    "iof": {
+      "aliquotaAdicional": 0.0038,
+      "aliquotaDiariaNormal": 4.1e-05,
+      "aliquotaDiariaSimples": 1.37e-05,
+      "limiteDeDias": 365,
+      "tetoParaAliquotaSimples": 30000,
+      "fatorFinanciamento": 1.03,
+      "origem": "'Linhas Investimento'!AE18 e a coluna AE das demais abas"
+    },
+    "tac": {
+      "escadaPadrao": [
+        {
+          "ate": 3000,
+          "tipo": "fixo",
+          "valor": 50
+        },
+        {
+          "ate": 21000,
+          "tipo": "percentual",
+          "taxa": 0.03,
+          "teto": 420
+        },
+        {
+          "ate": 100000,
+          "tipo": "percentual",
+          "taxa": 0.02
+        },
+        {
+          "ate": null,
+          "tipo": "fixoMaisPercentual",
+          "fixo": 2000,
+          "taxa": 0.005
+        }
+      ],
+      "fatorGiroPuro": 1.015,
+      "origem": "'Linhas Investimento'!F15 e mais onze células iguais; o fator 1,015 só em 'Linhas Giro Puro'!F15 — ver ABERTO-02"
+    },
+    "fampe": {
+      "fator": 0.001,
+      "origem": "'Linhas Giro Puro'!M21, 'Linhas Investimento'!F17 e 'Linhas Transportes'!F17"
+    },
+    "fundeq": {
+      "fator": 0.001,
+      "origem": "mesma fórmula do FAMPE; a planilha não distingue as duas"
+    },
+    "aval": {
+      "multiplicador": 3,
+      "pisoDeRenda": 2424,
+      "origem": "'Linhas Investimento'!F21"
+    },
+    "alienacao": {
+      "cobertura": 1.5,
+      "percentualMaximo": 0.7,
+      "origem": "'Linhas Investimento'!F23"
+    }
+  },
+  "indexadores": {
+    "SELIC": {
+      "codigo": "SELIC",
+      "nome": "Taxa Selic",
+      "fonte": "Banco Central do Brasil",
+      "unidade": "anual",
+      "composicao": "componenteSeparado",
+      "descricao": "Taxa básica de juros da economia, definida pelo Copom.",
+      "referencia": {
+        "valor": 0.1375,
+        "unidade": "anual",
+        "origem": "'Tabela de Encargos'!E37:E40",
+        "vigencia": "2024-12-16"
+      }
+    },
+    "TR": {
+      "codigo": "TR",
+      "nome": "Taxa Referencial",
+      "fonte": "Banco Central do Brasil",
+      "unidade": "anual",
+      "composicao": "componenteSeparado",
+      "descricao": "Taxa Referencial, calculada a partir da remuneração dos CDB/RDB.",
+      "referencia": {
+        "valor": 0.0119,
+        "unidade": "anual",
+        "origem": "'Tabela de Encargos'!E43:E49",
+        "vigencia": "2024-12-16"
+      }
+    },
+    "INPC": {
+      "codigo": "INPC",
+      "nome": "Índice Nacional de Preços ao Consumidor",
+      "fonte": "IBGE",
+      "unidade": "anual",
+      "composicao": "componenteSeparado",
+      "descricao": "Índice de inflação medido pelo IBGE para famílias de renda baixa.",
+      "referencia": null
+    }
   }
 }
 );

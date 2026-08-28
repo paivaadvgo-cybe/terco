@@ -38,6 +38,7 @@ const CASCA = [
   './icones/icone-mascara-512.png',
   './js/app.js',
   './js/data/parametros.js',
+  './js/data/parametros-vigentes.js',
   './js/encargos/fampe.js',
   './js/encargos/fgi.js',
   './js/encargos/garantias.js',

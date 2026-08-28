@@ -25,6 +25,25 @@ const FORA_DO_APLICATIVO = ['tests', 'documentacao', 'dados', 'ferramentas', 're
 /** Arquivos servidos, mas nunca cacheados por si mesmos. */
 const NAO_CACHEAVEIS = ['sw.js', 'package.json'];
 
+/**
+ * O painel de administração fica de fora da casca de propósito.
+ *
+ * Ele é usado por uma pessoa, algumas vezes por ano, e sempre com internet —
+ * publicar exige rede. Guardá-lo faria todo visitante do simulador baixar uma
+ * página que nunca vai abrir. A lista é explícita, e o teste seguinte exige
+ * que cada arquivo dela exista: assim a exceção não vira o lugar onde módulos
+ * esquecidos se escondem.
+ */
+const FORA_DA_CASCA = [
+  './admin.html',
+  './js/admin/esquema.js',
+  './js/admin/validar.js',
+  './js/admin/diferenca.js',
+  './js/admin/serializar.js',
+  './js/admin/painel.js',
+  './css/admin.css',
+];
+
 function arquivosDoAplicativo(diretorio = '', encontrados = []) {
   for (const entrada of fs.readdirSync(path.join(raiz, diretorio), { withFileTypes: true })) {
     const relativo = path.posix.join(diretorio, entrada.name);
@@ -47,7 +66,7 @@ test('a casca do service worker cobre todos os arquivos do aplicativo', () => {
   const casca = cascaDoServiceWorker();
   const emDisco = arquivosDoAplicativo();
 
-  const ausentes = emDisco.filter((a) => !casca.includes(a));
+  const ausentes = emDisco.filter((a) => !casca.includes(a) && !FORA_DA_CASCA.includes(a));
   assert.deepEqual(ausentes, [],
     'estes arquivos existem mas não seriam guardados para uso sem internet');
 
@@ -57,6 +76,17 @@ test('a casca do service worker cobre todos os arquivos do aplicativo', () => {
     .filter((a) => a !== './')
     .filter((a) => !fs.existsSync(path.join(raiz, a)));
   assert.deepEqual(fantasmas, [], 'a casca lista arquivos que não existem');
+});
+
+test('o que ficou de fora da casca existe, e não é o aplicativo se escondendo', () => {
+  for (const arquivo of FORA_DA_CASCA) {
+    assert.ok(fs.existsSync(path.join(raiz, arquivo)),
+      `${arquivo} está dispensado da casca mas não existe; ou foi removido, ou a lista mente`);
+  }
+  // E o inverso: nada da lista pode estar na casca, ou a dispensa seria falsa.
+  const casca = cascaDoServiceWorker();
+  const contradicoes = FORA_DA_CASCA.filter((a) => casca.includes(a));
+  assert.deepEqual(contradicoes, [], 'listados como dispensados e mesmo assim guardados');
 });
 
 test('a casca inclui a raiz e o documento, que são endereços distintos', () => {

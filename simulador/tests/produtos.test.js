@@ -16,6 +16,7 @@ import {
   PRODUTOS, listarProdutos, listarLinhas, obterLinha, simular, VERSAO_DO_MOTOR,
 } from '../js/produtos/produtos.js';
 import { PARAMETROS } from '../js/data/parametros.js';
+import { VIGENTES } from '../js/data/parametros-vigentes.js';
 import { ErroDeSimulacao } from '../js/engine/erros.js';
 
 const perto = (obtido, esperado, rotulo, tolerancia = 1e-9) => assert.ok(
@@ -160,7 +161,10 @@ test('toda simulação válida devolve números finitos e o modelo do item 26', 
       for (const campo of ['valorFinanciado', 'tac', 'iof', 'totalPago', 'totalJuros']) {
         assert.ok(Number.isFinite(s[campo]), `${rotulo}: ${campo} = ${s[campo]}`);
       }
-      assert.equal(s.versaoParametros, PARAMETROS.versao);
+      // Contra o conjunto vigente, que é o que `simular` usa por padrão — e não
+// contra a base da planilha, que segue congelada enquanto a administração
+// publica versões novas.
+      assert.equal(s.versaoParametros, VIGENTES.metadados.versao);
       assert.equal(s.versaoMotor, VERSAO_DO_MOTOR);
       assert.equal(s.cronograma.length, s.prazo);
       assert.ok(s.valorFinanciado >= s.valorSolicitado, `${rotulo}: financiado menor que o pedido`);

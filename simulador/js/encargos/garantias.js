@@ -10,6 +10,7 @@
 import { erro, exigirNumeroFinito } from './../engine/erros.js';
 import { calcularFAMPE, FATOR_FAMPE } from './fampe.js';
 import { calcularFGI } from './fgi.js';
+import { PARAMETROS } from './../data/parametros.js';
 
 export const MODALIDADES = {
   1: 'FAMPE',
@@ -18,11 +19,12 @@ export const MODALIDADES = {
 };
 
 /** Piso da renda exigida para aval, escrito direto na fórmula da planilha. */
-export const PISO_RENDA_PARA_AVAL = 2424;
+export const PISO_RENDA_PARA_AVAL = PARAMETROS.encargos.aval.pisoDeRenda;
 
 /** FUNDEQ tem, hoje, a mesma fórmula do FAMPE. */
 export function calcularFUNDEQ(entrada) {
-  const resultado = calcularFAMPE({ fator: FATOR_FAMPE, ...entrada });
+  const { fatorFUNDEQ = PARAMETROS.encargos.fundeq.fator, ...resto } = entrada;
+  const resultado = calcularFAMPE({ fator: fatorFUNDEQ, ...resto });
   return { ...resultado, memoria: resultado.memoria.replace('FAMPE', 'FUNDEQ') };
 }
 
@@ -33,8 +35,11 @@ export function calcularFUNDEQ(entrada) {
  */
 export function calcularGarantia(modalidade, entrada) {
   const nome = typeof modalidade === 'number' ? MODALIDADES[modalidade] : modalidade;
-  if (nome === 'FAMPE') return { modalidade: nome, ...calcularFAMPE(entrada) };
-  if (nome === 'FUNDEQ') return { modalidade: nome, ...calcularFUNDEQ(entrada) };
+  // Cada fundo tem o seu fator, ainda que hoje os dois valham o mesmo. Vêm
+  // separados para que a administração possa alterar um sem mexer no outro.
+  const { fatorFAMPE = FATOR_FAMPE, fatorFUNDEQ, ...resto } = entrada;
+  if (nome === 'FAMPE') return { modalidade: nome, ...calcularFAMPE({ ...resto, fator: fatorFAMPE }) };
+  if (nome === 'FUNDEQ') return { modalidade: nome, ...calcularFUNDEQ({ ...resto, fatorFUNDEQ }) };
   if (nome === 'FGI') return { modalidade: nome, ...calcularFGI(entrada) };
   return erro('PARAMETRO_INCOMPATIVEL',
     `Modalidade de garantia desconhecida: ${JSON.stringify(modalidade)}.`, { modalidade });

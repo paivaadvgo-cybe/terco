@@ -1,0 +1,177 @@
+/* ==========================================================================
+   Painel de administração.
+
+   Herda todos os tokens de `app.css` — mesma paleta, mesmo modo escuro, mesma
+   tipografia. O que muda é o tom: aqui a cor de acento é a de alerta, e não a
+   verde institucional. É uma pista permanente de que esta página altera o que
+   todo mundo vai ver, e não uma simulação descartável.
+   ========================================================================== */
+
+body.admin .topo { border-bottom: 2px solid var(--alerta); }
+body.admin .marca .instituicao { color: var(--alerta); }
+
+/* ── barra de estado ─────────────────────────────────────────────────────── */
+
+.estado-da-edicao {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .75rem 1.25rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: .7rem 1rem;
+  margin-bottom: 1.5rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+.estado-da-edicao .resumo { margin: 0; font-size: .95rem; }
+.estado-da-edicao .resumo strong { color: var(--alerta); }
+.estado-da-edicao .acoes { display: flex; flex-wrap: wrap; gap: .5rem; }
+
+/* ── campos ──────────────────────────────────────────────────────────────── */
+
+.campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(18rem, 100%), 1fr));
+  gap: 1rem 1.25rem;
+}
+.campo { display: flex; flex-direction: column; gap: .3rem; min-width: 0; }
+.campo > label { font-size: .9rem; font-weight: 600; }
+.campo .sufixo { font-weight: 400; color: var(--tinta-tenue); }
+.campo .ajuda { margin: 0; font-size: .82rem; line-height: 1.45; color: var(--tinta-suave); }
+.campo input, .campo select, .campo textarea {
+  width: 100%;
+  padding: .5rem .6rem;
+  font: inherit;
+  color: var(--tinta);
+  background: var(--superficie);
+  border: 1px solid var(--borda-forte);
+  border-radius: 8px;
+}
+.campo textarea { resize: vertical; min-height: 4.5rem; line-height: 1.5; }
+.campo input:focus-visible, .campo select:focus-visible, .campo textarea:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 1px;
+}
+.campo.alterado input, .campo.alterado select, .campo.alterado textarea {
+  border-color: var(--alerta);
+  background: var(--alerta-fundo);
+}
+.campo.invalido input, .campo.invalido select, .campo.invalido textarea {
+  border-color: var(--erro);
+  background: var(--erro-fundo);
+}
+
+/* ── grupos e linhas ─────────────────────────────────────────────────────── */
+
+.grupo-de-linhas {
+  padding: 1rem 1.1rem;
+  margin-bottom: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+.grupo-de-linhas > h3 { margin: 0 0 .2rem; font-size: 1.05rem; }
+.grupo-de-linhas > .quem-usa { margin: 0 0 .9rem; font-size: .85rem; color: var(--tinta-suave); }
+
+.linha-editavel { border-top: 1px solid var(--borda); padding-top: .9rem; margin-top: .9rem; }
+.linha-editavel > summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem 1rem;
+  align-items: baseline;
+  cursor: pointer;
+  font-weight: 600;
+}
+.linha-editavel > summary::marker { color: var(--tinta-tenue); }
+.linha-editavel > summary .resumo-da-linha {
+  font-weight: 400;
+  font-size: .85rem;
+  color: var(--tinta-suave);
+}
+.linha-editavel[data-alterada='sim'] > summary { color: var(--alerta); }
+.linha-editavel > .campos { margin: .9rem 0 .3rem; }
+
+.bloco-de-municipio {
+  margin-top: .9rem;
+  padding-left: .9rem;
+  border-left: 3px solid var(--acento-claro);
+}
+.bloco-de-municipio > h4 { margin: 0 0 .6rem; font-size: .9rem; color: var(--tinta-suave); }
+
+.somente-leitura {
+  padding: .75rem .9rem;
+  background: var(--acento-claro);
+  border-radius: 8px;
+  font-size: .88rem;
+  color: var(--tinta-suave);
+}
+
+/* ── tabelas do painel ───────────────────────────────────────────────────── */
+
+.rolagem { overflow-x: auto; }
+.tabela-de-fatores { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.tabela-de-fatores th, .tabela-de-fatores td {
+  padding: .35rem .5rem;
+  text-align: right;
+  border-bottom: 1px solid var(--borda);
+  white-space: nowrap;
+}
+.tabela-de-fatores th:first-child, .tabela-de-fatores td:first-child { text-align: left; }
+.tabela-de-fatores input { width: 7rem; padding: .3rem .4rem; font: inherit; text-align: right;
+  color: var(--tinta); background: var(--superficie);
+  border: 1px solid var(--borda-forte); border-radius: 6px; }
+
+/* ── conferência ─────────────────────────────────────────────────────────── */
+
+.conferencia { display: grid; gap: 1.25rem; }
+.lista-de-mudancas { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+.lista-de-mudancas li {
+  padding: .6rem .8rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-left: 4px solid var(--borda-forte);
+  border-radius: 8px;
+  font-size: .92rem;
+}
+.lista-de-mudancas li[data-relevancia='critica'] { border-left-color: var(--erro); }
+.lista-de-mudancas li[data-relevancia='alta'] { border-left-color: var(--alerta); }
+.lista-de-mudancas .rotulo { display: block; font-weight: 600; }
+.lista-de-mudancas .de-para { color: var(--tinta-suave); }
+.lista-de-mudancas .de-para .de { text-decoration: line-through; }
+.lista-de-mudancas .de-para .para { color: var(--tinta); font-weight: 600; }
+.lista-de-mudancas .nota { display: block; margin-top: .3rem; font-size: .85rem; color: var(--alerta); }
+
+.achado { padding: .7rem .9rem; border-radius: 8px; font-size: .92rem; margin-bottom: .5rem; }
+.achado.impedimento { background: var(--erro-fundo); color: var(--erro); }
+.achado.alerta { background: var(--alerta-fundo); color: var(--alerta); }
+.achado .onde { display: block; font-size: .8rem; opacity: .8; font-variant-numeric: tabular-nums; }
+.achado .herdado {
+  display: inline-block;
+  margin-left: .4rem;
+  padding: 0 .35rem;
+  font-size: .75rem;
+  border: 1px solid currentcolor;
+  border-radius: 4px;
+}
+
+/* ── publicação ──────────────────────────────────────────────────────────── */
+
+.passos-da-publicacao { padding-left: 1.2rem; line-height: 1.6; }
+.passos-da-publicacao li { margin-bottom: .5rem; }
+.passos-da-publicacao code {
+  padding: .1rem .3rem;
+  background: var(--acento-claro);
+  border-radius: 4px;
+  font-size: .9em;
+}
+
+/* Impressão: o painel não é para imprimir; o que se imprime é o relatório
+   de alterações, que é o documento que acompanha o processo. */
+@media print {
+  .estado-da-edicao, .topo .menu, .rodape, button { display: none !important; }
+}
