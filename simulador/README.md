@@ -29,8 +29,9 @@ não podem virar código sem decisão; estão em
 | 8 | Encargos: TAC, IOF, FGI, FAMPE, FUNDEQ, garantias | concluída |
 | 9 | Indexadores: INPC, TR, SELIC | concluída |
 | 10 | Produtos: nove famílias, TIR e a simulação completa | concluída |
-| 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída — 118 passando ao todo |
-| 12–15 | Comparador, relatórios, PWA, equivalência | aguardando |
+| 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída |
+| 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída — 122 passando ao todo |
+| 13–15 | Relatórios, PWA, equivalência | aguardando |
 
 ```
 cd simulador && npm test
@@ -65,7 +66,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
 | `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
 | `js/produtos/` | As nove famílias de linha de crédito, e a simulação de ponta a ponta |
-| `js/ui/` | Formulário, resultado, cronograma e formatação |
+| `js/ui/` | Formulário, resultado, cronograma, comparador, gráficos e formatação |
 | `js/storage/` | Simulações salvas no próprio aparelho, em IndexedDB |
 | `index.html`, `css/` | O aplicativo |
 | `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |

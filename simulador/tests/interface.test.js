@@ -17,6 +17,8 @@ import assert from 'node:assert/strict';
 import {
   moeda, numero, taxa, percentual, data, meses, lerValor, lerPercentual,
 } from '../js/ui/formatar.js';
+import { passoLegivel, marcasDoEixo } from '../js/ui/grafico.js';
+import { acumular, noEixo, naPonta } from '../js/ui/comparador.js';
 
 // O Intl separa o símbolo do número com espaço não separável (U+00A0), e não
 // com o espaço comum. Escrever o literal errado faz o teste falhar por um
@@ -93,4 +95,46 @@ test('ida e volta entre campo e valor preserva o número', () => {
     const texto = valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
     assert.equal(lerValor(texto), valor, `ida e volta de ${valor}`);
   }
+});
+
+
+// ────────────────────────────────────────────── escala e séries do gráfico
+
+test('o passo do eixo é sempre 1, 2 ou 5 vezes uma potência de dez', () => {
+  // Um passo de 3.700 produz marcas como 3.700 / 7.400 / 11.100, que ninguém
+  // lê de relance. A escada 1-2-5 é o que dá marcas redondas.
+  for (const bruto of [1, 3, 7, 13, 37, 137, 1370, 13700, 0.07, 0.3]) {
+    const passo = passoLegivel(bruto);
+    const normalizado = passo / 10 ** Math.floor(Math.log10(passo));
+    assert.ok([1, 2, 5, 10].includes(Math.round(normalizado * 1e6) / 1e6),
+      `passo ${passo} para ${bruto} não é 1, 2 nem 5`);
+    assert.ok(passo >= bruto, `o passo ${passo} não cobre ${bruto}`);
+  }
+});
+
+test('as marcas do eixo caem em números redondos e cobrem a faixa', () => {
+  const marcas = marcasDoEixo(0, 103507.5);
+  assert.ok(marcas.length >= 3 && marcas.length <= 7, `${marcas.length} marcas é demais ou de menos`);
+  assert.equal(marcas[0], 0);
+  assert.ok(marcas.every((m) => Number.isInteger(m / (marcas[1] - marcas[0]))), 'espaçamento irregular');
+
+  // Faixa achatada: uma série constante não pode produzir divisão por zero.
+  assert.deepEqual(marcasDoEixo(5000, 5000), [5000]);
+});
+
+test('acumular soma progressivamente, preservando a ordem', () => {
+  assert.deepEqual(acumular([1, 2, 3, 4]), [1, 3, 6, 10]);
+  assert.deepEqual(acumular([]), []);
+  assert.deepEqual(acumular([0, 0, 5]), [0, 0, 5]);
+});
+
+test('o eixo abrevia, a ponta não', () => {
+  // Abreviar na ponta faria R$ 2.887 e R$ 1.962 virarem "3 mil" e "2 mil" —
+  // mil reais de distância parecendo o mesmo valor arredondado.
+  assert.equal(noEixo(3000), '3 mil');
+  assert.equal(noEixo(0), '0');
+  assert.equal(noEixo(-0), '0', 'o eixo não mostra zero negativo');
+  assert.equal(naPonta(2887.35), '2.887');
+  assert.equal(naPonta(1961.68), '1.962');
+  assert.notEqual(naPonta(2887.35), naPonta(1961.68));
 });

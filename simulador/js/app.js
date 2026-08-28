@@ -12,6 +12,7 @@ import { listarProdutos, listarLinhas, PRODUTOS, VERSAO_DO_MOTOR } from './produ
 import { Formulario, criar } from './ui/formulario.js';
 import { desenharResultado } from './ui/resultado.js';
 import { desenharCronograma } from './ui/cronograma.js';
+import { desenharComparador } from './ui/comparador.js';
 import { moeda, taxa, meses, dataHora } from './ui/formatar.js';
 import * as armazem from './storage/simulacoes.js';
 
@@ -157,9 +158,21 @@ const desenhar = {
   },
 
   comparar() {
-    proximaFase('Comparar', 12,
-      'Vai colocar SAC e PRICE lado a lado, com a diferença de primeira parcela, '
-      + 'última, total de juros e total pago, mais os gráficos de evolução.');
+    const raiz = $('#conteudo');
+    if (!app.simulacao) {
+      raiz.append(
+        criar('h1', { texto: 'Comparar' }),
+        criar('p', { class: 'vazio' }, [
+          'A comparação parte de uma simulação. Faça uma em ',
+          criar('strong', { texto: 'Nova simulação' }),
+          ' — ou abra uma salva — e a aba ',
+          criar('strong', { texto: 'SAC × PRICE' }),
+          ' aparece junto com o resultado.',
+        ]),
+      );
+      return;
+    }
+    mostrarResultado('comparacao');
   },
 
   relatorios() {
@@ -260,7 +273,7 @@ function proximaFase(nome, fase, descricao) {
   );
 }
 
-function mostrarResultado() {
+function mostrarResultado(abaInicial = 'resumo') {
   const raiz = $('#conteudo');
   raiz.replaceChildren();
 
@@ -282,9 +295,26 @@ function mostrarResultado() {
       aoVoltar: () => navegar('nova'),
     }),
     cronograma: () => desenharCronograma(painel, app.simulacao),
+    comparacao: () => {
+      // O PRICE é gerado sob demanda, com a mesma entrada: comparar exige que a
+      // única diferença entre os dois cronogramas seja o sistema.
+      try {
+        const price = app.simulacao.sistemaAmortizacao === 'PRICE'
+          ? app.simulacao
+          : simular({ ...app.simulacao.parametrosUtilizados.entrada, sistemaAmortizacao: 'PRICE' });
+        const sac = app.simulacao.sistemaAmortizacao === 'SAC'
+          ? app.simulacao
+          : simular({ ...app.simulacao.parametrosUtilizados.entrada, sistemaAmortizacao: 'SAC' });
+        desenharComparador(painel, sac, price);
+      } catch (e) {
+        painel.replaceChildren(criar('p', { class: 'aviso' }, [
+          'Não foi possível montar a comparação: ', e.codigo ? mensagemDeErro(e) : e.message,
+        ]));
+      }
+    },
   };
 
-  for (const [chave, rotulo] of [['resumo', 'Resultado'], ['cronograma', 'Cronograma']]) {
+  for (const [chave, rotulo] of [['resumo', 'Resultado'], ['cronograma', 'Cronograma'], ['comparacao', 'SAC × PRICE']]) {
     abas.append(criar('button', {
       'data-aba': chave,
       onClick: (e) => {
@@ -293,10 +323,11 @@ function mostrarResultado() {
       },
     }, [rotulo]));
   }
-  abas.firstElementChild.setAttribute('aria-current', 'true');
+  const inicial = abas.querySelector(`[data-aba="${abaInicial}"]`) ?? abas.firstElementChild;
+  inicial.setAttribute('aria-current', 'true');
 
   raiz.append(abas, painel);
-  alvos.resumo();
+  alvos[inicial.dataset.aba]();
 }
 
 function iniciar() {

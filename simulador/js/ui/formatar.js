@@ -28,7 +28,7 @@ export function numero(valor, casas = 2) {
   if (valor === null || valor === undefined || !Number.isFinite(valor)) return '—';
   return new Intl.NumberFormat('pt-BR', {
     minimumFractionDigits: casas, maximumFractionDigits: casas,
-  }).format(valor);
+  }).format(valor === 0 ? 0 : valor);
 }
 
 const SUFIXO = {

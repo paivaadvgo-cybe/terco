@@ -388,6 +388,11 @@ export function simular(entrada, parametros = PARAMETROS) {
     avisos: resultado.avisos,
 
     parametrosUtilizados: {
+      // A entrada volta inteira no resultado, e não só resumida: é o que
+      // permite reexecutar a mesma operação trocando um parâmetro — o
+      // comparador faz isso para gerar o PRICE — e é o que torna uma
+      // simulação salva reprodutível meses depois, e não um número órfão.
+      entrada: { ...entrada },
       linha,
       regras: perfil.regras,
       percentualGarantido,

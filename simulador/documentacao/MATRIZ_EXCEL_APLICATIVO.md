@@ -7,10 +7,10 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 11 concluídas. O motor está completo e validado contra as células da
-planilha, valor a valor, e a interface já permite simular, ver o cronograma,
-ler a memória de cálculo e salvar no aparelho. Comparador, relatórios e PWA
-seguem em `MAPEADO`.
+Fases 1 a 12 concluídas. O motor está completo e validado contra as células da
+planilha, valor a valor; a interface permite simular, ver o cronograma, ler a
+memória de cálculo, salvar no aparelho e comparar SAC com PRICE. Relatórios e
+PWA seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -107,7 +107,7 @@ seguem em `MAPEADO`.
 | mensais | `AJ23` | Fluxo parte de `−valorSolicitado` | R$ | `montarFluxo()` | `tir` | VALIDADO |
 | Investimento | `AL18` | `PMT(TIR; prazo; −valorSolicitado)` | R$ | `calcularPMT()` | `price` | VALIDADO |
 | — | — | Cronograma PRICE completo | — | `gerarCronogramaPRICE()` | `price` | EXTENSAO · IMPLEMENTADO |
-| — | — | Comparador SAC × PRICE | — | `ui/comparador` | — | EXTENSAO |
+| — | — | Comparador SAC × PRICE, com os quatro gráficos | — | `desenharComparador()` | `ui/comparador` | EXTENSAO · IMPLEMENTADO |
 | mensais | `AL17:AR19` | Receita, despesa e margem da instituição | R$ | não migrado | — | fora de escopo |
 | FCO | `BB16:BD18` | idem | R$ | não migrado | — | fora de escopo |
 

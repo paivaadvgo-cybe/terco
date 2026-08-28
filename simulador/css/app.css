@@ -270,7 +270,7 @@ button.perigo:hover:not(:disabled) { border-color: var(--erro); }
 
 .grade {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
   gap: 0.1rem 2rem;
 }
 
@@ -436,4 +436,138 @@ tfoot th, tfoot td {
   .bloco { padding: 1rem; }
   .grade { grid-template-columns: 1fr; }
   .marca .produto { font-size: 1.3rem; }
+}
+
+/* ─────────────────────────────────────────────────────────── gráficos */
+
+/*
+ * Duas cores categóricas, azul e laranja, escolhidas por separação e não por
+ * gosto: o par passa nas verificações de daltonismo (ΔE 24,7 protanopia no
+ * claro, 26,8 no escuro) e tem contraste acima de 3:1 sobre as duas
+ * superfícies. Os passos do modo escuro são escolhidos para o fundo escuro,
+ * e não a inversão automática dos claros.
+ */
+:root {
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+  }
+}
+
+/*
+ * Duas colunas, não três. Com 20rem de mínimo cabiam três gráficos numa tela
+ * larga, e cada um ficava com menos de 300px — sobrava pouco para a linha
+ * depois de descontar os eixos. Vinte e seis rem dão dois gráficos largos no
+ * computador e um por vez no celular.
+ */
+.galeria {
+  display: grid;
+  /*
+   * O `min(…, 100%)` não é enfeite. `minmax(26rem, 1fr)` sozinho impõe uma
+   * coluna de 416px mesmo num contêiner de 358 — o grid não encolhe abaixo do
+   * mínimo, e o gráfico passa a escorar a página aberta, que então rola para o
+   * lado inteira. Com o `min`, o mínimo nunca passa da largura disponível.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.grafico {
+  position: relative;
+  margin: 0;
+  padding: 1rem 1rem 0.75rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.grafico figcaption {
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.4rem;
+}
+
+.legenda { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+
+/* A legenda espelha a marca: traço para linhas, nunca um quadrado cheio. */
+.chave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+}
+
+.chave .traco {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentcolor;
+}
+
+.chave.serie-1 .traco { background: var(--serie-1); }
+.chave.serie-2 .traco { background: var(--serie-2); }
+
+.area-grafico { display: block; }
+.area-grafico:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; border-radius: 4px; }
+.tela { display: block; max-width: 100%; touch-action: pan-y; }
+
+.linha { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.linha.serie-1 { stroke: var(--serie-1); }
+.linha.serie-2 { stroke: var(--serie-2); }
+
+/* Anel na cor da superfície: sem ele, dois marcadores sobrepostos viram um. */
+.ponta, .marcador { stroke: var(--superficie); stroke-width: 2; }
+.ponta.serie-1, .marcador.serie-1 { fill: var(--serie-1); }
+.ponta.serie-2, .marcador.serie-2 { fill: var(--serie-2); }
+
+.grade { stroke: var(--borda); stroke-width: 1; }
+.cruzeta { stroke: var(--borda-forte); stroke-width: 1; }
+
+/* O texto nunca veste a cor da série: quem carrega a identidade é a marca. */
+.rotulo-eixo { fill: var(--tinta-tenue); font-size: 11px; font-family: inherit; }
+.rotulo-fim { fill: var(--tinta-suave); font-size: 11px; font-family: inherit; font-weight: 600; }
+
+.captura { fill: transparent; }
+
+.leitura {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--borda);
+  font-size: 0.85rem;
+  min-height: 1.6rem;
+}
+
+.leitura[hidden] { display: none; }
+.leitura strong { font-size: 0.82rem; color: var(--tinta-suave); font-weight: 600; }
+.linha-leitura { display: inline-flex; align-items: baseline; gap: 0.35rem; }
+/* O valor lidera; o nome da série vem depois, discreto. */
+.linha-leitura .numero { font-variant-numeric: tabular-nums; font-weight: 650; }
+.linha-leitura .nome { color: var(--tinta-suave); font-size: 0.8rem; }
+
+.comparacao th[scope="row"] { font-weight: 500; color: var(--tinta-suave); white-space: normal; }
+.comparacao thead .chave { justify-content: flex-end; }
+
+.dados-brutos summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+.dados-brutos .rolagem-tabela { margin-top: 1rem; }
+
+.nota { color: var(--tinta-suave); font-size: 0.9rem; margin: 0 0 1.25rem; max-width: 46rem; }
+
+@media print {
+  .galeria { grid-template-columns: 1fr 1fr; }
+  .grafico { break-inside: avoid; }
+  .leitura, .dados-brutos { display: none; }
 }
