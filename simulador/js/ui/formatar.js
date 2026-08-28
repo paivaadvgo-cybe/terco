@@ -111,3 +111,14 @@ export function textoDoAviso(aviso) {
   }
   return aviso.mensagem;
 }
+
+/**
+ * Concordância escrita por extenso, e não «alteração(ões)».
+ *
+ * O número está sempre à mão quando a frase é montada, então não há motivo
+ * para empurrar a concordância para o leitor. Um documento que acompanha
+ * processo administrativo não se escreve com parênteses no meio da palavra.
+ */
+export function plural(n, singular, plural_) {
+  return `${n} ${n === 1 ? singular : plural_}`;
+}

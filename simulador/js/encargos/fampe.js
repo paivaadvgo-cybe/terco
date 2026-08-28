@@ -14,8 +14,9 @@
  */
 
 import { erro, exigirNumeroFinito } from './../engine/erros.js';
+import { PARAMETROS } from './../data/parametros.js';
 
-export const FATOR_FAMPE = 0.001;
+export const FATOR_FAMPE = PARAMETROS.encargos.fampe.fator;
 
 export function calcularFAMPE(entrada) {
   const { valorSolicitado, percentualGarantido, prazo, fator = FATOR_FAMPE } = entrada;

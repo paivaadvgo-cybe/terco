@@ -12,7 +12,7 @@ simulador/tests/
 ├── price.test.js          PRICE, incluindo a âncora AL18
 ├── encargos.test.js       TAC, IOF, FGI, FAMPE, FUNDEQ, aval, alienação
 ├── indexadores.test.js    INPC, TR, SELIC e a composição que a planilha usa
-├── interface.test.js      Formatação, leitura de campo, escala dos gráficos e CSV
+├── interface.test.js      Formatação, leitura de campo, séries acumuladas e CSV
 ├── pwa.test.js            Coerência entre casca, arquivos em disco e manifesto
 ├── produtos.test.js       Cada linha de crédito, com os seus limites
 └── equivalencia.test.js   Planilha × aplicativo, valor a valor, sobre casos

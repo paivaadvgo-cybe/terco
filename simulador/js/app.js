@@ -7,7 +7,7 @@
  */
 
 import { simular } from './produtos/produtos.js';
-import { PARAMETROS } from './data/parametros.js';
+import { VIGENTES } from './data/parametros-vigentes.js';
 import { listarProdutos, listarLinhas, PRODUTOS, VERSAO_DO_MOTOR } from './produtos/produtos.js';
 import { Formulario, criar } from './ui/formulario.js';
 import { desenharResultado } from './ui/resultado.js';
@@ -196,7 +196,7 @@ const desenhar = {
     const raiz = $('#conteudo');
     raiz.append(criar('h1', { texto: 'Parâmetros' }));
     raiz.append(criar('p', { class: 'subtitulo' }, [
-      `Vigência ${PARAMETROS.versao}, extraída de ${PARAMETROS.origem}. `,
+      `Vigência ${VIGENTES.metadados.versao}, extraída de ${VIGENTES.metadados.baseadoEm.origem}. `,
       'Motor ', VERSAO_DO_MOTOR, '.',
     ]));
 
@@ -245,7 +245,7 @@ const desenhar = {
     raiz.append(criar('div', { class: 'texto' }, [
       criar('p', {}, [
         'Simulador de financiamento reconstruído a partir da planilha ',
-        criar('em', { texto: PARAMETROS.origem }), ', com as regras dela preservadas.',
+        criar('em', { texto: VIGENTES.metadados.baseadoEm.origem }), ', com as regras dela preservadas.',
       ]),
       criar('p', {}, [
         'Tudo é calculado neste aparelho. Não há servidor, conta nem envio de dados: '
@@ -290,7 +290,7 @@ const desenhar = {
       ]),
       criar('h2', { texto: 'Versões' }),
       criar('p', { class: 'meta' }, [
-        `Parâmetros ${PARAMETROS.versao} · motor ${VERSAO_DO_MOTOR}`,
+        `Parâmetros ${VIGENTES.metadados.versao} · motor ${VERSAO_DO_MOTOR}`,
       ]),
     ]));
   },

@@ -30,7 +30,7 @@ não podem virar código sem decisão; estão em
 | 9 | Indexadores: INPC, TR, SELIC | concluída |
 | 10 | Produtos: nove famílias, TIR e a simulação completa | concluída |
 | 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída |
-| 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída |
+| 12 | Comparador SAC × PRICE, em tabela | concluída |
 | 13 | Relatórios: impressão, PDF e exportação em CSV | concluída |
 | 14 | PWA: funciona sem internet e instala | concluída |
 | 15 | Relatório de equivalência | concluída — 162 passando ao todo |
@@ -64,12 +64,13 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `documentacao/MATRIZ_EXCEL_APLICATIVO.md` | Cada regra, com origem, destino e status |
 | `documentacao/PLANO_DE_TESTES.md` | Casos de teste e âncoras extraídas da planilha |
 | `documentacao/EQUIVALENCIA_EXCEL.md` | Comparação célula a célula: planilha × aplicativo |
+| `documentacao/ADMINISTRACAO.md` | Manual de quem altera os parâmetros, sem mexer no código |
 | `dados/PARAMETROS_FINANCEIROS.json` | Taxas, prazos, limites e fatores, com unidade explícita |
 | `js/engine/` | Motor: SAC, PRICE, taxas, calendário, arredondamento, erros |
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
 | `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
 | `js/produtos/` | As nove famílias de linha de crédito, e a simulação de ponta a ponta |
-| `js/ui/` | Formulário, resultado, cronograma, comparador, gráficos, relatório, CSV e formatação |
+| `js/ui/` | Formulário, resultado, cronograma, comparador, relatório, CSV e formatação |
 | `js/storage/` | Simulações salvas no próprio aparelho, em IndexedDB |
 | `index.html`, `css/` | O aplicativo |
 | `sw.js`, `manifest.json`, `icones/` | Funcionamento sem internet e instalação |
@@ -77,6 +78,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |
 | `ferramentas/extrair_parametros.py` | Gera o JSON de parâmetros a partir da planilha |
+| `ferramentas/gerar_vigentes.mjs` | Recria o conjunto vigente a partir da base extraída |
 | `referencia/` | A planilha, versionada |
 
 ## Reproduzir a auditoria
@@ -102,12 +104,34 @@ cd simulador && node ferramentas/gerar_equivalencia.mjs
 A auditoria produz `inventario.json`, `celulas.tsv` e `formulas.txt`, que são
 a base de tudo o que está documentado aqui.
 
+## Administrar os parâmetros
+
+Quando a política de crédito mudar — taxa, prazo, carência, limite, linha nova
+ou linha extinta, alíquota, fator —, a alteração é feita em `admin.html`, sem
+tocar em código. O painel valida, mostra o que mudou por extenso, roda uma
+simulação de teste com os valores novos ao lado dos atuais, e gera os dois
+arquivos a publicar.
+
+O manual está em `documentacao/ADMINISTRACAO.md`.
+
+Dois conjuntos de parâmetros convivem, e a separação é deliberada:
+
+| Arquivo | O que é |
+|---|---|
+| `js/data/parametros.js` | A planilha de origem, extraída. Congelado. |
+| `js/data/parametros-vigentes.js` | O que está em vigor. Escrito pelo painel. |
+
+O aplicativo calcula com o vigente. Os testes de equivalência provam o motor
+contra a base extraída — uma taxa alterada por norma não pode derrubar a prova
+de que o motor reproduz a planilha, porque são coisas distintas. A diferença
+entre os dois arquivos é, exatamente, tudo que a administração alterou.
+
 ## Sem internet
 
 Depois da primeira visita o simulador funciona offline: o aplicativo inteiro —
 os quarenta e quatro arquivos da casca — fica guardado no navegador, e as
 simulações salvas ficam no próprio aparelho. Verificado desligando a rede e
-usando: simular, ver os quatro gráficos, abrir o relatório, salvar e recuperar.
+usando: simular, comparar SAC com PRICE, abrir o relatório, salvar e recuperar.
 
 A atualização não é automática. O aplicativo é feito de dezenas de módulos que
 se importam entre si, e deixar uma versão nova assumir no meio de uma sessão

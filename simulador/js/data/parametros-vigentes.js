@@ -1,7 +1,31 @@
+/**
+ * Parâmetros em vigor — escrito pelo painel de administração.
+ *
+ * Este é o único arquivo que a administração altera, e é o que o aplicativo
+ * carrega. Não se edita à mão: abre-se `admin.html`, muda-se o que a norma
+ * mudou, confere-se a lista de diferenças e publica-se.
+ *
+ * A base de comparação continua sendo `parametros.js`, extraído da planilha.
+ * Ela não muda: é contra ela que os testes provam que o motor reproduz o
+ * arquivo original. A diferença entre os dois arquivos é, exatamente, o que a
+ * administração alterou desde então.
+ */
+
+export const VIGENTES = Object.freeze(
 {
-  "versao": "2024-12-16",
-  "vigenciaInicio": "2024-12-16",
-  "origem": "Simulador_GoiasFomento 08-05-2025.xlsx",
+  "metadados": {
+    "versao": "2024-12-16",
+    "vigenciaInicio": "2024-12-16",
+    "atoNormativo": "",
+    "publicadoPor": "",
+    "publicadoEm": null,
+    "observacoes": "Conjunto inicial, igual ao que a planilha de referência traz. Nenhuma alteração da administração foi aplicada ainda.",
+    "sucedeVersao": null,
+    "baseadoEm": {
+      "versao": "2024-12-16",
+      "origem": "Simulador_GoiasFomento 08-05-2025.xlsx"
+    }
+  },
   "observacaoDeUnidade": "Toda taxa traz a unidade em que a planilha a escreveu. A conversão para o período de cálculo é responsabilidade do motor, e cada aba converte de um jeito: FCO usa (1+i_anual)^(1/12)-1 e Fungetur e FINEP usam (1+i_anual)^(22/252)-1.",
   "tabelaDeEncargos": [
     {
@@ -11,9 +35,9 @@
         {
           "nome": "GoiásFomento Giro",
           "origemLinha": 5,
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0,
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 300000,
           "taxaCheia": {
             "valor": 0.023951442892062056,
             "unidade": "mensal",
@@ -28,9 +52,9 @@
         {
           "nome": "GoiásFomento Giro VIP",
           "origemLinha": 6,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000,
           "taxaCheia": {
             "valor": 0.021838080283938927,
             "unidade": "mensal",
@@ -45,9 +69,9 @@
         {
           "nome": "GoiásFomento Giro - IMCF",
           "origemLinha": 7,
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0,
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 300000,
           "taxaCheia": {
             "valor": 0.02254253448664664,
             "unidade": "mensal",
@@ -62,9 +86,9 @@
         {
           "nome": "GoiásFomento Giro VIP - IMCF",
           "origemLinha": 8,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000,
           "taxaCheia": {
             "valor": 0.021309739631908152,
             "unidade": "mensal",
@@ -79,9 +103,9 @@
         {
           "nome": "GoiásFomento Giro Consorciado",
           "origemLinha": 9,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000,
           "taxaCheia": {
             "valor": 0.021309739631908152,
             "unidade": "mensal",
@@ -102,9 +126,9 @@
         {
           "nome": "GoiásFomento Investimento",
           "origemLinha": 12,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.020770391882960065,
             "unidade": "mensal",
@@ -119,9 +143,9 @@
         {
           "nome": "GoiásFomento Investimento VIP",
           "origemLinha": 13,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.01983478864498889,
             "unidade": "mensal",
@@ -136,9 +160,9 @@
         {
           "nome": "GoiásFomento Investimento - IMCF",
           "origemLinha": 14,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.019273426702206185,
             "unidade": "mensal",
@@ -153,9 +177,9 @@
         {
           "nome": "GoiásFomento Investimento VIP - IMCF",
           "origemLinha": 15,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.01833782346423501,
             "unidade": "mensal",
@@ -170,9 +194,9 @@
         {
           "nome": "GoiásFomento Eficiência Energética (fixo)",
           "origemLinha": 16,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 6.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 6,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.01833782346423501,
             "unidade": "mensal",
@@ -187,9 +211,9 @@
         {
           "nome": "GoiásFomento Eficiência Energética MEI (fixo)",
           "origemLinha": 17,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 6.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 6,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.01833782346423501,
             "unidade": "mensal",
@@ -210,9 +234,9 @@
         {
           "nome": "GoiásFomento Feirantes",
           "origemLinha": 20,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 90000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 90000,
           "taxaCheia": {
             "valor": 0.0198,
             "unidade": "mensal",
@@ -227,9 +251,9 @@
         {
           "nome": "GoiásFomento Taxi",
           "origemLinha": 21,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 90000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 90000,
           "taxaCheia": {
             "valor": 0.0219,
             "unidade": "mensal",
@@ -244,9 +268,9 @@
         {
           "nome": "GoiásFomento Mototaxi",
           "origemLinha": 22,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 14000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 14000,
           "taxaCheia": {
             "valor": 0.0219,
             "unidade": "mensal",
@@ -261,9 +285,9 @@
         {
           "nome": "GoiásFomento Transporte Escolar",
           "origemLinha": 23,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 150000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 150000,
           "taxaCheia": {
             "valor": 0.0219,
             "unidade": "mensal",
@@ -278,9 +302,9 @@
         {
           "nome": "GoiásFomento TransGás",
           "origemLinha": 24,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 40000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 40000,
           "taxaCheia": {
             "valor": 0.0219,
             "unidade": "mensal",
@@ -301,9 +325,9 @@
         {
           "nome": "GoiásFomento Tecnologia / PQF-IEL / Turismo / FarmaDrogas / Contabilistas",
           "origemLinha": 27,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000,
           "taxaCheia": {
             "valor": 0.02218485176470588,
             "unidade": "mensal",
@@ -324,9 +348,9 @@
         {
           "nome": "GoiásFomento Tecnologia / PQF-IEL / Turismo / FarmaDrogas / Contabilistas",
           "origemLinha": 30,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.018587317661027326,
             "unidade": "mensal",
@@ -347,9 +371,9 @@
         {
           "nome": "GoiásFomento Microcrédito Produtivo - Investimento",
           "origemLinha": 33,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 12.0,
-          "limite": 21000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 12,
+          "limite": 21000,
           "taxaCheia": {
             "valor": 0.0191571237,
             "unidade": "mensal",
@@ -364,9 +388,9 @@
         {
           "nome": "GoiásFomento Microcrédito Produtivo - Capital de Giro",
           "origemLinha": 34,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 21000,
           "taxaCheia": null,
           "taxaBonus": null
         }
@@ -379,9 +403,9 @@
         {
           "nome": "GF Turismo Microcrédito Orientado Guias de Turismo",
           "origemLinha": 37,
-          "prazoMaximo": 48.0,
-          "carenciaMaxima": 12.0,
-          "limite": 8000.0,
+          "prazoMaximo": 48,
+          "carenciaMaxima": 12,
+          "limite": 8000,
           "taxaCheia": {
             "valor": 0.025,
             "unidade": "anual",
@@ -397,9 +421,9 @@
         {
           "nome": "GF Turismo Giro Puro",
           "origemLinha": 38,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000,
           "taxaCheia": {
             "valor": 0.05,
             "unidade": "anual",
@@ -415,9 +439,9 @@
         {
           "nome": "GF Turismo Aquisição de Bens",
           "origemLinha": 39,
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 1000000.0,
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 1000000,
           "taxaCheia": {
             "valor": 0.05,
             "unidade": "anual",
@@ -433,9 +457,9 @@
         {
           "nome": "GF Turismo Capital Fixo",
           "origemLinha": 40,
-          "prazoMaximo": 240.0,
-          "carenciaMaxima": 60.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 240,
+          "carenciaMaxima": 60,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.05,
             "unidade": "anual",
@@ -458,9 +482,9 @@
         {
           "nome": "FINEP - Inovacred",
           "origemLinha": 43,
-          "prazoMaximo": 96.0,
-          "carenciaMaxima": 24.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 96,
+          "carenciaMaxima": 24,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.042,
             "unidade": "anual",
@@ -476,9 +500,9 @@
         {
           "nome": "FINEP - Inovacred Expresso",
           "origemLinha": 44,
-          "prazoMaximo": 48.0,
-          "carenciaMaxima": 12.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 48,
+          "carenciaMaxima": 12,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.042,
             "unidade": "anual",
@@ -494,9 +518,9 @@
         {
           "nome": "FINEP - Aquisição Inovadora Telecom",
           "origemLinha": 45,
-          "prazoMaximo": 120.0,
-          "carenciaMaxima": 24.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 120,
+          "carenciaMaxima": 24,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.07,
             "unidade": "anual",
@@ -519,9 +543,9 @@
         {
           "nome": "FINEP - Inovacred",
           "origemLinha": 47,
-          "prazoMaximo": 96.0,
-          "carenciaMaxima": 24.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 96,
+          "carenciaMaxima": 24,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.055,
             "unidade": "anual",
@@ -537,9 +561,9 @@
         {
           "nome": "FINEP - Inovacred Expresso",
           "origemLinha": 48,
-          "prazoMaximo": 48.0,
-          "carenciaMaxima": 12.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 48,
+          "carenciaMaxima": 12,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.055,
             "unidade": "anual",
@@ -555,9 +579,9 @@
         {
           "nome": "FINEP - Aquisição Inovadora Telecom",
           "origemLinha": 49,
-          "prazoMaximo": 120.0,
-          "carenciaMaxima": 24.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 120,
+          "carenciaMaxima": 24,
+          "limite": 2000000,
           "taxaCheia": {
             "valor": 0.07,
             "unidade": "anual",
@@ -580,9 +604,9 @@
         {
           "nome": "FCO MEI",
           "origemLinha": 53,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 27000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 27000,
           "municipioPrioritario": {
             "taxaCheia": {
               "valor": 0.088992,
@@ -611,9 +635,9 @@
         {
           "nome": "FCO Empresarial - (Pequeno)",
           "origemLinha": 54,
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 2000000,
           "municipioPrioritario": {
             "taxaCheia": {
               "valor": 0.088992,
@@ -642,9 +666,9 @@
         {
           "nome": "FCO Empresarial - (Pequeno Médio, Médio I)",
           "origemLinha": 55,
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 2000000,
           "municipioPrioritario": {
             "taxaCheia": {
               "valor": 0.106346,
@@ -673,29 +697,29 @@
         {
           "nome": "FCO Empresarial Giro Dissociado",
           "origemLinha": 56,
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 6.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 24,
+          "carenciaMaxima": 6,
+          "limite": 2000000,
           "municipioPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
           },
           "municipioNaoPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
@@ -704,29 +728,29 @@
         {
           "nome": "FCO PNMPO Investimento",
           "origemLinha": 57,
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0,
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 21000,
           "municipioPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
           },
           "municipioNaoPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
@@ -735,29 +759,29 @@
         {
           "nome": "FCO PNMPO Giro Dissociado",
           "origemLinha": 58,
-          "prazoMaximo": 18.0,
-          "carenciaMaxima": 3.0,
-          "limite": 7000.0,
+          "prazoMaximo": 18,
+          "carenciaMaxima": 3,
+          "limite": 7000,
           "municipioPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
           },
           "municipioNaoPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
@@ -766,29 +790,29 @@
         {
           "nome": "FCO Mini e Micro Geração de Energia",
           "origemLinha": 59,
-          "prazoMaximo": 96.0,
-          "carenciaMaxima": 6.0,
-          "limite": 100000.0,
+          "prazoMaximo": 96,
+          "carenciaMaxima": 6,
+          "limite": 100000,
           "municipioPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
           },
           "municipioNaoPrioritario": {
             "taxaCheia": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             },
             "taxaBonus": {
-              "valor": 0.0,
+              "valor": 0,
               "unidade": "anual",
               "tipo": "efetiva"
             }
@@ -803,9 +827,9 @@
         {
           "nome": "FCO Desenvolvimento Rural",
           "origemLinha": 61,
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 2000000,
           "municipioPrioritario": {
             "taxaCheia": {
               "valor": 0.0905,
@@ -826,9 +850,9 @@
         {
           "nome": "FCO Verde",
           "origemLinha": 62,
-          "prazoMaximo": 240.0,
-          "carenciaMaxima": 120.0,
-          "limite": 2000000.0,
+          "prazoMaximo": 240,
+          "carenciaMaxima": 120,
+          "limite": 2000000,
           "municipioPrioritario": {
             "taxaCheia": {
               "valor": 0.0746,
@@ -977,7 +1001,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -991,9 +1015,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Giro  VIP",
@@ -1004,7 +1028,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1018,9 +1042,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Giro - IMCF",
@@ -1031,7 +1055,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1045,9 +1069,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Giro - VIP IMCF",
@@ -1058,7 +1082,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1072,9 +1096,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Giro Consorciado",
@@ -1085,7 +1109,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1099,9 +1123,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento (GIRO)Tecnologia/PQF-IEL/Turismo/FarmaDrogas/ Contabilistas / Mulher Empreendedora",
@@ -1112,7 +1136,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1126,9 +1150,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Microcrédito Produtivo",
@@ -1153,9 +1177,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 21000
         }
       ]
     },
@@ -1187,9 +1211,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000
         },
         {
           "nome": "GoiásFomento Investimento VIP",
@@ -1214,9 +1238,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000
         },
         {
           "nome": "GoiásFomento Investimento - IMCF",
@@ -1241,9 +1265,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000
         },
         {
           "nome": "Goiás Fomento Investimento - VIP IMCF",
@@ -1268,9 +1292,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000
         },
         {
           "nome": "GoiásFomento Eficiência Energética (fixo)",
@@ -1295,9 +1319,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 6.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 6,
+          "limite": 400000
         },
         {
           "nome": "GoiásFomento Eficiência Energética MEI (fixo)",
@@ -1322,9 +1346,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 6.0,
-          "limite": 30000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 6,
+          "limite": 30000
         },
         {
           "nome": "GoiásFomento (INVESTIMENTO)Tecnologia/PQF-IEL/Turismo/FarmaDrogas/ Contabilistas / Mulher Empreendedora",
@@ -1349,9 +1373,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000
         },
         {
           "nome": "GoiásFomento Microcrédito Produtivo - Investimento",
@@ -1376,9 +1400,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 12.0,
-          "limite": 21000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 12,
+          "limite": 21000
         }
       ]
     },
@@ -1410,9 +1434,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 90000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 90000
         },
         {
           "nome": "GoiásFomento Mototaxi",
@@ -1437,9 +1461,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 14000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 14000
         },
         {
           "nome": "GoiásFomento Transporte Escolar",
@@ -1464,9 +1488,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 150000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 150000
         },
         {
           "nome": "Goiás Fomento TransGás",
@@ -1491,9 +1515,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 40000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 40000
         },
         {
           "nome": "GoiásFomento Feirantes",
@@ -1518,9 +1542,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 3.0,
-          "limite": 200000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 3,
+          "limite": 200000
         }
       ]
     },
@@ -1538,7 +1562,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1552,9 +1576,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 21000
         },
         {
           "nome": "Mais CrédIto com parceria - Juro Zero e Aval",
@@ -1565,23 +1589,23 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
           "taxaCG1": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
           "taxaCG2": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 21000
         },
         {
           "nome": "Mais Crédito Equalização de Juros FUNDEQ",
@@ -1592,23 +1616,23 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
           "taxaCG1": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
           "taxaCG2": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 3,
+          "limite": 21000
         },
         {
           "nome": "GoiásFomento Giro - VIP IMCF",
@@ -1619,7 +1643,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1633,9 +1657,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Giro Consorciado",
@@ -1646,7 +1670,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1660,9 +1684,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento (GIRO)Tecnologia/PQF-IEL/Turismo/FarmaDrogas/ Contabilistas",
@@ -1673,7 +1697,7 @@
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "mensal",
             "tipo": "efetiva"
           },
@@ -1687,9 +1711,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 300000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 300000
         },
         {
           "nome": "GoiásFomento Microcrédito Produtivo",
@@ -1714,9 +1738,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 21000
         }
       ]
     },
@@ -1733,9 +1757,9 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 48.0,
-          "carenciaMaxima": 12.0,
-          "limite": 8000.0
+          "prazoMaximo": 48,
+          "carenciaMaxima": 12,
+          "limite": 8000
         },
         {
           "nome": "GF Turismo Giro Puro",
@@ -1745,9 +1769,9 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 400000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 400000
         },
         {
           "nome": "GF Turismo Aquisição de Bens",
@@ -1757,9 +1781,9 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 60.0,
-          "carenciaMaxima": 12.0,
-          "limite": 1000000.0
+          "prazoMaximo": 60,
+          "carenciaMaxima": 12,
+          "limite": 1000000
         },
         {
           "nome": "GF Turismo Capital Fixo",
@@ -1784,10 +1808,10 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 96.0,
-          "carenciaMaxima": 24.0,
-          "valorMinimo": 150000.0,
-          "limite": 2000000.0
+          "prazoMaximo": 96,
+          "carenciaMaxima": 24,
+          "valorMinimo": 150000,
+          "limite": 2000000
         },
         {
           "nome": "FINEP - Inovacred Expresso",
@@ -1797,10 +1821,10 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 48.0,
-          "carenciaMaxima": 12.0,
-          "valorMinimo": 50000.0,
-          "limite": 2000000.0
+          "prazoMaximo": 48,
+          "carenciaMaxima": 12,
+          "valorMinimo": 50000,
+          "limite": 2000000
         },
         {
           "nome": "FINEP - Aquisição Inovadora Telecom",
@@ -1810,10 +1834,10 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 120.0,
-          "carenciaMaxima": 24.0,
-          "valorMinimo": 150000.0,
-          "limite": 2000000.0
+          "prazoMaximo": 120,
+          "carenciaMaxima": 24,
+          "valorMinimo": 150000,
+          "limite": 2000000
         }
       ]
     },
@@ -1835,9 +1859,9 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 27000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 27000
         },
         {
           "nome": "FCO Empresarial Investimento (Pequeno)",
@@ -1852,9 +1876,9 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 2000000.0
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 2000000
         },
         {
           "nome": "FCO Empresarial Investimento (Pequeno, Médio, Médio I)",
@@ -1869,77 +1893,77 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 2000000.0
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 2000000
         },
         {
           "nome": "FCO Empresarial Giro Dissociado",
           "origemLinha": 8,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 6.0,
-          "limite": 200000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 6,
+          "limite": 200000
         },
         {
           "nome": "FCO PNMPO Investimento",
           "origemLinha": 9,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 21000
         },
         {
           "nome": "FCO PNMPO Giro Dissociado",
           "origemLinha": 10,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 18.0,
-          "carenciaMaxima": 3.0,
-          "limite": 7000.0
+          "prazoMaximo": 18,
+          "carenciaMaxima": 3,
+          "limite": 7000
         },
         {
           "nome": "FCO Mini e Micro Geração de Energia",
           "origemLinha": 11,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 96.0,
-          "carenciaMaxima": 6.0,
-          "limite": 100000.0
+          "prazoMaximo": 96,
+          "carenciaMaxima": 6,
+          "limite": 100000
         }
       ]
     },
@@ -1961,9 +1985,9 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 27000.0
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 27000
         },
         {
           "nome": "FCO Verde",
@@ -1978,77 +2002,77 @@
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 240.0,
-          "carenciaMaxima": 120.0,
-          "limite": 2000000.0
+          "prazoMaximo": 240,
+          "carenciaMaxima": 120,
+          "limite": 2000000
         },
         {
           "nome": "FCO Empresarial Giro Dissociado",
           "origemLinha": 7,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 24.0,
-          "carenciaMaxima": 6.0,
-          "limite": 200000.0
+          "prazoMaximo": 24,
+          "carenciaMaxima": 6,
+          "limite": 200000
         },
         {
           "nome": "FCO PNMPO Investimento",
           "origemLinha": 8,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 36.0,
-          "carenciaMaxima": 3.0,
-          "limite": 21000.0
+          "prazoMaximo": 36,
+          "carenciaMaxima": 3,
+          "limite": 21000
         },
         {
           "nome": "FCO PNMPO Giro Dissociado",
           "origemLinha": 9,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 18.0,
-          "carenciaMaxima": 3.0,
-          "limite": 7000.0
+          "prazoMaximo": 18,
+          "carenciaMaxima": 3,
+          "limite": 7000
         },
         {
           "nome": "FCO Mini e Micro Geração de Energia",
           "origemLinha": 10,
           "taxaCheia": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
           "taxaBonus": {
-            "valor": 0.0,
+            "valor": 0,
             "unidade": "anual",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 96.0,
-          "carenciaMaxima": 6.0,
-          "limite": 100000.0
+          "prazoMaximo": 96,
+          "carenciaMaxima": 6,
+          "limite": 100000
         }
       ]
     },
@@ -2080,9 +2104,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 144.0,
-          "carenciaMaxima": 36.0,
-          "limite": 27000.0
+          "prazoMaximo": 144,
+          "carenciaMaxima": 36,
+          "limite": 27000
         },
         {
           "nome": "Produtor Empreendedor Fruticultura",
@@ -2107,9 +2131,9 @@
             "unidade": "mensal",
             "tipo": "efetiva"
           },
-          "prazoMaximo": 240.0,
-          "carenciaMaxima": 120.0,
-          "limite": 2000000.0
+          "prazoMaximo": 240,
+          "carenciaMaxima": 120,
+          "limite": 2000000
         }
       ]
     }
@@ -2117,8 +2141,8 @@
   "encargos": {
     "iof": {
       "aliquotaAdicional": 0.0038,
-      "aliquotaDiariaNormal": 4.1e-05,
-      "aliquotaDiariaSimples": 1.37e-05,
+      "aliquotaDiariaNormal": 0.000041,
+      "aliquotaDiariaSimples": 0.0000137,
       "limiteDeDias": 365,
       "tetoParaAliquotaSimples": 30000,
       "fatorFinanciamento": 1.03,
@@ -2211,3 +2235,6 @@
     }
   }
 }
+);
+
+export default VIGENTES;

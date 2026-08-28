@@ -16,15 +16,15 @@
 
 import { erro, exigirNumeroFinito } from './../engine/erros.js';
 import { gerarVencimentos } from './../engine/calendario.js';
+import { PARAMETROS } from './../data/parametros.js';
 
-export const PARAMETROS_IOF = Object.freeze({
-  aliquotaAdicional: 0.0038,
-  aliquotaDiariaNormal: 0.000041,
-  aliquotaDiariaSimples: 0.00137 / 100,
-  limiteDeDias: 365,
-  tetoParaAliquotaSimples: 30000,
-  fatorFinanciamento: 1.03,
-});
+/**
+ * Alíquotas do IOF. Vêm do arquivo de parâmetros, e não de literais escritos
+ * aqui: uma alíquota muda por norma, e quem a muda administra a página, não
+ * edita o código. `calcularIOF` aceita outro conjunto por argumento, que é
+ * como o conjunto vigente chega até aqui.
+ */
+export const PARAMETROS_IOF = PARAMETROS.encargos.iof;
 
 /**
  * IOF diário de uma parcela.

@@ -109,7 +109,7 @@ simular em vez de produzir um número plausível.
 | mensais | `AJ23` | Fluxo parte de `−valorSolicitado` | R$ | `montarFluxo()` | `tir` | VALIDADO |
 | Investimento | `AL18` | `PMT(TIR; prazo; −valorSolicitado)` | R$ | `calcularPMT()` | `price` | VALIDADO |
 | — | — | Cronograma PRICE completo | — | `gerarCronogramaPRICE()` | `price` | EXTENSAO · IMPLEMENTADO |
-| — | — | Comparador SAC × PRICE, com os quatro gráficos | — | `desenharComparador()` | `ui/comparador` | EXTENSAO · IMPLEMENTADO |
+| — | — | Comparador SAC × PRICE, em tabela | — | `desenharComparador()` | `ui/comparador` | EXTENSAO · IMPLEMENTADO |
 | — | — | Relatório para impressão, com os nove blocos do item 33 | — | `desenharRelatorio()` | `ui/relatorio` | EXTENSAO · IMPLEMENTADO |
 | — | — | Exportação do cronograma em CSV, para o Excel em pt-BR | — | `cronogramaEmCSV()` | `ui/csv` | EXTENSAO · IMPLEMENTADO |
 | — | — | PDF | — | pela caixa de impressão do navegador | `ui/relatorio` | EXTENSAO · IMPLEMENTADO |

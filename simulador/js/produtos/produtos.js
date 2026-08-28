@@ -20,7 +20,12 @@ import { calcularIOF } from './../encargos/iof.js';
 import { calcularGarantia } from './../encargos/garantias.js';
 import { calcularRendaParaAval, calcularAlienacaoImovel } from './../encargos/garantias.js';
 import { resolverIndexador } from './../indexadores/indexadores.js';
-import { PARAMETROS } from './../data/parametros.js';
+// O aplicativo calcula com o conjunto **vigente**, que é o que a
+// administração publica. A base extraída da planilha continua importável em
+// `data/parametros.js`, e é contra ela que os testes provam que o motor
+// reproduz o arquivo original — uma taxa alterada por norma não pode
+// derrubar essa prova, e por isso os dois conjuntos são arquivos distintos.
+import { VIGENTES } from './../data/parametros-vigentes.js';
 
 import { PERFIL as GIRO } from './giro.js';
 import { PERFIL as INVESTIMENTO } from './investimento.js';
@@ -96,7 +101,7 @@ function normalizarLinha(bruta, grupo, perfil) {
  * 5,5% no porte III. Sem informar o porte, o nome sozinho é ambíguo, e por
  * isso `porte` filtra o grupo em vez de deixar a primeira ocorrência ganhar.
  */
-export function listarLinhas(codigoDoProduto, opcoes = {}, parametros = PARAMETROS) {
+export function listarLinhas(codigoDoProduto, opcoes = {}, parametros = VIGENTES) {
   const perfil = obterProduto(codigoDoProduto);
   const { porte = null } = opcoes;
   const grupoDoPorte = porte !== null && perfil.regras.portes
@@ -127,7 +132,7 @@ export function listarLinhas(codigoDoProduto, opcoes = {}, parametros = PARAMETR
   return linhas;
 }
 
-export function obterLinha(codigoDoProduto, nomeDaLinha, opcoes = {}, parametros = PARAMETROS) {
+export function obterLinha(codigoDoProduto, nomeDaLinha, opcoes = {}, parametros = VIGENTES) {
   const perfil = obterProduto(codigoDoProduto);
   if (perfil.regras.exigePorte && (opcoes.porte === undefined || opcoes.porte === null)) {
     erro('PARAMETRO_INCOMPATIVEL',
@@ -263,7 +268,7 @@ function validarOperacao(perfil, linha, entrada) {
  * Não há circularidade: a base do FGI parte do valor solicitado, não do
  * financiado, então ela é conhecida antes de o financiado existir.
  */
-export function simular(entrada, parametros = PARAMETROS) {
+export function simular(entrada, parametros = VIGENTES) {
   const perfil = obterProduto(entrada.produto);
   const linha = obterLinha(entrada.produto, entrada.linha, { porte: entrada.porte ?? null }, parametros);
   validarOperacao(perfil, linha, entrada);
@@ -293,18 +298,27 @@ export function simular(entrada, parametros = PARAMETROS) {
     : null;
 
   // ── encargos
+  //
+  // Cada encargo recebe o conjunto de parâmetros que está em vigor, e não cai
+  // no padrão do próprio módulo. É o que faz uma alíquota alterada pela
+  // administração chegar até a conta: sem isto, o painel mudaria o arquivo e o
+  // cálculo continuaria usando o número antigo, sem nada indicar o descompasso.
+  const enc = parametros.encargos;
   const tac = calcularTAC(valorSolicitado, {
     variante: perfil.regras.varianteTAC, financiada: tacFinanciada,
+    escada: enc.tac.escadaPadrao, fatorGiroPuro: enc.tac.fatorGiroPuro,
   });
   const iof = calcularIOF({
     valorSolicitado, prazo, carencia,
     incide: iofIncide, financiado: iofFinanciado,
     dataProposta, modoCalendario,
+    parametros: enc.iof,
   });
   const garantia = modalidadeDeGarantia
     ? calcularGarantia(modalidadeDeGarantia, {
       valorSolicitado, tac, iof: iof.total, percentualGarantido, prazo,
       tabelaFatorK: parametros.fatorKFGI.fatores,
+      fatorFAMPE: enc.fampe.fator, fatorFUNDEQ: enc.fundeq.fator,
     })
     : null;
 
@@ -336,9 +350,13 @@ export function simular(entrada, parametros = PARAMETROS) {
 
   // ── indicadores que dependem do cronograma
   const parteGarantida = garantia ? valorSolicitado * percentualGarantido : 0;
-  const rendaParaAval = calcularRendaParaAval(resultado.totais.maiorParcela);
+  const rendaParaAval = calcularRendaParaAval(resultado.totais.maiorParcela, {
+    multiplicador: enc.aval.multiplicador, piso: enc.aval.pisoDeRenda,
+  });
   const alienacao = calcularAlienacaoImovel({
-    valorSolicitado, parteGarantida, ...perfil.regras.alienacao,
+    valorSolicitado, parteGarantida,
+    cobertura: enc.alienacao.cobertura, percentualMaximo: enc.alienacao.percentualMaximo,
+    ...perfil.regras.alienacao,
   });
 
   const tirComBonus = tir(valorSolicitado, resultado.cronograma);
@@ -399,7 +417,12 @@ export function simular(entrada, parametros = PARAMETROS) {
       tacFinanciada, iofFinanciado, garantiaFinanciada, iofIncide,
       premissas: resultado.premissas,
     },
-    versaoParametros: parametros.versao,
+    // Qual conjunto de parâmetros produziu este número, e sob que norma. Uma
+    // simulação entregue a um cliente precisa poder ser reproduzida meses
+    // depois, quando as taxas já mudaram; sem estes dois campos não haveria
+    // como saber qual tabela estava em vigor no dia.
+    versaoParametros: parametros.metadados?.versao ?? parametros.versao,
+    atoNormativo: parametros.metadados?.atoNormativo || null,
     versaoMotor: VERSAO_DO_MOTOR,
     dataSimulacao: new Date().toISOString(),
   };

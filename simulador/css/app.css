@@ -274,16 +274,36 @@ button.perigo:hover:not(:disabled) { border-color: var(--erro); }
   gap: 0.1rem 2rem;
 }
 
+/*
+ * Rótulo em cima, valor embaixo — a mesma forma de cabeçalho que a memória de
+ * cálculo já usava, agora também no resumo, nos encargos e nos indicadores.
+ *
+ * Antes o item era uma linha só, com o rótulo à esquerda e o valor empurrado
+ * para a direita. Numa coluna de dezoito rem isso abre oito rem de vazio entre
+ * os dois, e no computador — onde cabem três ou quatro colunas — o olho tem de
+ * atravessar a lacuna para casar «Valor solicitado» com o número que lhe
+ * pertence, com o número da coluna vizinha competindo no caminho. Empilhar
+ * encosta um no outro, e as quatro seções passam a ler como uma coisa só.
+ */
 .item {
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
   padding: 0.45rem 0;
   border-bottom: 1px solid var(--borda);
 }
 
-.item .rotulo { color: var(--tinta-suave); font-size: 0.9rem; }
-.item .valor { font-variant-numeric: tabular-nums; text-align: right; }
+.item .rotulo {
+  display: block;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.item .valor {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
 .item-destaque .valor { font-weight: 650; }
 
 .derivacao { margin: 0; }
@@ -295,7 +315,11 @@ button.perigo:hover:not(:disabled) { border-color: var(--erro); }
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.derivacao dd { margin: 0.15rem 0 0; font-variant-numeric: tabular-nums; }
+.derivacao dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
 
 .seletor-parcela {
   width: 100%;
@@ -438,125 +462,16 @@ tfoot th, tfoot td {
   .marca .produto { font-size: 1.3rem; }
 }
 
-/* ─────────────────────────────────────────────────────────── gráficos */
+/* ───────────────────────────────────────────────────────── comparação */
 
 /*
- * Duas cores categóricas, azul e laranja, escolhidas por separação e não por
- * gosto: o par passa nas verificações de daltonismo (ΔE 24,7 protanopia no
- * claro, 26,8 no escuro) e tem contraste acima de 3:1 sobre as duas
- * superfícies. Os passos do modo escuro são escolhidos para o fundo escuro,
- * e não a inversão automática dos claros.
+ * Os gráficos que ocupavam este espaço foram retirados. As quatro séries que
+ * eles desenhavam — prestação, saldo devedor, juros e amortização acumulados —
+ * continuam abertas na tabela de dados, parcela a parcela e com o valor exato,
+ * que é o que se confere contra um contrato. Com eles saíram as duas cores
+ * categóricas e o traço da legenda: sem linha para indexar, um traço colorido
+ * ao lado de «SAC» seria enfeite.
  */
-:root {
-  --serie-1: #2a78d6;
-  --serie-2: #eb6834;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --serie-1: #3987e5;
-    --serie-2: #d95926;
-  }
-}
-
-/*
- * Duas colunas, não três. Com 20rem de mínimo cabiam três gráficos numa tela
- * larga, e cada um ficava com menos de 300px — sobrava pouco para a linha
- * depois de descontar os eixos. Vinte e seis rem dão dois gráficos largos no
- * computador e um por vez no celular.
- */
-.galeria {
-  display: grid;
-  /*
-   * O `min(…, 100%)` não é enfeite. `minmax(26rem, 1fr)` sozinho impõe uma
-   * coluna de 416px mesmo num contêiner de 358 — o grid não encolhe abaixo do
-   * mínimo, e o gráfico passa a escorar a página aberta, que então rola para o
-   * lado inteira. Com o `min`, o mínimo nunca passa da largura disponível.
-   */
-  grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
-}
-
-.grafico {
-  position: relative;
-  margin: 0;
-  padding: 1rem 1rem 0.75rem;
-  background: var(--superficie);
-  border: 1px solid var(--borda);
-  border-radius: var(--raio);
-  box-shadow: var(--sombra);
-}
-
-.grafico figcaption {
-  font-size: 0.95rem;
-  font-weight: 650;
-  letter-spacing: -0.01em;
-  margin-bottom: 0.4rem;
-}
-
-.legenda { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
-
-/* A legenda espelha a marca: traço para linhas, nunca um quadrado cheio. */
-.chave {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  color: var(--tinta-suave);
-}
-
-.chave .traco {
-  display: inline-block;
-  width: 14px;
-  height: 2px;
-  border-radius: 1px;
-  background: currentcolor;
-}
-
-.chave.serie-1 .traco { background: var(--serie-1); }
-.chave.serie-2 .traco { background: var(--serie-2); }
-
-.area-grafico { display: block; }
-.area-grafico:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; border-radius: 4px; }
-.tela { display: block; max-width: 100%; touch-action: pan-y; }
-
-.linha { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
-.linha.serie-1 { stroke: var(--serie-1); }
-.linha.serie-2 { stroke: var(--serie-2); }
-
-/* Anel na cor da superfície: sem ele, dois marcadores sobrepostos viram um. */
-.ponta, .marcador { stroke: var(--superficie); stroke-width: 2; }
-.ponta.serie-1, .marcador.serie-1 { fill: var(--serie-1); }
-.ponta.serie-2, .marcador.serie-2 { fill: var(--serie-2); }
-
-.grade { stroke: var(--borda); stroke-width: 1; }
-.cruzeta { stroke: var(--borda-forte); stroke-width: 1; }
-
-/* O texto nunca veste a cor da série: quem carrega a identidade é a marca. */
-.rotulo-eixo { fill: var(--tinta-tenue); font-size: 11px; font-family: inherit; }
-.rotulo-fim { fill: var(--tinta-suave); font-size: 11px; font-family: inherit; font-weight: 600; }
-
-.captura { fill: transparent; }
-
-.leitura {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.2rem 1rem;
-  margin-top: 0.5rem;
-  padding-top: 0.5rem;
-  border-top: 1px solid var(--borda);
-  font-size: 0.85rem;
-  min-height: 1.6rem;
-}
-
-.leitura[hidden] { display: none; }
-.leitura strong { font-size: 0.82rem; color: var(--tinta-suave); font-weight: 600; }
-.linha-leitura { display: inline-flex; align-items: baseline; gap: 0.35rem; }
-/* O valor lidera; o nome da série vem depois, discreto. */
-.linha-leitura .numero { font-variant-numeric: tabular-nums; font-weight: 650; }
-.linha-leitura .nome { color: var(--tinta-suave); font-size: 0.8rem; }
 
 .comparacao th[scope="row"] { font-weight: 500; color: var(--tinta-suave); white-space: normal; }
 .comparacao thead .chave { justify-content: flex-end; }
@@ -567,9 +482,7 @@ tfoot th, tfoot td {
 .nota { color: var(--tinta-suave); font-size: 0.9rem; margin: 0 0 1.25rem; max-width: 46rem; }
 
 @media print {
-  .galeria { grid-template-columns: 1fr 1fr; }
-  .grafico { break-inside: avoid; }
-  .leitura, .dados-brutos { display: none; }
+  .dados-brutos { display: none; }
 }
 
 /* ──────────────────────────────────────────────────────────── relatório */
@@ -607,24 +520,38 @@ tfoot th, tfoot td {
 
 /* Rótulo à esquerda, valor à direita, ligados por uma linha pontilhada — é o
    arranjo que se lê rápido no papel, sem precisar seguir a régua com o dedo. */
-.pares { display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 1rem; margin: 0; }
-.pares dt { color: var(--tinta-suave); font-size: 0.9rem; }
-.pares dd {
+/*
+ * A mesma forma de cabeçalho da tela de resultado. Aqui o vazio era maior: os
+ * pares ocupavam a largura inteira do relatório, e «Valor solicitado» ficava a
+ * meia página do número, ligado a ele só por uma linha pontilhada que o olho
+ * tinha de seguir. Em colunas e empilhado, o rótulo encosta no valor e o
+ * relatório ainda encurta, porque três pares cabem onde antes cabia um.
+ */
+.pares {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: 0.1rem 2rem;
   margin: 0;
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-  border-bottom: 1px dotted var(--borda);
-  padding-bottom: 0.3rem;
 }
-.pares dt { border-bottom: 1px dotted var(--borda); padding-bottom: 0.3rem; }
+.pares > div { padding: 0.45rem 0; border-bottom: 1px solid var(--borda); }
+.pares dt {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.pares dd {
+  margin: 0.15rem 0 0;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+}
 
 .observacoes { margin: 0; padding-left: 1.1rem; color: var(--tinta-suave); font-size: 0.9rem; }
 .observacoes li { margin-bottom: 0.4rem; }
 
-.galeria-relatorio { margin-bottom: 0; }
-.galeria-relatorio .grafico { box-shadow: none; }
-
-.cronograma-relatorio { border: 1px solid var(--borda); border-radius: var(--raio); }
+/* A borda passou para o contêiner que rola; a tabela dentro dele não repete. */
+.secao-cronograma .rolagem-tabela { margin-top: 0.5rem; }
 
 .rodape-relatorio {
   margin-top: 2rem;
@@ -661,14 +588,19 @@ tfoot th, tfoot td {
   .secao-relatorio h2 { break-after: avoid; }
   .secao-cronograma { break-inside: auto; }
 
+  /*
+   * No papel, o quadro que rola não existe: um contêiner com `overflow`
+   * estabelece contexto próprio e deixa de paginar, e a tabela inteira é
+   * empurrada para a página seguinte em vez de se dividir. Solto, o cronograma
+   * quebra entre páginas repetindo o cabeçalho, que é o que se quer imprimir.
+   */
+  .rolagem-tabela { overflow: visible; border: 0; border-radius: 0; background: none; }
+
   .cronograma-relatorio thead { display: table-header-group; }
   .cronograma-relatorio tfoot { display: table-footer-group; }
   .cronograma-relatorio tr { break-inside: avoid; }
   .cronograma-relatorio th, .cronograma-relatorio td { padding: 0.3rem 0.5rem; font-size: 0.78rem; }
   .cronograma th:first-child, .cronograma td:first-child { position: static; }
-
-  .galeria-relatorio { grid-template-columns: 1fr 1fr; }
-  .grafico { border-color: #ccc; }
 
   .topo-relatorio { border-bottom-color: #333; }
   .rodape-relatorio { break-inside: avoid; }

@@ -2,7 +2,7 @@
  * Relatório para impressão, e exportação do cronograma.
  *
  * O item 33 do escopo lista o que o relatório precisa conter: identificação,
- * parâmetros, premissas, resumo, cronograma, totais, TIR, gráficos e as duas
+ * parâmetros, premissas, resumo, cronograma, totais, TIR e as duas
  * versões. Está tudo aqui, numa página só, formatada para sair no papel sem
  * cortar tabela no meio.
  *
@@ -15,20 +15,22 @@
  */
 
 import { criar } from './formulario.js';
-import { desenharGrafico } from './grafico.js';
 import { cronogramaEmCSV, nomeDoArquivo } from './csv.js';
-import { moeda, numero, taxa, percentual, meses, data, dataHora, textoDoAviso } from './formatar.js';
+import { moeda, taxa, percentual, meses, data, dataHora, textoDoAviso } from './formatar.js';
 
-const acumular = (valores) => {
-  let total = 0;
-  return valores.map((v) => { total += v; return total; });
-};
-
-const noEixo = (v) => (Math.abs(v) >= 1000 ? `${numero(v / 1000, 0)} mil` : numero(v, 0));
-const naPonta = (v) => numero(v, 0);
-
+/*
+ * Cada par vai dentro de um `div`, e não solto no `dl`.
+ *
+ * É o que permite empilhar rótulo e valor e ainda distribuir os pares em
+ * colunas: um `dl` com `dt` e `dd` soltos, posto em grade, alterna os dois pela
+ * linha e separa o rótulo do valor que lhe pertence. `dl > div > dt + dd` é
+ * HTML válido e mantém a lista de definição como lista de definição.
+ */
 function par(rotulo, valor) {
-  return [criar('dt', { texto: rotulo }), criar('dd', { texto: valor })];
+  return [criar('div', {}, [
+    criar('dt', { texto: rotulo }),
+    criar('dd', { texto: valor }),
+  ])];
 }
 
 function secao(titulo, conteudo, classe = '') {
@@ -139,28 +141,6 @@ export function desenharRelatorio(raiz, s) {
     ]),
   ]));
 
-  // ── gráficos
-  const galeria = criar('div', { class: 'galeria galeria-relatorio' });
-  desenharGrafico(galeria, {
-    titulo: 'Evolução da prestação',
-    series: [{ nome: 'Prestação', classe: 'serie-1', pontos: s.cronograma.map((p) => p.prestacao) }],
-    formatar: moeda, formatarEixo: noEixo, formatarPonta: naPonta,
-  });
-  desenharGrafico(galeria, {
-    titulo: 'Evolução do saldo devedor',
-    series: [{ nome: 'Saldo', classe: 'serie-1', pontos: s.cronograma.map((p) => p.saldoFinal) }],
-    formatar: moeda, formatarEixo: noEixo, formatarPonta: naPonta,
-  });
-  desenharGrafico(galeria, {
-    titulo: 'Juros e amortização acumulados',
-    series: [
-      { nome: 'Juros', classe: 'serie-2', pontos: acumular(s.cronograma.map((p) => p.juros + p.jurosIndexador)) },
-      { nome: 'Amortização', classe: 'serie-1', pontos: acumular(s.cronograma.map((p) => p.amortizacao)) },
-    ],
-    formatar: moeda, formatarEixo: noEixo, formatarPonta: naPonta,
-  });
-  relatorio.append(secao('Gráficos', galeria));
-
   // ── observações
   // O aviso do saldo residual já explica que não é arredondamento; repetir
   // isso numa segunda observação só faria o leitor duvidar da primeira.
@@ -171,7 +151,12 @@ export function desenharRelatorio(raiz, s) {
   }
 
   // ── cronograma
-  relatorio.append(secao('Cronograma', criar('table', { class: 'cronograma cronograma-relatorio' }, [
+  //
+  // Dentro de um contêiner que rola, como as demais tabelas do aplicativo. Sem
+  // ele, as oito colunas do cronograma escoram a página aberta no celular, e o
+  // relatório inteiro passa a rolar para o lado — inclusive o texto, que caberia.
+  relatorio.append(secao('Cronograma', criar('div', { class: 'rolagem-tabela' }, [
+    criar('table', { class: 'cronograma cronograma-relatorio' }, [
     criar('thead', {}, [criar('tr', {}, [
       criar('th', { texto: '#' }),
       criar('th', { texto: 'Vencimento' }),
@@ -199,6 +184,7 @@ export function desenharRelatorio(raiz, s) {
       criar('td', { class: 'num', texto: moeda(s.totalPago) }),
       criar('td', { class: 'num', texto: moeda(s.saldoResidual) }),
     ])]),
+    ]),
   ]), 'secao-cronograma'));
 
   // ── procedência
