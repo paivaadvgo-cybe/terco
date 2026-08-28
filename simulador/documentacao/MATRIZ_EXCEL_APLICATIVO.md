@@ -7,10 +7,11 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 13 concluídas. O motor está completo e validado contra as células da
+Fases 1 a 14 concluídas. O motor está completo e validado contra as células da
 planilha, valor a valor; a interface permite simular, ver o cronograma, ler a
 memória de cálculo, salvar no aparelho, comparar SAC com PRICE, imprimir o
-relatório e exportar o cronograma. O PWA segue em `MAPEADO`.
+relatório e exportar o cronograma; e o aplicativo funciona sem internet e pode
+ser instalado. Falta a Fase 15, o relatório de equivalência.
 
 ## 1. Entrada e composição do valor
 
@@ -111,6 +112,7 @@ relatório e exportar o cronograma. O PWA segue em `MAPEADO`.
 | — | — | Relatório para impressão, com os nove blocos do item 33 | — | `desenharRelatorio()` | `ui/relatorio` | EXTENSAO · IMPLEMENTADO |
 | — | — | Exportação do cronograma em CSV, para o Excel em pt-BR | — | `cronogramaEmCSV()` | `ui/csv` | EXTENSAO · IMPLEMENTADO |
 | — | — | PDF | — | pela caixa de impressão do navegador | `ui/relatorio` | EXTENSAO · IMPLEMENTADO |
+| — | — | Funcionamento sem internet e instalação | — | `sw.js`, `manifest.json` | — | EXTENSAO · IMPLEMENTADO |
 | mensais | `AL17:AR19` | Receita, despesa e margem da instituição | R$ | não migrado | — | fora de escopo |
 | FCO | `BB16:BD18` | idem | R$ | não migrado | — | fora de escopo |
 

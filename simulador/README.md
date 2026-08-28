@@ -31,8 +31,9 @@ não podem virar código sem decisão; estão em
 | 10 | Produtos: nove famílias, TIR e a simulação completa | concluída |
 | 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída |
 | 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída |
-| 13 | Relatórios: impressão, PDF e exportação em CSV | concluída — 127 passando ao todo |
-| 14–15 | PWA, equivalência final | aguardando |
+| 13 | Relatórios: impressão, PDF e exportação em CSV | concluída |
+| 14 | PWA: funciona sem internet e instala | concluída — 135 passando ao todo |
+| 15 | Relatório de equivalência | aguardando |
 
 ```
 cd simulador && npm test
@@ -70,6 +71,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `js/ui/` | Formulário, resultado, cronograma, comparador, gráficos, relatório, CSV e formatação |
 | `js/storage/` | Simulações salvas no próprio aparelho, em IndexedDB |
 | `index.html`, `css/` | O aplicativo |
+| `sw.js`, `manifest.json`, `icones/` | Funcionamento sem internet e instalação |
 | `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |
 | `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |
@@ -92,6 +94,18 @@ python3 simulador/ferramentas/extrair_parametros.py \
 
 A auditoria produz `inventario.json`, `celulas.tsv` e `formulas.txt`, que são
 a base de tudo o que está documentado aqui.
+
+## Sem internet
+
+Depois da primeira visita o simulador funciona offline: o aplicativo inteiro —
+os quarenta e quatro arquivos da casca — fica guardado no navegador, e as
+simulações salvas ficam no próprio aparelho. Verificado desligando a rede e
+usando: simular, ver os quatro gráficos, abrir o relatório, salvar e recuperar.
+
+A atualização não é automática. O aplicativo é feito de dezenas de módulos que
+se importam entre si, e deixar uma versão nova assumir no meio de uma sessão
+serviria arquivos novos a uma página que já carregou os antigos. A versão nova
+espera, a página avisa, e quem está usando decide quando recarregar.
 
 ## Sobre o PDF
 

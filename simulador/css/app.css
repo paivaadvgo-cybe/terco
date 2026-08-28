@@ -673,3 +673,33 @@ tfoot th, tfoot td {
   .topo-relatorio { border-bottom-color: #333; }
   .rodape-relatorio { break-inside: avoid; }
 }
+
+/* ───────────────────────────────────────────── instalação e atualização */
+
+.atualizacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: var(--largura);
+  margin: 1rem auto 0;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--acento);
+  border-radius: var(--raio);
+  background: var(--acento-claro);
+  font-size: 0.92rem;
+}
+
+.atualizacao[hidden] { display: none; }
+.atualizacao button { padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+
+.menu button.instalar {
+  margin-left: auto;
+  border-color: var(--acento);
+  color: var(--acento);
+  font-weight: 600;
+}
+
+.menu button.instalar[hidden] { display: none; }
+
+@media print { .atualizacao { display: none; } }

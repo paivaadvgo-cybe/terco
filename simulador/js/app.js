@@ -268,6 +268,26 @@ const desenhar = {
       criar('p', {}, [
         'Uma simulação não é proposta, não vincula a instituição e não garante concessão.',
       ]),
+      criar('h2', { texto: 'Funcionamento sem internet' }),
+      criar('p', {}, [
+        'Depois da primeira visita, o simulador funciona sem conexão: o aplicativo '
+        + 'inteiro fica guardado no navegador. Pelo menu ',
+        criar('strong', { texto: 'Instalar' }),
+        ', quando o navegador oferecer, ele passa a abrir como um aplicativo, com '
+        + 'ícone próprio. No iPhone, a instalação é pelo botão de compartilhar do '
+        + 'Safari, em «Adicionar à Tela de Início».',
+      ]),
+      criar('p', { class: 'meta' }, [
+        navigator.onLine === false
+          ? 'Você está sem conexão agora, e o simulador está funcionando assim mesmo.'
+          : 'Conectado.',
+        ' ',
+        'serviceWorker' in navigator
+          ? (navigator.serviceWorker.controller
+            ? 'O aplicativo está guardado para uso sem internet.'
+            : 'O aplicativo está sendo guardado; recarregue uma vez para concluir.')
+          : 'Este navegador não guarda aplicativos para uso sem internet.',
+      ]),
       criar('h2', { texto: 'Versões' }),
       criar('p', { class: 'meta' }, [
         `Parâmetros ${PARAMETROS.versao} · motor ${VERSAO_DO_MOTOR}`,
@@ -351,7 +371,79 @@ function iniciar() {
       'data-tela': chave, onClick: () => navegar(chave),
     }, [rotulo]));
   }
+  // Só aparece quando o navegador diz que a instalação é possível: um botão
+  // que não instala nada é pior que botão nenhum.
+  menu.append(criar('button', {
+    id: 'instalar', class: 'instalar', hidden: true,
+    onClick: async () => {
+      if (!app.convite) return;
+      app.convite.prompt();
+      await app.convite.userChoice;
+      app.convite = null;
+      $('#instalar').hidden = true;
+    },
+  }, ['Instalar']));
   navegar('nova');
 }
 
-document.addEventListener('DOMContentLoaded', iniciar);
+/**
+ * Registra o service worker e cuida da instalação e da atualização.
+ *
+ * A atualização não é automática de propósito. O aplicativo é feito de dezenas
+ * de módulos que se importam entre si; deixar um worker novo assumir no meio de
+ * uma sessão serviria arquivos novos a uma página que já carregou os antigos, e
+ * a incompatibilidade apareceria como um erro sem sentido no meio de uma
+ * simulação. O worker novo espera; a página avisa; quem está usando decide
+ * quando recarregar — e só então o controle passa.
+ */
+function prepararInstalacaoEAtualizacao() {
+  if (!('serviceWorker' in navigator)) return;
+
+  navigator.serviceWorker.register('sw.js').then((registro) => {
+    const vigiar = (worker) => {
+      if (!worker) return;
+      worker.addEventListener('statechange', () => {
+        // `controller` nulo é a primeira instalação, não uma atualização.
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          anunciarAtualizacao(worker);
+        }
+      });
+    };
+    if (registro.waiting && navigator.serviceWorker.controller) anunciarAtualizacao(registro.waiting);
+    registro.addEventListener('updatefound', () => vigiar(registro.installing));
+  }).catch(() => {
+    // Sem service worker o aplicativo continua funcionando; só não fica
+    // disponível offline nem oferece instalação. Não é motivo para alarme.
+  });
+
+  let recarregando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (recarregando) return;
+    recarregando = true;
+    window.location.reload();
+  });
+
+  window.addEventListener('beforeinstallprompt', (evento) => {
+    evento.preventDefault();
+    app.convite = evento;
+    const botao = $('#instalar');
+    if (botao) botao.hidden = false;
+  });
+}
+
+function anunciarAtualizacao(worker) {
+  const painel = $('#atualizacao');
+  painel.replaceChildren(
+    document.createTextNode('Há uma versão nova do simulador. '),
+    criar('button', {
+      onClick: () => worker.postMessage('assumir-controle'),
+    }, ['Atualizar agora']),
+    criar('button', { onClick: () => { painel.hidden = true; } }, ['Depois']),
+  );
+  painel.hidden = false;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  iniciar();
+  prepararInstalacaoEAtualizacao();
+});
