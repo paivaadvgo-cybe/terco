@@ -17,7 +17,20 @@
  * nova, e quem estiver usando decide quando recarregar.
  */
 
-const VERSAO = 'simulador-goiasfomento-v1';
+/*
+ * Nome do cache. É o resumo do conteúdo da casca, gerado por
+ * `ferramentas/versionar_casca.mjs`, e não um número escolhido à mão.
+ *
+ * Os arquivos abaixo são servidos cache primeiro: enquanto este nome não muda,
+ * o navegador continua entregando o que guardou, e uma versão publicada não
+ * chega a quem já visitou o site. Depender de alguém lembrar de trocar um
+ * `v1` por `v2` já falhou — duas entregas seguidas mudaram estilos e módulos
+ * mantendo `v1`, e quem tinha o simulador aberto continuou vendo a tela
+ * antiga. Nada quebrava; a tela simplesmente não mudava. Agora qualquer
+ * arquivo alterado muda este nome, e o teste em `tests/pwa.test.js` acusa a
+ * diferença antes de a publicação sair.
+ */
+const VERSAO = 'simulador-goiasfomento-453cdcaa4411';
 const BASE = new URL('./', self.location).pathname;
 
 /**
@@ -75,11 +88,31 @@ const CASCA = [
   './js/ui/resultado.js',
 ];
 
+/** Os endereços da casca, resolvidos uma vez. */
+const ENDERECOS_DA_CASCA = new Set(CASCA.map((c) => new URL(c, self.location).pathname));
+
+/** Este caminho é um arquivo da casca? */
+function daCasca(caminho) {
+  return ENDERECOS_DA_CASCA.has(caminho);
+}
+
 self.addEventListener('install', (evento) => {
+  // `cache: 'reload'` obriga cada arquivo a vir da rede.
+  //
+  // Sem isso a instalação é atendida pelo cache HTTP do navegador, e o cache
+  // novo nasce cheio dos arquivos velhos — que o worker então passa a servir
+  // para sempre, porque daqui em diante ele responde do próprio cache. É o
+  // pior formato de defeito: nada quebra, nada avisa, e a versão publicada
+  // simplesmente não chega. O GitHub Pages serve com dez minutos de validade,
+  // de modo que republicar e atualizar dentro desse intervalo bastava para
+  // congelar a versão antiga no aparelho de quem atualizou.
+  //
   // Sem `catch` por recurso: se um módulo da casca não baixar, a instalação
   // deve falhar. Um cache pela metade é pior que cache nenhum — o aplicativo
   // abriria offline e quebraria na primeira importação que faltasse.
-  evento.waitUntil(caches.open(VERSAO).then((cache) => cache.addAll(CASCA)));
+  evento.waitUntil(caches.open(VERSAO).then(
+    (cache) => cache.addAll(CASCA.map((caminho) => new Request(caminho, { cache: 'reload' }))),
+  ));
 });
 
 self.addEventListener('activate', (evento) => {
@@ -121,8 +154,19 @@ self.addEventListener('fetch', (evento) => {
     return;
   }
 
-  // Módulos, estilo e ícones: cache primeiro. São exatamente o que precisa
-  // estar disponível sem rede, e mudam só quando a versão do cache muda.
+  // Só a casca é guardada, e só ela é servida do cache.
+  //
+  // Guardar tudo que passasse por aqui parecia generoso e era armadilha: o
+  // painel de administração fica de fora da casca de propósito, e portanto
+  // fora do resumo que dá nome ao cache. Guardado assim mesmo, ele seria
+  // servido do cache para sempre, e uma correção no painel nunca chegaria a
+  // quem já o tivesse aberto — sem nada mudar de nome para forçar a troca.
+  // O que não é da casca vai para a rede, como qualquer página comum.
+  if (!daCasca(url.pathname)) return;
+
+  // Cache primeiro: é exatamente o que precisa estar disponível sem rede, e
+  // muda quando a versão do cache muda — isto é, sempre que qualquer arquivo
+  // da casca mudar.
   evento.respondWith(
     caches.match(requisicao).then((cacheado) => cacheado || fetch(requisicao).then((resposta) => {
       if (resposta && resposta.status === 200 && resposta.type === 'basic') {

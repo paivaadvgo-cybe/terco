@@ -17,6 +17,8 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { versaoDeclarada, versaoEsperada } from '../ferramentas/versionar_casca.mjs';
+
 const raiz = new URL('..', import.meta.url).pathname;
 const ler = (relativo) => fs.readFileSync(path.join(raiz, relativo), 'utf8');
 
@@ -153,4 +155,43 @@ test('a página aponta para o manifesto e para o ícone do iPhone', () => {
   // O iOS ignora o manifesto para o ícone da tela inicial.
   assert.match(html, /rel="apple-touch-icon"/);
   assert.match(html, /name="theme-color"/);
+});
+
+test('a versão do cache acompanha o conteúdo da casca', () => {
+  // O defeito que este teste existe para impedir já aconteceu: duas entregas
+  // seguidas mudaram estilos e módulos mantendo `simulador-goiasfomento-v1`.
+  // Como os módulos são servidos cache primeiro, quem já tinha visitado o site
+  // continuou recebendo os arquivos velhos — o `index.html` atualizava, e todo
+  // o resto não. Nada quebrava; a tela simplesmente não mudava, e não havia
+  // erro nenhum apontando para a causa.
+  const texto = ler('sw.js');
+  assert.equal(versaoDeclarada(texto), versaoEsperada(raiz, texto),
+    'algum arquivo da casca mudou sem a versão do cache mudar junto. '
+    + 'Rode `node ferramentas/versionar_casca.mjs --gravar`.');
+});
+
+test('a instalação busca a casca da rede, e não do cache do navegador', () => {
+  // Defeito real, e do tipo que não avisa: `cache.addAll` faz busca comum, que
+  // o cache HTTP do navegador atende. O cache novo nascia cheio dos arquivos
+  // velhos, e o worker passava a servi-los para sempre — nada quebrava, e a
+  // versão publicada simplesmente não chegava. Medido num navegador: com a
+  // busca comum, o CSS guardado sob o nome novo continuava sendo o antigo.
+  const sw = ler('sw.js');
+  const instalacao = sw.slice(sw.indexOf("addEventListener('install'"), sw.indexOf("addEventListener('activate'"));
+  // Sem os comentários: a primeira versão deste teste passava porque casava
+  // com o próprio comentário que explica a correção, e continuava verde depois
+  // de eu desfazer a correção no código.
+  const codigo = instalacao.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  assert.match(codigo, /addAll\([\s\S]*?new Request\([\s\S]*?cache:\s*'reload'/,
+    'a instalação precisa buscar cada arquivo da rede, ignorando o cache HTTP');
+});
+
+test('o worker só guarda e serve o que está na casca', () => {
+  // O painel de administração fica fora da casca de propósito, e portanto fora
+  // do resumo que dá nome ao cache. Guardá-lo assim mesmo o congelaria: seria
+  // servido do cache para sempre, sem nada mudar de nome para forçar a troca.
+  const sw = ler('sw.js');
+  assert.match(sw, /if \(!daCasca\(url\.pathname\)\) return;/,
+    'o que não é da casca precisa ir para a rede, sem passar pelo cache');
+  assert.match(sw, /const ENDERECOS_DA_CASCA = new Set\(/);
 });
