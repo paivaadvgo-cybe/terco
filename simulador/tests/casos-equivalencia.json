@@ -1,0 +1,3736 @@
+{
+ "origem": "Simulador_GoiasFomento 08-05-2025.xlsx",
+ "casos": [
+  {
+   "aba": "Linhas Investimento",
+   "produto": "investimento",
+   "entrada": {
+    "valorSolicitado": 100000.0,
+    "prazo": 60,
+    "carencia": 6,
+    "valorFinanciado": 103507.5,
+    "taxa": {
+     "valor": 0.0165,
+     "unidade": "mensal"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "planilha",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {
+    "tacFinanciada": true,
+    "iofFinanciado": true
+   },
+   "iof": {
+    "incide": true,
+    "adicional": 380.0,
+    "normalTruncado": 1127.5,
+    "simplesTruncado": 376.75000000000017,
+    "total": 1507.5,
+    "aplicado": 1507.5
+   },
+   "encargos": {
+    "tac": 2000.0,
+    "iof": 1507.5,
+    "garantia": 0.0,
+    "rendaParaAval": 10679.176805555555,
+    "alienacao": 214285.7142857143
+   },
+   "tir": {
+    "comBonus": 0.017859866497962784,
+    "semBonus": 0.02207331730268325
+   },
+   "parcelasComValor": 60,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 1707.87375,
+     "amortizacao": 0.0,
+     "saldo": 103507.5,
+     "prestacao": 1707.87375
+    },
+    {
+     "parcela": 2,
+     "juros": 1707.87375,
+     "amortizacao": 0.0,
+     "saldo": 103507.5,
+     "prestacao": 1707.87375
+    },
+    {
+     "parcela": 3,
+     "juros": 1707.87375,
+     "amortizacao": 0.0,
+     "saldo": 103507.5,
+     "prestacao": 1707.87375
+    },
+    {
+     "parcela": 4,
+     "juros": 1707.87375,
+     "amortizacao": 0.0,
+     "saldo": 103507.5,
+     "prestacao": 1707.87375
+    },
+    {
+     "parcela": 5,
+     "juros": 1707.87375,
+     "amortizacao": 0.0,
+     "saldo": 103507.5,
+     "prestacao": 1707.87375
+    },
+    {
+     "parcela": 6,
+     "juros": 1707.87375,
+     "amortizacao": 0.0,
+     "saldo": 103507.5,
+     "prestacao": 1707.87375
+    },
+    {
+     "parcela": 7,
+     "juros": 1707.87375,
+     "amortizacao": 1851.851851851852,
+     "saldo": 101655.64814814815,
+     "prestacao": 3559.725601851852
+    },
+    {
+     "parcela": 8,
+     "juros": 1677.3181944444445,
+     "amortizacao": 1851.851851851852,
+     "saldo": 99803.79629629629,
+     "prestacao": 3529.1700462962963
+    },
+    {
+     "parcela": 9,
+     "juros": 1646.762638888889,
+     "amortizacao": 1851.851851851852,
+     "saldo": 97951.94444444444,
+     "prestacao": 3498.6144907407406
+    },
+    {
+     "parcela": 10,
+     "juros": 1616.2070833333332,
+     "amortizacao": 1851.851851851852,
+     "saldo": 96100.09259259258,
+     "prestacao": 3468.058935185185
+    },
+    {
+     "parcela": 11,
+     "juros": 1585.6515277777778,
+     "amortizacao": 1851.851851851852,
+     "saldo": 94248.24074074073,
+     "prestacao": 3437.5033796296298
+    },
+    {
+     "parcela": 12,
+     "juros": 1555.0959722222221,
+     "amortizacao": 1851.851851851852,
+     "saldo": 92396.38888888888,
+     "prestacao": 3406.947824074074
+    },
+    {
+     "parcela": 13,
+     "juros": 1524.5404166666665,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 90479.58333333331,
+     "prestacao": 3441.3459722222224
+    },
+    {
+     "parcela": 14,
+     "juros": 1492.9131249999998,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 88562.77777777775,
+     "prestacao": 3409.7186805555557
+    },
+    {
+     "parcela": 15,
+     "juros": 1461.285833333333,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 86645.97222222219,
+     "prestacao": 3378.0913888888886
+    },
+    {
+     "parcela": 16,
+     "juros": 1429.6585416666662,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 84729.16666666663,
+     "prestacao": 3346.464097222222
+    },
+    {
+     "parcela": 17,
+     "juros": 1398.0312499999993,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 82812.36111111107,
+     "prestacao": 3314.8368055555547
+    },
+    {
+     "parcela": 18,
+     "juros": 1366.4039583333326,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 80895.5555555555,
+     "prestacao": 3283.209513888888
+    },
+    {
+     "parcela": 19,
+     "juros": 1334.776666666666,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 78978.74999999994,
+     "prestacao": 3251.5822222222214
+    },
+    {
+     "parcela": 20,
+     "juros": 1303.149374999999,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 77061.94444444438,
+     "prestacao": 3219.9549305555547
+    },
+    {
+     "parcela": 21,
+     "juros": 1271.5220833333324,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 75145.13888888882,
+     "prestacao": 3188.327638888888
+    },
+    {
+     "parcela": 22,
+     "juros": 1239.8947916666655,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 73228.33333333326,
+     "prestacao": 3156.7003472222214
+    },
+    {
+     "parcela": 23,
+     "juros": 1208.2674999999988,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 71311.5277777777,
+     "prestacao": 3125.0730555555547
+    },
+    {
+     "parcela": 24,
+     "juros": 1176.640208333332,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 69394.72222222213,
+     "prestacao": 3093.445763888888
+    },
+    {
+     "parcela": 25,
+     "juros": 1145.0129166666652,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 67477.91666666657,
+     "prestacao": 3061.818472222221
+    },
+    {
+     "parcela": 26,
+     "juros": 1113.3856249999985,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 65561.11111111101,
+     "prestacao": 3030.191180555554
+    },
+    {
+     "parcela": 27,
+     "juros": 1081.7583333333316,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 63644.30555555545,
+     "prestacao": 2998.563888888887
+    },
+    {
+     "parcela": 28,
+     "juros": 1050.131041666665,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 61727.4999999999,
+     "prestacao": 2966.9365972222204
+    },
+    {
+     "parcela": 29,
+     "juros": 1018.5037499999984,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 59810.69444444434,
+     "prestacao": 2935.309305555554
+    },
+    {
+     "parcela": 30,
+     "juros": 986.8764583333317,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 57893.88888888879,
+     "prestacao": 2903.6820138888875
+    },
+    {
+     "parcela": 31,
+     "juros": 955.249166666665,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 55977.083333333234,
+     "prestacao": 2872.054722222221
+    },
+    {
+     "parcela": 32,
+     "juros": 923.6218749999985,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 54060.27777777768,
+     "prestacao": 2840.427430555554
+    },
+    {
+     "parcela": 33,
+     "juros": 891.9945833333318,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 52143.472222222124,
+     "prestacao": 2808.8001388888874
+    },
+    {
+     "parcela": 34,
+     "juros": 860.3672916666651,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 50226.66666666657,
+     "prestacao": 2777.1728472222208
+    },
+    {
+     "parcela": 35,
+     "juros": 828.7399999999984,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 48309.861111111015,
+     "prestacao": 2745.545555555554
+    },
+    {
+     "parcela": 36,
+     "juros": 797.1127083333317,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 46393.05555555546,
+     "prestacao": 2713.9182638888874
+    },
+    {
+     "parcela": 37,
+     "juros": 765.4854166666652,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 44476.249999999905,
+     "prestacao": 2682.2909722222207
+    },
+    {
+     "parcela": 38,
+     "juros": 733.8581249999985,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 42559.44444444435,
+     "prestacao": 2650.663680555554
+    },
+    {
+     "parcela": 39,
+     "juros": 702.2308333333318,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 40642.638888888796,
+     "prestacao": 2619.0363888888874
+    },
+    {
+     "parcela": 40,
+     "juros": 670.6035416666651,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 38725.83333333324,
+     "prestacao": 2587.4090972222207
+    },
+    {
+     "parcela": 41,
+     "juros": 638.9762499999985,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 36809.02777777769,
+     "prestacao": 2555.781805555554
+    },
+    {
+     "parcela": 42,
+     "juros": 607.3489583333319,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 34892.22222222213,
+     "prestacao": 2524.154513888888
+    },
+    {
+     "parcela": 43,
+     "juros": 575.7216666666652,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 32975.41666666658,
+     "prestacao": 2492.527222222221
+    },
+    {
+     "parcela": 44,
+     "juros": 544.0943749999985,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 31058.611111111022,
+     "prestacao": 2460.8999305555544
+    },
+    {
+     "parcela": 45,
+     "juros": 512.4670833333319,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 29141.805555555467,
+     "prestacao": 2429.2726388888877
+    },
+    {
+     "parcela": 46,
+     "juros": 480.83979166666523,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 27224.999999999913,
+     "prestacao": 2397.645347222221
+    },
+    {
+     "parcela": 47,
+     "juros": 449.21249999999856,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 25308.194444444358,
+     "prestacao": 2366.0180555555544
+    },
+    {
+     "parcela": 48,
+     "juros": 417.58520833333193,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 23391.388888888803,
+     "prestacao": 2334.3907638888877
+    },
+    {
+     "parcela": 49,
+     "juros": 385.95791666666526,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 21474.58333333325,
+     "prestacao": 2302.763472222221
+    },
+    {
+     "parcela": 50,
+     "juros": 354.33062499999863,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 19557.777777777694,
+     "prestacao": 2271.1361805555543
+    },
+    {
+     "parcela": 51,
+     "juros": 322.70333333333195,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 17640.97222222214,
+     "prestacao": 2239.5088888888877
+    },
+    {
+     "parcela": 52,
+     "juros": 291.07604166666533,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 15724.166666666584,
+     "prestacao": 2207.881597222221
+    },
+    {
+     "parcela": 53,
+     "juros": 259.44874999999865,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 13807.36111111103,
+     "prestacao": 2176.2543055555543
+    },
+    {
+     "parcela": 54,
+     "juros": 227.821458333332,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 11890.555555555475,
+     "prestacao": 2144.6270138888876
+    },
+    {
+     "parcela": 55,
+     "juros": 196.19416666666535,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 9973.74999999992,
+     "prestacao": 2112.999722222221
+    },
+    {
+     "parcela": 56,
+     "juros": 164.56687499999867,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 8056.944444444364,
+     "prestacao": 2081.3724305555543
+    },
+    {
+     "parcela": 57,
+     "juros": 132.93958333333202,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 6140.138888888809,
+     "prestacao": 2049.7451388888876
+    },
+    {
+     "parcela": 58,
+     "juros": 101.31229166666535,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 4223.333333333253,
+     "prestacao": 2018.117847222221
+    },
+    {
+     "parcela": 59,
+     "juros": 69.68499999999868,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 2306.5277777776973,
+     "prestacao": 1986.4905555555542
+    },
+    {
+     "parcela": 60,
+     "juros": 38.05770833333201,
+     "amortizacao": 1916.8055555555557,
+     "saldo": 389.7222222221417,
+     "prestacao": 1954.8632638888876
+    }
+   ]
+  },
+  {
+   "aba": "Linhas Giro Puro",
+   "produto": "giro",
+   "entrada": {
+    "valorSolicitado": 60000.0,
+    "prazo": 60,
+    "carencia": 6,
+    "valorFinanciado": 62149.635,
+    "taxa": {
+     "valor": 0.005,
+     "unidade": "mensal"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "valorFinanciado",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {
+    "tacFinanciada": true,
+    "iofFinanciado": true
+   },
+   "iof": {
+    "incide": true,
+    "adicional": 228.0,
+    "normalTruncado": 676.5,
+    "simplesTruncado": 226.04999999999987,
+    "total": 904.5,
+    "aplicado": 931.635
+   },
+   "encargos": {
+    "tac": 1217.9999999999998,
+    "iof": 931.635,
+    "garantia": 0.0,
+    "rendaParaAval": 4385.002025,
+    "alienacao": 128571.42857142858
+   },
+   "tir": {
+    "comBonus": -0.0010961245385661122,
+    "semBonus": null
+   },
+   "parcelasComValor": 48,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 310.748175,
+     "amortizacao": 0.0,
+     "saldo": 62149.635,
+     "prestacao": 310.748175
+    },
+    {
+     "parcela": 2,
+     "juros": 310.748175,
+     "amortizacao": 0.0,
+     "saldo": 62149.635,
+     "prestacao": 310.748175
+    },
+    {
+     "parcela": 3,
+     "juros": 310.748175,
+     "amortizacao": 0.0,
+     "saldo": 62149.635,
+     "prestacao": 310.748175
+    },
+    {
+     "parcela": 4,
+     "juros": 310.748175,
+     "amortizacao": 0.0,
+     "saldo": 62149.635,
+     "prestacao": 310.748175
+    },
+    {
+     "parcela": 5,
+     "juros": 310.748175,
+     "amortizacao": 0.0,
+     "saldo": 62149.635,
+     "prestacao": 310.748175
+    },
+    {
+     "parcela": 6,
+     "juros": 310.748175,
+     "amortizacao": 0.0,
+     "saldo": 62149.635,
+     "prestacao": 310.748175
+    },
+    {
+     "parcela": 7,
+     "juros": 310.748175,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 60998.715833333335,
+     "prestacao": 1461.6673416666667
+    },
+    {
+     "parcela": 8,
+     "juros": 304.9935791666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 59847.79666666667,
+     "prestacao": 1455.9127458333335
+    },
+    {
+     "parcela": 9,
+     "juros": 299.23898333333335,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 58696.8775,
+     "prestacao": 1450.1581500000002
+    },
+    {
+     "parcela": 10,
+     "juros": 293.4843875,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 57545.958333333336,
+     "prestacao": 1444.4035541666667
+    },
+    {
+     "parcela": 11,
+     "juros": 287.7297916666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 56395.03916666667,
+     "prestacao": 1438.6489583333334
+    },
+    {
+     "parcela": 12,
+     "juros": 281.9751958333334,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 55244.12,
+     "prestacao": 1432.8943625000002
+    },
+    {
+     "parcela": 13,
+     "juros": 276.22060000000005,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 54093.200833333336,
+     "prestacao": 1427.139766666667
+    },
+    {
+     "parcela": 14,
+     "juros": 270.46600416666666,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 52942.28166666667,
+     "prestacao": 1421.3851708333334
+    },
+    {
+     "parcela": 15,
+     "juros": 264.71140833333334,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 51791.3625,
+     "prestacao": 1415.6305750000001
+    },
+    {
+     "parcela": 16,
+     "juros": 258.9568125,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 50640.443333333336,
+     "prestacao": 1409.8759791666669
+    },
+    {
+     "parcela": 17,
+     "juros": 253.2022166666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 49489.52416666667,
+     "prestacao": 1404.1213833333336
+    },
+    {
+     "parcela": 18,
+     "juros": 247.44762083333336,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 48338.605,
+     "prestacao": 1398.3667875
+    },
+    {
+     "parcela": 19,
+     "juros": 241.69302500000003,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 47187.68583333334,
+     "prestacao": 1392.6121916666668
+    },
+    {
+     "parcela": 20,
+     "juros": 235.93842916666668,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 46036.76666666667,
+     "prestacao": 1386.8575958333336
+    },
+    {
+     "parcela": 21,
+     "juros": 230.18383333333335,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 44885.8475,
+     "prestacao": 1381.103
+    },
+    {
+     "parcela": 22,
+     "juros": 224.42923750000003,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 43734.92833333334,
+     "prestacao": 1375.3484041666668
+    },
+    {
+     "parcela": 23,
+     "juros": 218.6746416666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 42584.00916666667,
+     "prestacao": 1369.5938083333335
+    },
+    {
+     "parcela": 24,
+     "juros": 212.92004583333335,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 41433.090000000004,
+     "prestacao": 1363.8392125
+    },
+    {
+     "parcela": 25,
+     "juros": 207.16545000000002,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 40282.17083333334,
+     "prestacao": 1358.0846166666668
+    },
+    {
+     "parcela": 26,
+     "juros": 201.4108541666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 39131.25166666667,
+     "prestacao": 1352.3300208333335
+    },
+    {
+     "parcela": 27,
+     "juros": 195.65625833333337,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 37980.332500000004,
+     "prestacao": 1346.5754250000002
+    },
+    {
+     "parcela": 28,
+     "juros": 189.90166250000001,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 36829.41333333334,
+     "prestacao": 1340.8208291666667
+    },
+    {
+     "parcela": 29,
+     "juros": 184.1470666666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 35678.49416666667,
+     "prestacao": 1335.0662333333335
+    },
+    {
+     "parcela": 30,
+     "juros": 178.39247083333336,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 34527.575000000004,
+     "prestacao": 1329.3116375000002
+    },
+    {
+     "parcela": 31,
+     "juros": 172.63787500000004,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 33376.65583333334,
+     "prestacao": 1323.557041666667
+    },
+    {
+     "parcela": 32,
+     "juros": 166.88327916666668,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 32225.73666666667,
+     "prestacao": 1317.8024458333334
+    },
+    {
+     "parcela": 33,
+     "juros": 161.12868333333336,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 31074.817500000005,
+     "prestacao": 1312.0478500000002
+    },
+    {
+     "parcela": 34,
+     "juros": 155.37408750000003,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 29923.898333333338,
+     "prestacao": 1306.2932541666669
+    },
+    {
+     "parcela": 35,
+     "juros": 149.6194916666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 28772.97916666667,
+     "prestacao": 1300.5386583333334
+    },
+    {
+     "parcela": 36,
+     "juros": 143.86489583333335,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 27622.060000000005,
+     "prestacao": 1294.7840625000001
+    },
+    {
+     "parcela": 37,
+     "juros": 138.11030000000002,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 26471.14083333334,
+     "prestacao": 1289.0294666666668
+    },
+    {
+     "parcela": 38,
+     "juros": 132.3557041666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 25320.22166666667,
+     "prestacao": 1283.2748708333336
+    },
+    {
+     "parcela": 39,
+     "juros": 126.60110833333336,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 24169.302500000005,
+     "prestacao": 1277.520275
+    },
+    {
+     "parcela": 40,
+     "juros": 120.84651250000003,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 23018.38333333334,
+     "prestacao": 1271.7656791666668
+    },
+    {
+     "parcela": 41,
+     "juros": 115.09191666666669,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 21867.464166666672,
+     "prestacao": 1266.0110833333335
+    },
+    {
+     "parcela": 42,
+     "juros": 109.33732083333337,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 20716.545000000006,
+     "prestacao": 1260.2564875000003
+    },
+    {
+     "parcela": 43,
+     "juros": 103.58272500000002,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 19565.62583333334,
+     "prestacao": 1254.5018916666668
+    },
+    {
+     "parcela": 44,
+     "juros": 97.8281291666667,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 18414.706666666672,
+     "prestacao": 1248.7472958333335
+    },
+    {
+     "parcela": 45,
+     "juros": 92.07353333333336,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 17263.787500000006,
+     "prestacao": 1242.9927000000002
+    },
+    {
+     "parcela": 46,
+     "juros": 86.31893750000003,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 16112.86833333334,
+     "prestacao": 1237.2381041666667
+    },
+    {
+     "parcela": 47,
+     "juros": 80.56434166666669,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 14961.949166666673,
+     "prestacao": 1231.4835083333335
+    },
+    {
+     "parcela": 48,
+     "juros": 74.80974583333337,
+     "amortizacao": 1150.9191666666668,
+     "saldo": 13811.030000000006,
+     "prestacao": 1225.7289125000002
+    }
+   ]
+  },
+  {
+   "aba": "Linhas Transportes",
+   "produto": "transportes",
+   "entrada": {
+    "valorSolicitado": 44000.0,
+    "prazo": 36,
+    "carencia": 0,
+    "valorFinanciado": 45603.433333333334,
+    "taxa": {
+     "valor": 0.0165,
+     "unidade": "mensal"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "planilha",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {
+    "tacFinanciada": true,
+    "iofFinanciado": true
+   },
+   "iof": {
+    "incide": true,
+    "adicional": 167.2,
+    "normalTruncado": 556.2333333333333,
+    "simplesTruncado": 185.8633333333334,
+    "total": 723.4333333333334,
+    "aplicado": 723.4333333333334
+   },
+   "encargos": {
+    "tac": 880.0,
+    "iof": 723.4333333333334,
+    "garantia": 0.0,
+    "rendaParaAval": 5924.036616666666,
+    "alienacao": 94285.71428571429
+   },
+   "tir": {},
+   "parcelasComValor": 36,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 752.4566500000001,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 44381.211111111115,
+     "prestacao": 1974.6788722222223
+    },
+    {
+     "parcela": 2,
+     "juros": 732.2899833333335,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 43158.988888888896,
+     "prestacao": 1954.5122055555557
+    },
+    {
+     "parcela": 3,
+     "juros": 712.1233166666668,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 41936.76666666668,
+     "prestacao": 1934.345538888889
+    },
+    {
+     "parcela": 4,
+     "juros": 691.9566500000002,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 40714.54444444446,
+     "prestacao": 1914.1788722222223
+    },
+    {
+     "parcela": 5,
+     "juros": 671.7899833333336,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 39492.32222222224,
+     "prestacao": 1894.0122055555557
+    },
+    {
+     "parcela": 6,
+     "juros": 651.6233166666669,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 38270.10000000002,
+     "prestacao": 1873.8455388888892
+    },
+    {
+     "parcela": 7,
+     "juros": 631.4566500000004,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 37047.8777777778,
+     "prestacao": 1853.6788722222227
+    },
+    {
+     "parcela": 8,
+     "juros": 611.2899833333338,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 35825.65555555558,
+     "prestacao": 1833.512205555556
+    },
+    {
+     "parcela": 9,
+     "juros": 591.1233166666672,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 34603.43333333336,
+     "prestacao": 1813.3455388888892
+    },
+    {
+     "parcela": 10,
+     "juros": 570.9566500000005,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 33381.211111111144,
+     "prestacao": 1793.1788722222227
+    },
+    {
+     "parcela": 11,
+     "juros": 550.7899833333339,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 32158.98888888892,
+     "prestacao": 1773.0122055555562
+    },
+    {
+     "parcela": 12,
+     "juros": 530.6233166666673,
+     "amortizacao": 1222.2222222222222,
+     "saldo": 30936.7666666667,
+     "prestacao": 1752.8455388888895
+    },
+    {
+     "parcela": 13,
+     "juros": 510.45665000000054,
+     "amortizacao": 1266.762037037037,
+     "saldo": 29670.00462962966,
+     "prestacao": 1777.2186870370376
+    },
+    {
+     "parcela": 14,
+     "juros": 489.5550763888894,
+     "amortizacao": 1266.762037037037,
+     "saldo": 28403.24259259262,
+     "prestacao": 1756.3171134259264
+    },
+    {
+     "parcela": 15,
+     "juros": 468.6535027777783,
+     "amortizacao": 1266.762037037037,
+     "saldo": 27136.480555555583,
+     "prestacao": 1735.4155398148155
+    },
+    {
+     "parcela": 16,
+     "juros": 447.75192916666714,
+     "amortizacao": 1266.762037037037,
+     "saldo": 25869.718518518544,
+     "prestacao": 1714.5139662037043
+    },
+    {
+     "parcela": 17,
+     "juros": 426.850355555556,
+     "amortizacao": 1266.762037037037,
+     "saldo": 24602.956481481506,
+     "prestacao": 1693.612392592593
+    },
+    {
+     "parcela": 18,
+     "juros": 405.9487819444449,
+     "amortizacao": 1266.762037037037,
+     "saldo": 23336.194444444467,
+     "prestacao": 1672.710818981482
+    },
+    {
+     "parcela": 19,
+     "juros": 385.04720833333374,
+     "amortizacao": 1266.762037037037,
+     "saldo": 22069.43240740743,
+     "prestacao": 1651.8092453703707
+    },
+    {
+     "parcela": 20,
+     "juros": 364.1456347222226,
+     "amortizacao": 1266.762037037037,
+     "saldo": 20802.67037037039,
+     "prestacao": 1630.9076717592598
+    },
+    {
+     "parcela": 21,
+     "juros": 343.2440611111114,
+     "amortizacao": 1266.762037037037,
+     "saldo": 19535.90833333335,
+     "prestacao": 1610.0060981481486
+    },
+    {
+     "parcela": 22,
+     "juros": 322.3424875000003,
+     "amortizacao": 1266.762037037037,
+     "saldo": 18269.146296296312,
+     "prestacao": 1589.1045245370374
+    },
+    {
+     "parcela": 23,
+     "juros": 301.44091388888916,
+     "amortizacao": 1266.762037037037,
+     "saldo": 17002.384259259274,
+     "prestacao": 1568.2029509259262
+    },
+    {
+     "parcela": 24,
+     "juros": 280.539340277778,
+     "amortizacao": 1266.762037037037,
+     "saldo": 15735.622222222237,
+     "prestacao": 1547.301377314815
+    },
+    {
+     "parcela": 25,
+     "juros": 259.6377666666669,
+     "amortizacao": 1266.762037037037,
+     "saldo": 14468.8601851852,
+     "prestacao": 1526.399803703704
+    },
+    {
+     "parcela": 26,
+     "juros": 238.73619305555582,
+     "amortizacao": 1266.762037037037,
+     "saldo": 13202.098148148163,
+     "prestacao": 1505.4982300925928
+    },
+    {
+     "parcela": 27,
+     "juros": 217.8346194444447,
+     "amortizacao": 1266.762037037037,
+     "saldo": 11935.336111111126,
+     "prestacao": 1484.596656481482
+    },
+    {
+     "parcela": 28,
+     "juros": 196.93304583333358,
+     "amortizacao": 1266.762037037037,
+     "saldo": 10668.57407407409,
+     "prestacao": 1463.6950828703707
+    },
+    {
+     "parcela": 29,
+     "juros": 176.03147222222248,
+     "amortizacao": 1266.762037037037,
+     "saldo": 9401.812037037053,
+     "prestacao": 1442.7935092592595
+    },
+    {
+     "parcela": 30,
+     "juros": 155.12989861111137,
+     "amortizacao": 1266.762037037037,
+     "saldo": 8135.050000000016,
+     "prestacao": 1421.8919356481485
+    },
+    {
+     "parcela": 31,
+     "juros": 134.22832500000027,
+     "amortizacao": 1266.762037037037,
+     "saldo": 6868.287962962979,
+     "prestacao": 1400.9903620370374
+    },
+    {
+     "parcela": 32,
+     "juros": 113.32675138888915,
+     "amortizacao": 1266.762037037037,
+     "saldo": 5601.525925925942,
+     "prestacao": 1380.0887884259262
+    },
+    {
+     "parcela": 33,
+     "juros": 92.42517777777805,
+     "amortizacao": 1266.762037037037,
+     "saldo": 4334.763888888905,
+     "prestacao": 1359.1872148148152
+    },
+    {
+     "parcela": 34,
+     "juros": 71.52360416666694,
+     "amortizacao": 1266.762037037037,
+     "saldo": 3068.001851851868,
+     "prestacao": 1338.285641203704
+    },
+    {
+     "parcela": 35,
+     "juros": 50.622030555555824,
+     "amortizacao": 1266.762037037037,
+     "saldo": 1801.239814814831,
+     "prestacao": 1317.3840675925928
+    },
+    {
+     "parcela": 36,
+     "juros": 29.720456944444713,
+     "amortizacao": 1266.762037037037,
+     "saldo": 534.477777777794,
+     "prestacao": 1296.4824939814819
+    }
+   ]
+  },
+  {
+   "aba": "Mais Crédito",
+   "produto": "microcredito",
+   "entrada": {
+    "valorSolicitado": 5000.0,
+    "prazo": 36,
+    "carencia": 6,
+    "valorFinanciado": 5000.0,
+    "taxa": {
+     "valor": 0.0169,
+     "unidade": "mensal"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "planilha",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {
+    "tacFinanciada": false,
+    "iofFinanciado": false
+   },
+   "iof": {
+    "incide": true,
+    "adicional": 19.0,
+    "normalTruncado": 71.54499999999999,
+    "simplesTruncado": 23.906500000000012,
+    "total": 42.90650000000001,
+    "aplicado": 42.90650000000001
+   },
+   "encargos": {
+    "tac": 150.0,
+    "iof": 42.90650000000001,
+    "garantia": 180.0,
+    "rendaParaAval": 2424.0
+   },
+   "tir": {},
+   "parcelasComValor": 36,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 84.49999999999999,
+     "amortizacao": 0.0,
+     "saldo": 5000.0,
+     "prestacao": 84.49999999999999
+    },
+    {
+     "parcela": 2,
+     "juros": 84.49999999999999,
+     "amortizacao": 0.0,
+     "saldo": 5000.0,
+     "prestacao": 84.49999999999999
+    },
+    {
+     "parcela": 3,
+     "juros": 84.49999999999999,
+     "amortizacao": 0.0,
+     "saldo": 5000.0,
+     "prestacao": 84.49999999999999
+    },
+    {
+     "parcela": 4,
+     "juros": 84.49999999999999,
+     "amortizacao": 0.0,
+     "saldo": 5000.0,
+     "prestacao": 84.49999999999999
+    },
+    {
+     "parcela": 5,
+     "juros": 84.49999999999999,
+     "amortizacao": 0.0,
+     "saldo": 5000.0,
+     "prestacao": 84.49999999999999
+    },
+    {
+     "parcela": 6,
+     "juros": 84.49999999999999,
+     "amortizacao": 0.0,
+     "saldo": 5000.0,
+     "prestacao": 84.49999999999999
+    },
+    {
+     "parcela": 7,
+     "juros": 84.49999999999999,
+     "amortizacao": 166.66666666666666,
+     "saldo": 4833.333333333333,
+     "prestacao": 251.16666666666663
+    },
+    {
+     "parcela": 8,
+     "juros": 81.68333333333332,
+     "amortizacao": 166.66666666666666,
+     "saldo": 4666.666666666666,
+     "prestacao": 248.34999999999997
+    },
+    {
+     "parcela": 9,
+     "juros": 78.86666666666665,
+     "amortizacao": 166.66666666666666,
+     "saldo": 4499.999999999999,
+     "prestacao": 245.5333333333333
+    },
+    {
+     "parcela": 10,
+     "juros": 76.04999999999998,
+     "amortizacao": 166.66666666666666,
+     "saldo": 4333.333333333332,
+     "prestacao": 242.71666666666664
+    },
+    {
+     "parcela": 11,
+     "juros": 73.2333333333333,
+     "amortizacao": 166.66666666666666,
+     "saldo": 4166.666666666665,
+     "prestacao": 239.89999999999998
+    },
+    {
+     "parcela": 12,
+     "juros": 70.41666666666663,
+     "amortizacao": 166.66666666666666,
+     "saldo": 3999.9999999999986,
+     "prestacao": 237.0833333333333
+    },
+    {
+     "parcela": 13,
+     "juros": 67.59999999999997,
+     "amortizacao": 166.66666666666666,
+     "saldo": 3833.333333333332,
+     "prestacao": 234.26666666666662
+    },
+    {
+     "parcela": 14,
+     "juros": 64.7833333333333,
+     "amortizacao": 166.66666666666666,
+     "saldo": 3666.6666666666656,
+     "prestacao": 231.44999999999996
+    },
+    {
+     "parcela": 15,
+     "juros": 61.96666666666664,
+     "amortizacao": 166.66666666666666,
+     "saldo": 3499.999999999999,
+     "prestacao": 228.6333333333333
+    },
+    {
+     "parcela": 16,
+     "juros": 59.14999999999998,
+     "amortizacao": 166.66666666666666,
+     "saldo": 3333.3333333333326,
+     "prestacao": 225.81666666666663
+    },
+    {
+     "parcela": 17,
+     "juros": 56.333333333333314,
+     "amortizacao": 166.66666666666666,
+     "saldo": 3166.666666666666,
+     "prestacao": 222.99999999999997
+    },
+    {
+     "parcela": 18,
+     "juros": 53.51666666666665,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2999.9999999999995,
+     "prestacao": 220.1833333333333
+    },
+    {
+     "parcela": 19,
+     "juros": 50.69999999999999,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2833.333333333333,
+     "prestacao": 217.36666666666665
+    },
+    {
+     "parcela": 20,
+     "juros": 47.883333333333326,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2666.6666666666665,
+     "prestacao": 214.54999999999998
+    },
+    {
+     "parcela": 21,
+     "juros": 45.06666666666666,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2500.0,
+     "prestacao": 211.73333333333332
+    },
+    {
+     "parcela": 22,
+     "juros": 42.24999999999999,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2333.3333333333335,
+     "prestacao": 208.91666666666666
+    },
+    {
+     "parcela": 23,
+     "juros": 39.43333333333333,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2166.666666666667,
+     "prestacao": 206.1
+    },
+    {
+     "parcela": 24,
+     "juros": 36.61666666666667,
+     "amortizacao": 166.66666666666666,
+     "saldo": 2000.0000000000002,
+     "prestacao": 203.28333333333333
+    },
+    {
+     "parcela": 25,
+     "juros": 33.8,
+     "amortizacao": 166.66666666666666,
+     "saldo": 1833.3333333333335,
+     "prestacao": 200.46666666666664
+    },
+    {
+     "parcela": 26,
+     "juros": 30.983333333333334,
+     "amortizacao": 166.66666666666666,
+     "saldo": 1666.6666666666667,
+     "prestacao": 197.64999999999998
+    },
+    {
+     "parcela": 27,
+     "juros": 28.166666666666664,
+     "amortizacao": 166.66666666666666,
+     "saldo": 1500.0,
+     "prestacao": 194.83333333333331
+    },
+    {
+     "parcela": 28,
+     "juros": 25.349999999999998,
+     "amortizacao": 166.66666666666666,
+     "saldo": 1333.3333333333333,
+     "prestacao": 192.01666666666665
+    },
+    {
+     "parcela": 29,
+     "juros": 22.53333333333333,
+     "amortizacao": 166.66666666666666,
+     "saldo": 1166.6666666666665,
+     "prestacao": 189.2
+    },
+    {
+     "parcela": 30,
+     "juros": 19.71666666666666,
+     "amortizacao": 166.66666666666666,
+     "saldo": 999.9999999999999,
+     "prestacao": 186.38333333333333
+    },
+    {
+     "parcela": 31,
+     "juros": 16.899999999999995,
+     "amortizacao": 166.66666666666666,
+     "saldo": 833.3333333333333,
+     "prestacao": 183.56666666666666
+    },
+    {
+     "parcela": 32,
+     "juros": 14.08333333333333,
+     "amortizacao": 166.66666666666666,
+     "saldo": 666.6666666666666,
+     "prestacao": 180.75
+    },
+    {
+     "parcela": 33,
+     "juros": 11.266666666666666,
+     "amortizacao": 166.66666666666666,
+     "saldo": 500.0,
+     "prestacao": 177.93333333333334
+    },
+    {
+     "parcela": 34,
+     "juros": 8.45,
+     "amortizacao": 166.66666666666666,
+     "saldo": 333.33333333333337,
+     "prestacao": 175.11666666666665
+    },
+    {
+     "parcela": 35,
+     "juros": 5.633333333333334,
+     "amortizacao": 166.66666666666666,
+     "saldo": 166.6666666666667,
+     "prestacao": 172.29999999999998
+    },
+    {
+     "parcela": 36,
+     "juros": 2.8166666666666673,
+     "amortizacao": 166.66666666666666,
+     "saldo": 5.684341886080802e-14,
+     "prestacao": 169.48333333333332
+    }
+   ]
+  },
+  {
+   "aba": "Mais Crédito (2)",
+   "produto": "microcredito",
+   "entrada": {
+    "valorSolicitado": 21000.0,
+    "prazo": 36,
+    "carencia": 6,
+    "valorFinanciado": 21000.0,
+    "taxa": {
+     "valor": 0.0169,
+     "unidade": "mensal"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "planilha",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {
+    "tacFinanciada": false,
+    "iofFinanciado": false
+   },
+   "iof": {
+    "incide": true,
+    "adicional": 79.8,
+    "normalTruncado": 300.48900000000015,
+    "simplesTruncado": 100.40729999999996,
+    "total": 180.20729999999998,
+    "aplicado": 180.20729999999998
+   },
+   "encargos": {
+    "tac": 420.0,
+    "iof": 180.20729999999998,
+    "garantia": 756.0,
+    "rendaParaAval": 3164.7000000000003
+   },
+   "tir": {},
+   "parcelasComValor": 36,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 354.9,
+     "amortizacao": 0.0,
+     "saldo": 21000.0,
+     "prestacao": 354.9
+    },
+    {
+     "parcela": 2,
+     "juros": 354.9,
+     "amortizacao": 0.0,
+     "saldo": 21000.0,
+     "prestacao": 354.9
+    },
+    {
+     "parcela": 3,
+     "juros": 354.9,
+     "amortizacao": 0.0,
+     "saldo": 21000.0,
+     "prestacao": 354.9
+    },
+    {
+     "parcela": 4,
+     "juros": 354.9,
+     "amortizacao": 0.0,
+     "saldo": 21000.0,
+     "prestacao": 354.9
+    },
+    {
+     "parcela": 5,
+     "juros": 354.9,
+     "amortizacao": 0.0,
+     "saldo": 21000.0,
+     "prestacao": 354.9
+    },
+    {
+     "parcela": 6,
+     "juros": 354.9,
+     "amortizacao": 0.0,
+     "saldo": 21000.0,
+     "prestacao": 354.9
+    },
+    {
+     "parcela": 7,
+     "juros": 354.9,
+     "amortizacao": 700.0,
+     "saldo": 20300.0,
+     "prestacao": 1054.9
+    },
+    {
+     "parcela": 8,
+     "juros": 343.07,
+     "amortizacao": 700.0,
+     "saldo": 19600.0,
+     "prestacao": 1043.07
+    },
+    {
+     "parcela": 9,
+     "juros": 331.23999999999995,
+     "amortizacao": 700.0,
+     "saldo": 18900.0,
+     "prestacao": 1031.24
+    },
+    {
+     "parcela": 10,
+     "juros": 319.40999999999997,
+     "amortizacao": 700.0,
+     "saldo": 18200.0,
+     "prestacao": 1019.41
+    },
+    {
+     "parcela": 11,
+     "juros": 307.58,
+     "amortizacao": 700.0,
+     "saldo": 17500.0,
+     "prestacao": 1007.5799999999999
+    },
+    {
+     "parcela": 12,
+     "juros": 295.74999999999994,
+     "amortizacao": 700.0,
+     "saldo": 16800.0,
+     "prestacao": 995.75
+    },
+    {
+     "parcela": 13,
+     "juros": 283.91999999999996,
+     "amortizacao": 700.0,
+     "saldo": 16100.0,
+     "prestacao": 983.92
+    },
+    {
+     "parcela": 14,
+     "juros": 272.09,
+     "amortizacao": 700.0,
+     "saldo": 15400.0,
+     "prestacao": 972.0899999999999
+    },
+    {
+     "parcela": 15,
+     "juros": 260.26,
+     "amortizacao": 700.0,
+     "saldo": 14700.0,
+     "prestacao": 960.26
+    },
+    {
+     "parcela": 16,
+     "juros": 248.42999999999998,
+     "amortizacao": 700.0,
+     "saldo": 14000.0,
+     "prestacao": 948.43
+    },
+    {
+     "parcela": 17,
+     "juros": 236.59999999999997,
+     "amortizacao": 700.0,
+     "saldo": 13300.0,
+     "prestacao": 936.5999999999999
+    },
+    {
+     "parcela": 18,
+     "juros": 224.76999999999998,
+     "amortizacao": 700.0,
+     "saldo": 12600.0,
+     "prestacao": 924.77
+    },
+    {
+     "parcela": 19,
+     "juros": 212.93999999999997,
+     "amortizacao": 700.0,
+     "saldo": 11900.0,
+     "prestacao": 912.9399999999999
+    },
+    {
+     "parcela": 20,
+     "juros": 201.10999999999999,
+     "amortizacao": 700.0,
+     "saldo": 11200.0,
+     "prestacao": 901.11
+    },
+    {
+     "parcela": 21,
+     "juros": 189.27999999999997,
+     "amortizacao": 700.0,
+     "saldo": 10500.0,
+     "prestacao": 889.28
+    },
+    {
+     "parcela": 22,
+     "juros": 177.45,
+     "amortizacao": 700.0,
+     "saldo": 9800.0,
+     "prestacao": 877.45
+    },
+    {
+     "parcela": 23,
+     "juros": 165.61999999999998,
+     "amortizacao": 700.0,
+     "saldo": 9100.0,
+     "prestacao": 865.62
+    },
+    {
+     "parcela": 24,
+     "juros": 153.79,
+     "amortizacao": 700.0,
+     "saldo": 8400.0,
+     "prestacao": 853.79
+    },
+    {
+     "parcela": 25,
+     "juros": 141.95999999999998,
+     "amortizacao": 700.0,
+     "saldo": 7700.0,
+     "prestacao": 841.96
+    },
+    {
+     "parcela": 26,
+     "juros": 130.13,
+     "amortizacao": 700.0,
+     "saldo": 7000.0,
+     "prestacao": 830.13
+    },
+    {
+     "parcela": 27,
+     "juros": 118.29999999999998,
+     "amortizacao": 700.0,
+     "saldo": 6300.0,
+     "prestacao": 818.3
+    },
+    {
+     "parcela": 28,
+     "juros": 106.46999999999998,
+     "amortizacao": 700.0,
+     "saldo": 5600.0,
+     "prestacao": 806.47
+    },
+    {
+     "parcela": 29,
+     "juros": 94.63999999999999,
+     "amortizacao": 700.0,
+     "saldo": 4900.0,
+     "prestacao": 794.64
+    },
+    {
+     "parcela": 30,
+     "juros": 82.80999999999999,
+     "amortizacao": 700.0,
+     "saldo": 4200.0,
+     "prestacao": 782.81
+    },
+    {
+     "parcela": 31,
+     "juros": 70.97999999999999,
+     "amortizacao": 700.0,
+     "saldo": 3500.0,
+     "prestacao": 770.98
+    },
+    {
+     "parcela": 32,
+     "juros": 59.14999999999999,
+     "amortizacao": 700.0,
+     "saldo": 2800.0,
+     "prestacao": 759.15
+    },
+    {
+     "parcela": 33,
+     "juros": 47.31999999999999,
+     "amortizacao": 700.0,
+     "saldo": 2100.0,
+     "prestacao": 747.3199999999999
+    },
+    {
+     "parcela": 34,
+     "juros": 35.489999999999995,
+     "amortizacao": 700.0,
+     "saldo": 1400.0,
+     "prestacao": 735.49
+    },
+    {
+     "parcela": 35,
+     "juros": 23.659999999999997,
+     "amortizacao": 700.0,
+     "saldo": 700.0,
+     "prestacao": 723.66
+    },
+    {
+     "parcela": 36,
+     "juros": 11.829999999999998,
+     "amortizacao": 700.0,
+     "saldo": 0.0,
+     "prestacao": 711.83
+    }
+   ]
+  },
+  {
+   "aba": "Linhas Fungetur",
+   "produto": "fungetur",
+   "entrada": {
+    "valorSolicitado": 1000000.0,
+    "prazo": 60,
+    "carencia": 3,
+    "valorFinanciado": 1007000.0,
+    "taxa": {
+     "valor": 0.05,
+     "unidade": "anual"
+    },
+    "indexador": {
+     "valor": 0.1,
+     "unidade": "anual"
+    },
+    "convencaoTaxa": "diasUteis",
+    "baseAmortizacao": "valorFinanciado",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {},
+   "iof": null,
+   "encargos": {
+    "tac": 7000.0,
+    "garantia": 0.0
+   },
+   "tir": {},
+   "parcelasComValor": 60,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 4334.338197110748,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 12748.269771766054,
+     "jurosIndexador": 8413.931574655306
+    },
+    {
+     "parcela": 2,
+     "juros": 4334.338197110748,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 12748.269771766054,
+     "jurosIndexador": 8413.931574655306
+    },
+    {
+     "parcela": 3,
+     "juros": 4334.338197110748,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 12748.269771766054,
+     "jurosIndexador": 8413.931574655306
+    },
+    {
+     "parcela": 4,
+     "juros": 4334.338197110748,
+     "amortizacao": 17666.666666666668,
+     "saldo": 989333.3333333334,
+     "prestacao": 30414.93643843272,
+     "jurosIndexador": 8413.931574655306
+    },
+    {
+     "parcela": 5,
+     "juros": 4258.297176108805,
+     "amortizacao": 17666.666666666668,
+     "saldo": 971666.6666666667,
+     "prestacao": 30191.282582787702,
+     "jurosIndexador": 8266.318740012232
+    },
+    {
+     "parcela": 6,
+     "juros": 4182.256155106862,
+     "amortizacao": 17666.666666666668,
+     "saldo": 954000.0000000001,
+     "prestacao": 29967.628727142685,
+     "jurosIndexador": 8118.7059053691555
+    },
+    {
+     "parcela": 7,
+     "juros": 4106.215134104919,
+     "amortizacao": 17666.666666666668,
+     "saldo": 936333.3333333335,
+     "prestacao": 29743.974871497667,
+     "jurosIndexador": 7971.09307072608
+    },
+    {
+     "parcela": 8,
+     "juros": 4030.1741131029767,
+     "amortizacao": 17666.666666666668,
+     "saldo": 918666.6666666669,
+     "prestacao": 29520.32101585265,
+     "jurosIndexador": 7823.480236083005
+    },
+    {
+     "parcela": 9,
+     "juros": 3954.133092101034,
+     "amortizacao": 17666.666666666668,
+     "saldo": 901000.0000000002,
+     "prestacao": 29296.66716020763,
+     "jurosIndexador": 7675.86740143993
+    },
+    {
+     "parcela": 10,
+     "juros": 3878.092071099091,
+     "amortizacao": 17666.666666666668,
+     "saldo": 883333.3333333336,
+     "prestacao": 29073.013304562613,
+     "jurosIndexador": 7528.254566796854
+    },
+    {
+     "parcela": 11,
+     "juros": 3802.0510500971486,
+     "amortizacao": 17666.666666666668,
+     "saldo": 865666.666666667,
+     "prestacao": 28849.359448917596,
+     "jurosIndexador": 7380.641732153779
+    },
+    {
+     "parcela": 12,
+     "juros": 3726.0100290952055,
+     "amortizacao": 17666.666666666668,
+     "saldo": 848000.0000000003,
+     "prestacao": 28625.705593272578,
+     "jurosIndexador": 7233.028897510704
+    },
+    {
+     "parcela": 13,
+     "juros": 3649.969008093263,
+     "amortizacao": 17666.666666666668,
+     "saldo": 830333.3333333337,
+     "prestacao": 28402.05173762756,
+     "jurosIndexador": 7085.416062867629
+    },
+    {
+     "parcela": 14,
+     "juros": 3573.9279870913197,
+     "amortizacao": 17666.666666666668,
+     "saldo": 812666.6666666671,
+     "prestacao": 28178.397881982542,
+     "jurosIndexador": 6937.803228224554
+    },
+    {
+     "parcela": 15,
+     "juros": 3497.8869660893774,
+     "amortizacao": 17666.666666666668,
+     "saldo": 795000.0000000005,
+     "prestacao": 27954.744026337525,
+     "jurosIndexador": 6790.190393581479
+    },
+    {
+     "parcela": 16,
+     "juros": 3421.8459450874343,
+     "amortizacao": 17666.666666666668,
+     "saldo": 777333.3333333338,
+     "prestacao": 27731.090170692507,
+     "jurosIndexador": 6642.577558938404
+    },
+    {
+     "parcela": 17,
+     "juros": 3345.8049240854916,
+     "amortizacao": 17666.666666666668,
+     "saldo": 759666.6666666672,
+     "prestacao": 27507.43631504749,
+     "jurosIndexador": 6494.964724295328
+    },
+    {
+     "parcela": 18,
+     "juros": 3269.7639030835485,
+     "amortizacao": 17666.666666666668,
+     "saldo": 742000.0000000006,
+     "prestacao": 27283.78245940247,
+     "jurosIndexador": 6347.351889652253
+    },
+    {
+     "parcela": 19,
+     "juros": 3193.7228820816063,
+     "amortizacao": 17666.666666666668,
+     "saldo": 724333.333333334,
+     "prestacao": 27060.128603757454,
+     "jurosIndexador": 6199.739055009178
+    },
+    {
+     "parcela": 20,
+     "juros": 3117.681861079663,
+     "amortizacao": 17666.666666666668,
+     "saldo": 706666.6666666673,
+     "prestacao": 26836.474748112436,
+     "jurosIndexador": 6052.126220366103
+    },
+    {
+     "parcela": 21,
+     "juros": 3041.6408400777204,
+     "amortizacao": 17666.666666666668,
+     "saldo": 689000.0000000007,
+     "prestacao": 26612.820892467418,
+     "jurosIndexador": 5904.513385723028
+    },
+    {
+     "parcela": 22,
+     "juros": 2965.5998190757778,
+     "amortizacao": 17666.666666666668,
+     "saldo": 671333.3333333341,
+     "prestacao": 26389.1670368224,
+     "jurosIndexador": 5756.9005510799525
+    },
+    {
+     "parcela": 23,
+     "juros": 2889.558798073835,
+     "amortizacao": 17666.666666666668,
+     "saldo": 653666.6666666674,
+     "prestacao": 26165.51318117738,
+     "jurosIndexador": 5609.2877164368765
+    },
+    {
+     "parcela": 24,
+     "juros": 2813.517777071892,
+     "amortizacao": 17666.666666666668,
+     "saldo": 636000.0000000008,
+     "prestacao": 25941.85932553236,
+     "jurosIndexador": 5461.674881793801
+    },
+    {
+     "parcela": 25,
+     "juros": 2737.4767560699493,
+     "amortizacao": 17666.666666666668,
+     "saldo": 618333.3333333342,
+     "prestacao": 25718.205469887343,
+     "jurosIndexador": 5314.062047150726
+    },
+    {
+     "parcela": 26,
+     "juros": 2661.435735068007,
+     "amortizacao": 17666.666666666668,
+     "saldo": 600666.6666666676,
+     "prestacao": 25494.551614242326,
+     "jurosIndexador": 5166.449212507651
+    },
+    {
+     "parcela": 27,
+     "juros": 2585.394714066064,
+     "amortizacao": 17666.666666666668,
+     "saldo": 583000.0000000009,
+     "prestacao": 25270.897758597308,
+     "jurosIndexador": 5018.836377864576
+    },
+    {
+     "parcela": 28,
+     "juros": 2509.353693064121,
+     "amortizacao": 17666.666666666668,
+     "saldo": 565333.3333333343,
+     "prestacao": 25047.24390295229,
+     "jurosIndexador": 4871.223543221501
+    },
+    {
+     "parcela": 29,
+     "juros": 2433.312672062178,
+     "amortizacao": 17666.666666666668,
+     "saldo": 547666.6666666677,
+     "prestacao": 24823.59004730727,
+     "jurosIndexador": 4723.610708578425
+    },
+    {
+     "parcela": 30,
+     "juros": 2357.271651060236,
+     "amortizacao": 17666.666666666668,
+     "saldo": 530000.000000001,
+     "prestacao": 24599.936191662255,
+     "jurosIndexador": 4575.99787393535
+    },
+    {
+     "parcela": 31,
+     "juros": 2281.2306300582927,
+     "amortizacao": 17666.666666666668,
+     "saldo": 512333.33333333436,
+     "prestacao": 24376.282336017233,
+     "jurosIndexador": 4428.385039292275
+    },
+    {
+     "parcela": 32,
+     "juros": 2205.18960905635,
+     "amortizacao": 17666.666666666668,
+     "saldo": 494666.6666666677,
+     "prestacao": 24152.628480372216,
+     "jurosIndexador": 4280.772204649199
+    },
+    {
+     "parcela": 33,
+     "juros": 2129.148588054407,
+     "amortizacao": 17666.666666666668,
+     "saldo": 477000.000000001,
+     "prestacao": 23928.974624727198,
+     "jurosIndexador": 4133.159370006124
+    },
+    {
+     "parcela": 34,
+     "juros": 2053.1075670524638,
+     "amortizacao": 17666.666666666668,
+     "saldo": 459333.3333333343,
+     "prestacao": 23705.32076908218,
+     "jurosIndexador": 3985.546535363048
+    },
+    {
+     "parcela": 35,
+     "juros": 1977.0665460505206,
+     "amortizacao": 17666.666666666668,
+     "saldo": 441666.6666666676,
+     "prestacao": 23481.666913437162,
+     "jurosIndexador": 3837.9337007199724
+    },
+    {
+     "parcela": 36,
+     "juros": 1901.0255250485777,
+     "amortizacao": 17666.666666666668,
+     "saldo": 424000.00000000093,
+     "prestacao": 23258.01305779214,
+     "jurosIndexador": 3690.3208660768964
+    },
+    {
+     "parcela": 37,
+     "juros": 1824.9845040466346,
+     "amortizacao": 17666.666666666668,
+     "saldo": 406333.33333333425,
+     "prestacao": 23034.359202147123,
+     "jurosIndexador": 3542.708031433821
+    },
+    {
+     "parcela": 38,
+     "juros": 1748.9434830446917,
+     "amortizacao": 17666.666666666668,
+     "saldo": 388666.66666666756,
+     "prestacao": 22810.705346502105,
+     "jurosIndexador": 3395.0951967907454
+    },
+    {
+     "parcela": 39,
+     "juros": 1672.9024620427485,
+     "amortizacao": 17666.666666666668,
+     "saldo": 371000.0000000009,
+     "prestacao": 22587.051490857084,
+     "jurosIndexador": 3247.4823621476694
+    },
+    {
+     "parcela": 40,
+     "juros": 1596.8614410408056,
+     "amortizacao": 17666.666666666668,
+     "saldo": 353333.3333333342,
+     "prestacao": 22363.397635212066,
+     "jurosIndexador": 3099.869527504594
+    },
+    {
+     "parcela": 41,
+     "juros": 1520.8204200388625,
+     "amortizacao": 17666.666666666668,
+     "saldo": 335666.6666666675,
+     "prestacao": 22139.74377956705,
+     "jurosIndexador": 2952.256692861518
+    },
+    {
+     "parcela": 42,
+     "juros": 1444.7793990369196,
+     "amortizacao": 17666.666666666668,
+     "saldo": 318000.0000000008,
+     "prestacao": 21916.08992392203,
+     "jurosIndexador": 2804.6438582184423
+    },
+    {
+     "parcela": 43,
+     "juros": 1368.7383780349764,
+     "amortizacao": 17666.666666666668,
+     "saldo": 300333.3333333341,
+     "prestacao": 21692.436068277013,
+     "jurosIndexador": 2657.031023575367
+    },
+    {
+     "parcela": 44,
+     "juros": 1292.6973570330335,
+     "amortizacao": 17666.666666666668,
+     "saldo": 282666.66666666744,
+     "prestacao": 21468.78221263199,
+     "jurosIndexador": 2509.418188932291
+    },
+    {
+     "parcela": 45,
+     "juros": 1216.6563360310902,
+     "amortizacao": 17666.666666666668,
+     "saldo": 265000.00000000076,
+     "prestacao": 21245.128356986974,
+     "jurosIndexador": 2361.8053542892153
+    },
+    {
+     "parcela": 46,
+     "juros": 1140.6153150291473,
+     "amortizacao": 17666.666666666668,
+     "saldo": 247333.3333333341,
+     "prestacao": 21021.474501341952,
+     "jurosIndexador": 2214.1925196461393
+    },
+    {
+     "parcela": 47,
+     "juros": 1064.5742940272044,
+     "amortizacao": 17666.666666666668,
+     "saldo": 229666.66666666744,
+     "prestacao": 20797.820645696935,
+     "jurosIndexador": 2066.5796850030642
+    },
+    {
+     "parcela": 48,
+     "juros": 988.5332730252616,
+     "amortizacao": 17666.666666666668,
+     "saldo": 212000.0000000008,
+     "prestacao": 20574.166790051917,
+     "jurosIndexador": 1918.9668503599885
+    },
+    {
+     "parcela": 49,
+     "juros": 912.4922520233187,
+     "amortizacao": 17666.666666666668,
+     "saldo": 194333.33333333413,
+     "prestacao": 20350.5129344069,
+     "jurosIndexador": 1771.3540157169132
+    },
+    {
+     "parcela": 50,
+     "juros": 836.4512310213757,
+     "amortizacao": 17666.666666666668,
+     "saldo": 176666.66666666747,
+     "prestacao": 20126.85907876188,
+     "jurosIndexador": 1623.7411810738377
+    },
+    {
+     "parcela": 51,
+     "juros": 760.4102100194328,
+     "amortizacao": 17666.666666666668,
+     "saldo": 159000.00000000081,
+     "prestacao": 19903.205223116864,
+     "jurosIndexador": 1476.1283464307621
+    },
+    {
+     "parcela": 52,
+     "juros": 684.36918901749,
+     "amortizacao": 17666.666666666668,
+     "saldo": 141333.33333333416,
+     "prestacao": 19679.551367471846,
+     "jurosIndexador": 1328.5155117876868
+    },
+    {
+     "parcela": 53,
+     "juros": 608.3281680155471,
+     "amortizacao": 17666.666666666668,
+     "saldo": 123666.66666666749,
+     "prestacao": 19455.897511826828,
+     "jurosIndexador": 1180.9026771446113
+    },
+    {
+     "parcela": 54,
+     "juros": 532.2871470136041,
+     "amortizacao": 17666.666666666668,
+     "saldo": 106000.00000000081,
+     "prestacao": 19232.243656181807,
+     "jurosIndexador": 1033.2898425015358
+    },
+    {
+     "parcela": 55,
+     "juros": 456.2461260116612,
+     "amortizacao": 17666.666666666668,
+     "saldo": 88333.33333333414,
+     "prestacao": 19008.58980053679,
+     "jurosIndexador": 885.6770078584601
+    },
+    {
+     "parcela": 56,
+     "juros": 380.20510500971824,
+     "amortizacao": 17666.666666666668,
+     "saldo": 70666.66666666747,
+     "prestacao": 18784.93594489177,
+     "jurosIndexador": 738.0641732153845
+    },
+    {
+     "parcela": 57,
+     "juros": 304.1640840077752,
+     "amortizacao": 17666.666666666668,
+     "saldo": 53000.0000000008,
+     "prestacao": 18561.282089246753,
+     "jurosIndexador": 590.4513385723089
+    },
+    {
+     "parcela": 58,
+     "juros": 228.12306300583228,
+     "amortizacao": 17666.666666666668,
+     "saldo": 35333.33333333413,
+     "prestacao": 18337.628233601732,
+     "jurosIndexador": 442.8385039292333
+    },
+    {
+     "parcela": 59,
+     "juros": 152.08204200388928,
+     "amortizacao": 17666.666666666668,
+     "saldo": 17666.66666666746,
+     "prestacao": 18113.974377956714,
+     "jurosIndexador": 295.2256692861577
+    },
+    {
+     "parcela": 60,
+     "juros": 76.04102100194636,
+     "amortizacao": 17666.666666666668,
+     "saldo": 7.930793799459934e-10,
+     "prestacao": 17890.320522311697,
+     "jurosIndexador": 147.61283464308218
+    }
+   ]
+  },
+  {
+   "aba": "Linhas FINEP",
+   "produto": "finep",
+   "entrada": {
+    "valorSolicitado": 300000.0,
+    "prazo": 60,
+    "carencia": 6,
+    "valorFinanciado": 300000.0,
+    "taxa": {
+     "valor": 0.055,
+     "unidade": "anual"
+    },
+    "indexador": {
+     "valor": 0.0107,
+     "unidade": "anual"
+    },
+    "convencaoTaxa": "diasUteis",
+    "baseAmortizacao": "valorFinanciado",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {},
+   "iof": null,
+   "encargos": {
+    "tac": 3500.0,
+    "iof": 0.0
+   },
+   "tir": {},
+   "parcelasComValor": 60,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 1406.847092521911,
+     "amortizacao": 0.0,
+     "saldo": 300000.0,
+     "prestacao": 1685.726065867109,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 2,
+     "juros": 1406.847092521911,
+     "amortizacao": 0.0,
+     "saldo": 300000.0,
+     "prestacao": 1685.726065867109,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 3,
+     "juros": 1406.847092521911,
+     "amortizacao": 0.0,
+     "saldo": 300000.0,
+     "prestacao": 1685.726065867109,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 4,
+     "juros": 1406.847092521911,
+     "amortizacao": 0.0,
+     "saldo": 300000.0,
+     "prestacao": 1685.726065867109,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 5,
+     "juros": 1406.847092521911,
+     "amortizacao": 0.0,
+     "saldo": 300000.0,
+     "prestacao": 1685.726065867109,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 6,
+     "juros": 1406.847092521911,
+     "amortizacao": 0.0,
+     "saldo": 300000.0,
+     "prestacao": 1685.726065867109,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 7,
+     "juros": 1406.847092521911,
+     "amortizacao": 5555.555555555556,
+     "saldo": 294444.44444444444,
+     "prestacao": 7241.281621422664,
+     "jurosIndexador": 278.87897334519795
+    },
+    {
+     "parcela": 8,
+     "juros": 1380.79436858632,
+     "amortizacao": 5555.555555555556,
+     "saldo": 288888.8888888889,
+     "prestacao": 7210.064472054755,
+     "jurosIndexador": 273.7145479128795
+    },
+    {
+     "parcela": 9,
+     "juros": 1354.7416446507289,
+     "amortizacao": 5555.555555555556,
+     "saldo": 283333.3333333333,
+     "prestacao": 7178.8473226868455,
+     "jurosIndexador": 268.55012248056096
+    },
+    {
+     "parcela": 10,
+     "juros": 1328.6889207151378,
+     "amortizacao": 5555.555555555556,
+     "saldo": 277777.77777777775,
+     "prestacao": 7147.630173318936,
+     "jurosIndexador": 263.3856970482425
+    },
+    {
+     "parcela": 11,
+     "juros": 1302.636196779547,
+     "amortizacao": 5555.555555555556,
+     "saldo": 272222.2222222222,
+     "prestacao": 7116.413023951027,
+     "jurosIndexador": 258.221271615924
+    },
+    {
+     "parcela": 12,
+     "juros": 1276.583472843956,
+     "amortizacao": 5555.555555555556,
+     "saldo": 266666.6666666666,
+     "prestacao": 7085.195874583117,
+     "jurosIndexador": 253.05684618360553
+    },
+    {
+     "parcela": 13,
+     "juros": 1250.530748908365,
+     "amortizacao": 5555.555555555556,
+     "saldo": 261111.11111111107,
+     "prestacao": 7053.978725215207,
+     "jurosIndexador": 247.89242075128703
+    },
+    {
+     "parcela": 14,
+     "juros": 1224.4780249727742,
+     "amortizacao": 5555.555555555556,
+     "saldo": 255555.5555555555,
+     "prestacao": 7022.761575847298,
+     "jurosIndexador": 242.72799531896854
+    },
+    {
+     "parcela": 15,
+     "juros": 1198.425301037183,
+     "amortizacao": 5555.555555555556,
+     "saldo": 249999.99999999994,
+     "prestacao": 6991.544426479389,
+     "jurosIndexador": 237.56356988665007
+    },
+    {
+     "parcela": 16,
+     "juros": 1172.372577101592,
+     "amortizacao": 5555.555555555556,
+     "saldo": 244444.44444444438,
+     "prestacao": 6960.327277111479,
+     "jurosIndexador": 232.39914445433158
+    },
+    {
+     "parcela": 17,
+     "juros": 1146.3198531660012,
+     "amortizacao": 5555.555555555556,
+     "saldo": 238888.88888888882,
+     "prestacao": 6929.11012774357,
+     "jurosIndexador": 227.23471902201308
+    },
+    {
+     "parcela": 18,
+     "juros": 1120.26712923041,
+     "amortizacao": 5555.555555555556,
+     "saldo": 233333.33333333326,
+     "prestacao": 6897.89297837566,
+     "jurosIndexador": 222.07029358969461
+    },
+    {
+     "parcela": 19,
+     "juros": 1094.2144052948192,
+     "amortizacao": 5555.555555555556,
+     "saldo": 227777.7777777777,
+     "prestacao": 6866.6758290077505,
+     "jurosIndexador": 216.90586815737612
+    },
+    {
+     "parcela": 20,
+     "juros": 1068.1616813592282,
+     "amortizacao": 5555.555555555556,
+     "saldo": 222222.22222222213,
+     "prestacao": 6835.458679639842,
+     "jurosIndexador": 211.74144272505762
+    },
+    {
+     "parcela": 21,
+     "juros": 1042.108957423637,
+     "amortizacao": 5555.555555555556,
+     "saldo": 216666.66666666657,
+     "prestacao": 6804.241530271932,
+     "jurosIndexador": 206.57701729273913
+    },
+    {
+     "parcela": 22,
+     "juros": 1016.0562334880462,
+     "amortizacao": 5555.555555555556,
+     "saldo": 211111.111111111,
+     "prestacao": 6773.024380904022,
+     "jurosIndexador": 201.41259186042066
+    },
+    {
+     "parcela": 23,
+     "juros": 990.0035095524553,
+     "amortizacao": 5555.555555555556,
+     "saldo": 205555.55555555545,
+     "prestacao": 6741.807231536113,
+     "jurosIndexador": 196.24816642810217
+    },
+    {
+     "parcela": 24,
+     "juros": 963.9507856168643,
+     "amortizacao": 5555.555555555556,
+     "saldo": 199999.99999999988,
+     "prestacao": 6710.5900821682035,
+     "jurosIndexador": 191.08374099578367
+    },
+    {
+     "parcela": 25,
+     "juros": 937.8980616812734,
+     "amortizacao": 5555.555555555556,
+     "saldo": 194444.44444444432,
+     "prestacao": 6679.372932800294,
+     "jurosIndexador": 185.9193155634652
+    },
+    {
+     "parcela": 26,
+     "juros": 911.8453377456824,
+     "amortizacao": 5555.555555555556,
+     "saldo": 188888.88888888876,
+     "prestacao": 6648.155783432385,
+     "jurosIndexador": 180.7548901311467
+    },
+    {
+     "parcela": 27,
+     "juros": 885.7926138100913,
+     "amortizacao": 5555.555555555556,
+     "saldo": 183333.3333333332,
+     "prestacao": 6616.938634064475,
+     "jurosIndexador": 175.5904646988282
+    },
+    {
+     "parcela": 28,
+     "juros": 859.7398898745005,
+     "amortizacao": 5555.555555555556,
+     "saldo": 177777.77777777764,
+     "prestacao": 6585.721484696565,
+     "jurosIndexador": 170.42603926650975
+    },
+    {
+     "parcela": 29,
+     "juros": 833.6871659389094,
+     "amortizacao": 5555.555555555556,
+     "saldo": 172222.22222222207,
+     "prestacao": 6554.504335328656,
+     "jurosIndexador": 165.26161383419125
+    },
+    {
+     "parcela": 30,
+     "juros": 807.6344420033186,
+     "amortizacao": 5555.555555555556,
+     "saldo": 166666.6666666665,
+     "prestacao": 6523.287185960747,
+     "jurosIndexador": 160.09718840187276
+    },
+    {
+     "parcela": 31,
+     "juros": 781.5817180677275,
+     "amortizacao": 5555.555555555556,
+     "saldo": 161111.11111111095,
+     "prestacao": 6492.070036592837,
+     "jurosIndexador": 154.9327629695543
+    },
+    {
+     "parcela": 32,
+     "juros": 755.5289941321366,
+     "amortizacao": 5555.555555555556,
+     "saldo": 155555.5555555554,
+     "prestacao": 6460.852887224928,
+     "jurosIndexador": 149.7683375372358
+    },
+    {
+     "parcela": 33,
+     "juros": 729.4762701965456,
+     "amortizacao": 5555.555555555556,
+     "saldo": 149999.99999999983,
+     "prestacao": 6429.635737857018,
+     "jurosIndexador": 144.6039121049173
+    },
+    {
+     "parcela": 34,
+     "juros": 703.4235462609546,
+     "amortizacao": 5555.555555555556,
+     "saldo": 144444.44444444426,
+     "prestacao": 6398.418588489109,
+     "jurosIndexador": 139.4394866725988
+    },
+    {
+     "parcela": 35,
+     "juros": 677.3708223253636,
+     "amortizacao": 5555.555555555556,
+     "saldo": 138888.8888888887,
+     "prestacao": 6367.2014391212,
+     "jurosIndexador": 134.27506124028034
+    },
+    {
+     "parcela": 36,
+     "juros": 651.3180983897727,
+     "amortizacao": 5555.555555555556,
+     "saldo": 133333.33333333314,
+     "prestacao": 6335.98428975329,
+     "jurosIndexador": 129.11063580796184
+    },
+    {
+     "parcela": 37,
+     "juros": 625.2653744541817,
+     "amortizacao": 5555.555555555556,
+     "saldo": 127777.77777777758,
+     "prestacao": 6304.767140385381,
+     "jurosIndexador": 123.94621037564336
+    },
+    {
+     "parcela": 38,
+     "juros": 599.2126505185906,
+     "amortizacao": 5555.555555555556,
+     "saldo": 122222.22222222202,
+     "prestacao": 6273.549991017471,
+     "jurosIndexador": 118.78178494332487
+    },
+    {
+     "parcela": 39,
+     "juros": 573.1599265829997,
+     "amortizacao": 5555.555555555556,
+     "saldo": 116666.66666666645,
+     "prestacao": 6242.3328416495615,
+     "jurosIndexador": 113.61735951100638
+    },
+    {
+     "parcela": 40,
+     "juros": 547.1072026474087,
+     "amortizacao": 5555.555555555556,
+     "saldo": 111111.11111111089,
+     "prestacao": 6211.115692281653,
+     "jurosIndexador": 108.45293407868789
+    },
+    {
+     "parcela": 41,
+     "juros": 521.0544787118178,
+     "amortizacao": 5555.555555555556,
+     "saldo": 105555.55555555533,
+     "prestacao": 6179.898542913743,
+     "jurosIndexador": 103.28850864636941
+    },
+    {
+     "parcela": 42,
+     "juros": 495.0017547762268,
+     "amortizacao": 5555.555555555556,
+     "saldo": 99999.99999999977,
+     "prestacao": 6148.681393545833,
+     "jurosIndexador": 98.12408321405093
+    },
+    {
+     "parcela": 43,
+     "juros": 468.9490308406358,
+     "amortizacao": 5555.555555555556,
+     "saldo": 94444.4444444442,
+     "prestacao": 6117.464244177924,
+     "jurosIndexador": 92.95965778173243
+    },
+    {
+     "parcela": 44,
+     "juros": 442.89630690504487,
+     "amortizacao": 5555.555555555556,
+     "saldo": 88888.88888888864,
+     "prestacao": 6086.2470948100145,
+     "jurosIndexador": 87.79523234941395
+    },
+    {
+     "parcela": 45,
+     "juros": 416.8435829694539,
+     "amortizacao": 5555.555555555556,
+     "saldo": 83333.33333333308,
+     "prestacao": 6055.029945442105,
+     "jurosIndexador": 82.63080691709546
+    },
+    {
+     "parcela": 46,
+     "juros": 390.79085903386294,
+     "amortizacao": 5555.555555555556,
+     "saldo": 77777.77777777752,
+     "prestacao": 6023.812796074196,
+     "jurosIndexador": 77.46638148477697
+    },
+    {
+     "parcela": 47,
+     "juros": 364.7381350982719,
+     "amortizacao": 5555.555555555556,
+     "saldo": 72222.22222222196,
+     "prestacao": 5992.595646706286,
+     "jurosIndexador": 72.3019560524585
+    },
+    {
+     "parcela": 48,
+     "juros": 338.68541116268096,
+     "amortizacao": 5555.555555555556,
+     "saldo": 66666.6666666664,
+     "prestacao": 5961.378497338376,
+     "jurosIndexador": 67.13753062014
+    },
+    {
+     "parcela": 49,
+     "juros": 312.63268722709,
+     "amortizacao": 5555.555555555556,
+     "saldo": 61111.11111111084,
+     "prestacao": 5930.161347970467,
+     "jurosIndexador": 61.97310518782152
+    },
+    {
+     "parcela": 50,
+     "juros": 286.5799632914991,
+     "amortizacao": 5555.555555555556,
+     "saldo": 55555.555555555286,
+     "prestacao": 5898.944198602558,
+     "jurosIndexador": 56.808679755503036
+    },
+    {
+     "parcela": 51,
+     "juros": 260.52723935590814,
+     "amortizacao": 5555.555555555556,
+     "saldo": 49999.99999999973,
+     "prestacao": 5867.727049234649,
+     "jurosIndexador": 51.644254323184555
+    },
+    {
+     "parcela": 52,
+     "juros": 234.4745154203172,
+     "amortizacao": 5555.555555555556,
+     "saldo": 44444.444444444176,
+     "prestacao": 5836.509899866739,
+     "jurosIndexador": 46.479828890866074
+    },
+    {
+     "parcela": 53,
+     "juros": 208.42179148472627,
+     "amortizacao": 5555.555555555556,
+     "saldo": 38888.88888888862,
+     "prestacao": 5805.292750498829,
+     "jurosIndexador": 41.31540345854759
+    },
+    {
+     "parcela": 54,
+     "juros": 182.36906754913534,
+     "amortizacao": 5555.555555555556,
+     "saldo": 33333.33333333307,
+     "prestacao": 5774.07560113092,
+     "jurosIndexador": 36.15097802622912
+    },
+    {
+     "parcela": 55,
+     "juros": 156.3163436135444,
+     "amortizacao": 5555.555555555556,
+     "saldo": 27777.77777777751,
+     "prestacao": 5742.858451763011,
+     "jurosIndexador": 30.986552593910638
+    },
+    {
+     "parcela": 56,
+     "juros": 130.26361967795344,
+     "amortizacao": 5555.555555555556,
+     "saldo": 22222.222222221957,
+     "prestacao": 5711.641302395101,
+     "jurosIndexador": 25.822127161592157
+    },
+    {
+     "parcela": 57,
+     "juros": 104.21089574236252,
+     "amortizacao": 5555.555555555556,
+     "saldo": 16666.666666666402,
+     "prestacao": 5680.424153027192,
+     "jurosIndexador": 20.657701729273676
+    },
+    {
+     "parcela": 58,
+     "juros": 78.15817180677158,
+     "amortizacao": 5555.555555555556,
+     "saldo": 11111.111111110848,
+     "prestacao": 5649.207003659282,
+     "jurosIndexador": 15.493276296955196
+    },
+    {
+     "parcela": 59,
+     "juros": 52.105447871180644,
+     "amortizacao": 5555.555555555556,
+     "saldo": 5555.555555555292,
+     "prestacao": 5617.989854291373,
+     "jurosIndexador": 10.328850864636717
+    },
+    {
+     "parcela": 60,
+     "juros": 26.052723935589704,
+     "amortizacao": 5555.555555555556,
+     "saldo": -2.637534635141492e-10,
+     "prestacao": 5586.772704923464,
+     "jurosIndexador": 5.164425432318236
+    }
+   ]
+  },
+  {
+   "aba": "FCO Empresarial",
+   "produto": "fco",
+   "entrada": {
+    "valorSolicitado": 1000000.0,
+    "prazo": 84,
+    "carencia": 12,
+    "valorFinanciado": 1007000.0,
+    "taxa": {
+     "valor": 0.10267,
+     "unidade": "anual"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "planilha",
+    "tratamentoCarencia": "pagos",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {},
+   "iof": null,
+   "encargos": {
+    "tac": 7000.0
+   },
+   "tir": {},
+   "parcelasComValor": 84,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 2,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 3,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 4,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 5,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 6,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 7,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 8,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 9,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 10,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 11,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 12,
+     "juros": 8235.0442330667,
+     "amortizacao": 0.0,
+     "saldo": 1007000.0,
+     "prestacao": 8235.0442330667
+    },
+    {
+     "parcela": 13,
+     "juros": 8235.0442330667,
+     "amortizacao": 13986.111111111111,
+     "saldo": 993013.8888888889,
+     "prestacao": 22221.15534417781
+    },
+    {
+     "parcela": 14,
+     "juros": 8120.6686187185505,
+     "amortizacao": 13986.111111111111,
+     "saldo": 979027.7777777778,
+     "prestacao": 22106.77972982966
+    },
+    {
+     "parcela": 15,
+     "juros": 8006.293004370402,
+     "amortizacao": 13986.111111111111,
+     "saldo": 965041.6666666666,
+     "prestacao": 21992.404115481513
+    },
+    {
+     "parcela": 16,
+     "juros": 7891.917390022253,
+     "amortizacao": 13986.111111111111,
+     "saldo": 951055.5555555555,
+     "prestacao": 21878.028501133365
+    },
+    {
+     "parcela": 17,
+     "juros": 7777.541775674104,
+     "amortizacao": 13986.111111111111,
+     "saldo": 937069.4444444444,
+     "prestacao": 21763.652886785218
+    },
+    {
+     "parcela": 18,
+     "juros": 7663.166161325956,
+     "amortizacao": 13986.111111111111,
+     "saldo": 923083.3333333333,
+     "prestacao": 21649.277272437066
+    },
+    {
+     "parcela": 19,
+     "juros": 7548.790546977807,
+     "amortizacao": 13986.111111111111,
+     "saldo": 909097.2222222221,
+     "prestacao": 21534.90165808892
+    },
+    {
+     "parcela": 20,
+     "juros": 7434.414932629658,
+     "amortizacao": 13986.111111111111,
+     "saldo": 895111.111111111,
+     "prestacao": 21420.52604374077
+    },
+    {
+     "parcela": 21,
+     "juros": 7320.03931828151,
+     "amortizacao": 13986.111111111111,
+     "saldo": 881124.9999999999,
+     "prestacao": 21306.15042939262
+    },
+    {
+     "parcela": 22,
+     "juros": 7205.663703933361,
+     "amortizacao": 13986.111111111111,
+     "saldo": 867138.8888888888,
+     "prestacao": 21191.77481504447
+    },
+    {
+     "parcela": 23,
+     "juros": 7091.288089585212,
+     "amortizacao": 13986.111111111111,
+     "saldo": 853152.7777777776,
+     "prestacao": 21077.399200696324
+    },
+    {
+     "parcela": 24,
+     "juros": 6976.9124752370635,
+     "amortizacao": 13986.111111111111,
+     "saldo": 839166.6666666665,
+     "prestacao": 20963.023586348176
+    },
+    {
+     "parcela": 25,
+     "juros": 6862.536860888915,
+     "amortizacao": 13986.111111111111,
+     "saldo": 825180.5555555554,
+     "prestacao": 20848.647972000028
+    },
+    {
+     "parcela": 26,
+     "juros": 6748.161246540766,
+     "amortizacao": 13986.111111111111,
+     "saldo": 811194.4444444443,
+     "prestacao": 20734.272357651877
+    },
+    {
+     "parcela": 27,
+     "juros": 6633.785632192617,
+     "amortizacao": 13986.111111111111,
+     "saldo": 797208.3333333331,
+     "prestacao": 20619.89674330373
+    },
+    {
+     "parcela": 28,
+     "juros": 6519.410017844469,
+     "amortizacao": 13986.111111111111,
+     "saldo": 783222.222222222,
+     "prestacao": 20505.52112895558
+    },
+    {
+     "parcela": 29,
+     "juros": 6405.03440349632,
+     "amortizacao": 13986.111111111111,
+     "saldo": 769236.1111111109,
+     "prestacao": 20391.14551460743
+    },
+    {
+     "parcela": 30,
+     "juros": 6290.658789148171,
+     "amortizacao": 13986.111111111111,
+     "saldo": 755249.9999999998,
+     "prestacao": 20276.76990025928
+    },
+    {
+     "parcela": 31,
+     "juros": 6176.283174800023,
+     "amortizacao": 13986.111111111111,
+     "saldo": 741263.8888888886,
+     "prestacao": 20162.394285911134
+    },
+    {
+     "parcela": 32,
+     "juros": 6061.907560451874,
+     "amortizacao": 13986.111111111111,
+     "saldo": 727277.7777777775,
+     "prestacao": 20048.018671562986
+    },
+    {
+     "parcela": 33,
+     "juros": 5947.531946103725,
+     "amortizacao": 13986.111111111111,
+     "saldo": 713291.6666666664,
+     "prestacao": 19933.64305721484
+    },
+    {
+     "parcela": 34,
+     "juros": 5833.1563317555765,
+     "amortizacao": 13986.111111111111,
+     "saldo": 699305.5555555553,
+     "prestacao": 19819.267442866687
+    },
+    {
+     "parcela": 35,
+     "juros": 5718.780717407428,
+     "amortizacao": 13986.111111111111,
+     "saldo": 685319.4444444441,
+     "prestacao": 19704.89182851854
+    },
+    {
+     "parcela": 36,
+     "juros": 5604.405103059279,
+     "amortizacao": 13986.111111111111,
+     "saldo": 671333.333333333,
+     "prestacao": 19590.51621417039
+    },
+    {
+     "parcela": 37,
+     "juros": 5490.02948871113,
+     "amortizacao": 13986.111111111111,
+     "saldo": 657347.2222222219,
+     "prestacao": 19476.14059982224
+    },
+    {
+     "parcela": 38,
+     "juros": 5375.653874362982,
+     "amortizacao": 13986.111111111111,
+     "saldo": 643361.1111111108,
+     "prestacao": 19361.764985474092
+    },
+    {
+     "parcela": 39,
+     "juros": 5261.278260014833,
+     "amortizacao": 13986.111111111111,
+     "saldo": 629374.9999999997,
+     "prestacao": 19247.389371125944
+    },
+    {
+     "parcela": 40,
+     "juros": 5146.902645666684,
+     "amortizacao": 13986.111111111111,
+     "saldo": 615388.8888888885,
+     "prestacao": 19133.013756777797
+    },
+    {
+     "parcela": 41,
+     "juros": 5032.527031318536,
+     "amortizacao": 13986.111111111111,
+     "saldo": 601402.7777777774,
+     "prestacao": 19018.63814242965
+    },
+    {
+     "parcela": 42,
+     "juros": 4918.151416970387,
+     "amortizacao": 13986.111111111111,
+     "saldo": 587416.6666666663,
+     "prestacao": 18904.262528081497
+    },
+    {
+     "parcela": 43,
+     "juros": 4803.775802622238,
+     "amortizacao": 13986.111111111111,
+     "saldo": 573430.5555555552,
+     "prestacao": 18789.88691373335
+    },
+    {
+     "parcela": 44,
+     "juros": 4689.4001882740895,
+     "amortizacao": 13986.111111111111,
+     "saldo": 559444.444444444,
+     "prestacao": 18675.5112993852
+    },
+    {
+     "parcela": 45,
+     "juros": 4575.024573925941,
+     "amortizacao": 13986.111111111111,
+     "saldo": 545458.3333333329,
+     "prestacao": 18561.13568503705
+    },
+    {
+     "parcela": 46,
+     "juros": 4460.648959577792,
+     "amortizacao": 13986.111111111111,
+     "saldo": 531472.2222222218,
+     "prestacao": 18446.760070688902
+    },
+    {
+     "parcela": 47,
+     "juros": 4346.273345229643,
+     "amortizacao": 13986.111111111111,
+     "saldo": 517486.11111111066,
+     "prestacao": 18332.384456340755
+    },
+    {
+     "parcela": 48,
+     "juros": 4231.897730881495,
+     "amortizacao": 13986.111111111111,
+     "saldo": 503499.99999999953,
+     "prestacao": 18218.008841992607
+    },
+    {
+     "parcela": 49,
+     "juros": 4117.522116533346,
+     "amortizacao": 13986.111111111111,
+     "saldo": 489513.8888888884,
+     "prestacao": 18103.63322764446
+    },
+    {
+     "parcela": 50,
+     "juros": 4003.1465021851973,
+     "amortizacao": 13986.111111111111,
+     "saldo": 475527.7777777773,
+     "prestacao": 17989.257613296308
+    },
+    {
+     "parcela": 51,
+     "juros": 3888.7708878370486,
+     "amortizacao": 13986.111111111111,
+     "saldo": 461541.66666666616,
+     "prestacao": 17874.88199894816
+    },
+    {
+     "parcela": 52,
+     "juros": 3774.3952734889,
+     "amortizacao": 13986.111111111111,
+     "saldo": 447555.55555555504,
+     "prestacao": 17760.506384600012
+    },
+    {
+     "parcela": 53,
+     "juros": 3660.019659140751,
+     "amortizacao": 13986.111111111111,
+     "saldo": 433569.4444444439,
+     "prestacao": 17646.13077025186
+    },
+    {
+     "parcela": 54,
+     "juros": 3545.6440447926025,
+     "amortizacao": 13986.111111111111,
+     "saldo": 419583.3333333328,
+     "prestacao": 17531.755155903713
+    },
+    {
+     "parcela": 55,
+     "juros": 3431.2684304444538,
+     "amortizacao": 13986.111111111111,
+     "saldo": 405597.22222222167,
+     "prestacao": 17417.379541555565
+    },
+    {
+     "parcela": 56,
+     "juros": 3316.892816096305,
+     "amortizacao": 13986.111111111111,
+     "saldo": 391611.11111111054,
+     "prestacao": 17303.003927207417
+    },
+    {
+     "parcela": 57,
+     "juros": 3202.5172017481564,
+     "amortizacao": 13986.111111111111,
+     "saldo": 377624.9999999994,
+     "prestacao": 17188.62831285927
+    },
+    {
+     "parcela": 58,
+     "juros": 3088.1415874000077,
+     "amortizacao": 13986.111111111111,
+     "saldo": 363638.8888888883,
+     "prestacao": 17074.252698511118
+    },
+    {
+     "parcela": 59,
+     "juros": 2973.765973051859,
+     "amortizacao": 13986.111111111111,
+     "saldo": 349652.77777777717,
+     "prestacao": 16959.87708416297
+    },
+    {
+     "parcela": 60,
+     "juros": 2859.3903587037103,
+     "amortizacao": 13986.111111111111,
+     "saldo": 335666.66666666605,
+     "prestacao": 16845.501469814822
+    },
+    {
+     "parcela": 61,
+     "juros": 2745.0147443555616,
+     "amortizacao": 13986.111111111111,
+     "saldo": 321680.5555555549,
+     "prestacao": 16731.12585546667
+    },
+    {
+     "parcela": 62,
+     "juros": 2630.639130007413,
+     "amortizacao": 13986.111111111111,
+     "saldo": 307694.4444444438,
+     "prestacao": 16616.750241118523
+    },
+    {
+     "parcela": 63,
+     "juros": 2516.263515659264,
+     "amortizacao": 13986.111111111111,
+     "saldo": 293708.3333333327,
+     "prestacao": 16502.374626770375
+    },
+    {
+     "parcela": 64,
+     "juros": 2401.8879013111155,
+     "amortizacao": 13986.111111111111,
+     "saldo": 279722.22222222155,
+     "prestacao": 16387.999012422228
+    },
+    {
+     "parcela": 65,
+     "juros": 2287.5122869629668,
+     "amortizacao": 13986.111111111111,
+     "saldo": 265736.1111111104,
+     "prestacao": 16273.623398074078
+    },
+    {
+     "parcela": 66,
+     "juros": 2173.1366726148176,
+     "amortizacao": 13986.111111111111,
+     "saldo": 251749.9999999993,
+     "prestacao": 16159.247783725928
+    },
+    {
+     "parcela": 67,
+     "juros": 2058.761058266669,
+     "amortizacao": 13986.111111111111,
+     "saldo": 237763.88888888818,
+     "prestacao": 16044.87216937778
+    },
+    {
+     "parcela": 68,
+     "juros": 1944.3854439185204,
+     "amortizacao": 13986.111111111111,
+     "saldo": 223777.77777777705,
+     "prestacao": 15930.496555029631
+    },
+    {
+     "parcela": 69,
+     "juros": 1830.0098295703717,
+     "amortizacao": 13986.111111111111,
+     "saldo": 209791.66666666593,
+     "prestacao": 15816.120940681483
+    },
+    {
+     "parcela": 70,
+     "juros": 1715.634215222223,
+     "amortizacao": 13986.111111111111,
+     "saldo": 195805.5555555548,
+     "prestacao": 15701.745326333334
+    },
+    {
+     "parcela": 71,
+     "juros": 1601.2586008740743,
+     "amortizacao": 13986.111111111111,
+     "saldo": 181819.44444444368,
+     "prestacao": 15587.369711985186
+    },
+    {
+     "parcela": 72,
+     "juros": 1486.8829865259256,
+     "amortizacao": 13986.111111111111,
+     "saldo": 167833.33333333256,
+     "prestacao": 15472.994097637036
+    },
+    {
+     "parcela": 73,
+     "juros": 1372.507372177777,
+     "amortizacao": 13986.111111111111,
+     "saldo": 153847.22222222143,
+     "prestacao": 15358.618483288888
+    },
+    {
+     "parcela": 74,
+     "juros": 1258.1317578296282,
+     "amortizacao": 13986.111111111111,
+     "saldo": 139861.1111111103,
+     "prestacao": 15244.242868940739
+    },
+    {
+     "parcela": 75,
+     "juros": 1143.7561434814795,
+     "amortizacao": 13986.111111111111,
+     "saldo": 125874.9999999992,
+     "prestacao": 15129.867254592591
+    },
+    {
+     "parcela": 76,
+     "juros": 1029.3805291333308,
+     "amortizacao": 13986.111111111111,
+     "saldo": 111888.88888888809,
+     "prestacao": 15015.491640244441
+    },
+    {
+     "parcela": 77,
+     "juros": 915.0049147851823,
+     "amortizacao": 13986.111111111111,
+     "saldo": 97902.77777777698,
+     "prestacao": 14901.116025896294
+    },
+    {
+     "parcela": 78,
+     "juros": 800.6293004370336,
+     "amortizacao": 13986.111111111111,
+     "saldo": 83916.66666666587,
+     "prestacao": 14786.740411548144
+    },
+    {
+     "parcela": 79,
+     "juros": 686.253686088885,
+     "amortizacao": 13986.111111111111,
+     "saldo": 69930.55555555476,
+     "prestacao": 14672.364797199996
+    },
+    {
+     "parcela": 80,
+     "juros": 571.8780717407365,
+     "amortizacao": 13986.111111111111,
+     "saldo": 55944.44444444365,
+     "prestacao": 14557.989182851848
+    },
+    {
+     "parcela": 81,
+     "juros": 457.5024573925879,
+     "amortizacao": 13986.111111111111,
+     "saldo": 41958.33333333254,
+     "prestacao": 14443.613568503699
+    },
+    {
+     "parcela": 82,
+     "juros": 343.12684304443934,
+     "amortizacao": 13986.111111111111,
+     "saldo": 27972.222222221433,
+     "prestacao": 14329.237954155551
+    },
+    {
+     "parcela": 83,
+     "juros": 228.75122869629075,
+     "amortizacao": 13986.111111111111,
+     "saldo": 13986.111111110322,
+     "prestacao": 14214.862339807401
+    },
+    {
+     "parcela": 84,
+     "juros": 114.37561434814215,
+     "amortizacao": 13986.111111111111,
+     "saldo": -7.894414011389017e-10,
+     "prestacao": 14100.486725459254
+    }
+   ]
+  },
+  {
+   "aba": "Produtor Empreendedor",
+   "produto": "produtorEmpreendedor",
+   "entrada": {
+    "valorSolicitado": 50000.0,
+    "prazo": 48,
+    "carencia": 18,
+    "valorFinanciado": 54597.2,
+    "taxa": {
+     "valor": 0.005,
+     "unidade": "mensal"
+    },
+    "indexador": null,
+    "convencaoTaxa": "mensalComposta",
+    "baseAmortizacao": "valorFinanciado",
+    "tratamentoCarencia": "capitalizados",
+    "dataProposta": "2026-08-06"
+   },
+   "bandeiras": {},
+   "iof": null,
+   "encargos": {
+    "tac": 1000.0,
+    "garantia": 2400.0
+   },
+   "tir": {},
+   "parcelasComValor": 48,
+   "parcelas": [
+    {
+     "parcela": 1,
+     "juros": 272.986,
+     "amortizacao": 0.0,
+     "saldo": 54870.185999999994,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 2,
+     "juros": 274.35093,
+     "amortizacao": 0.0,
+     "saldo": 55144.53692999999,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 3,
+     "juros": 275.72268464999996,
+     "amortizacao": 0.0,
+     "saldo": 55420.25961464998,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 4,
+     "juros": 277.1012980732499,
+     "amortizacao": 0.0,
+     "saldo": 55697.36091272322,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 5,
+     "juros": 278.4868045636161,
+     "amortizacao": 0.0,
+     "saldo": 55975.84771728683,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 6,
+     "juros": 279.87923858643416,
+     "amortizacao": 0.0,
+     "saldo": 56255.72695587326,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 7,
+     "juros": 281.2786347793663,
+     "amortizacao": 0.0,
+     "saldo": 56537.00559065262,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 8,
+     "juros": 282.6850279532631,
+     "amortizacao": 0.0,
+     "saldo": 56819.69061860588,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 9,
+     "juros": 284.0984530930294,
+     "amortizacao": 0.0,
+     "saldo": 57103.7890716989,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 10,
+     "juros": 285.5189453584945,
+     "amortizacao": 0.0,
+     "saldo": 57389.30801705739,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 11,
+     "juros": 286.9465400852869,
+     "amortizacao": 0.0,
+     "saldo": 57676.25455714267,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 12,
+     "juros": 288.38127278571335,
+     "amortizacao": 0.0,
+     "saldo": 57964.635829928375,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 13,
+     "juros": 289.8231791496419,
+     "amortizacao": 0.0,
+     "saldo": 58254.45900907801,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 14,
+     "juros": 291.2722950453901,
+     "amortizacao": 0.0,
+     "saldo": 58545.731304123394,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 15,
+     "juros": 292.728656520617,
+     "amortizacao": 0.0,
+     "saldo": 58838.459960644,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 16,
+     "juros": 294.19229980322,
+     "amortizacao": 0.0,
+     "saldo": 59132.65226044722,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 17,
+     "juros": 295.6632613022361,
+     "amortizacao": 0.0,
+     "saldo": 59428.31552174945,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 18,
+     "juros": 297.14157760874724,
+     "amortizacao": 0.0,
+     "saldo": 59725.45709935819,
+     "prestacao": 0.0
+    },
+    {
+     "parcela": 19,
+     "juros": 298.62728549679093,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 57734.608529379584,
+     "prestacao": 2289.475855475397
+    },
+    {
+     "parcela": 20,
+     "juros": 288.67304264689795,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 55743.75995940098,
+     "prestacao": 2279.521612625504
+    },
+    {
+     "parcela": 21,
+     "juros": 278.7187997970049,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 53752.91138942238,
+     "prestacao": 2269.567369775611
+    },
+    {
+     "parcela": 22,
+     "juros": 268.7645569471119,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 51762.062819443774,
+     "prestacao": 2259.613126925718
+    },
+    {
+     "parcela": 23,
+     "juros": 258.81031409721885,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 49771.21424946517,
+     "prestacao": 2249.658884075825
+    },
+    {
+     "parcela": 24,
+     "juros": 248.85607124732587,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 47780.36567948657,
+     "prestacao": 2239.7046412259324
+    },
+    {
+     "parcela": 25,
+     "juros": 238.90182839743284,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 45789.517109507964,
+     "prestacao": 2229.750398376039
+    },
+    {
+     "parcela": 26,
+     "juros": 228.94758554753983,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 43798.66853952936,
+     "prestacao": 2219.7961555261463
+    },
+    {
+     "parcela": 27,
+     "juros": 218.9933426976468,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 41807.81996955076,
+     "prestacao": 2209.8419126762533
+    },
+    {
+     "parcela": 28,
+     "juros": 209.0390998477538,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 39816.971399572154,
+     "prestacao": 2199.8876698263603
+    },
+    {
+     "parcela": 29,
+     "juros": 199.08485699786078,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 37826.12282959355,
+     "prestacao": 2189.933426976467
+    },
+    {
+     "parcela": 30,
+     "juros": 189.13061414796775,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 35835.27425961495,
+     "prestacao": 2179.979184126574
+    },
+    {
+     "parcela": 31,
+     "juros": 179.17637129807474,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 33844.425689636344,
+     "prestacao": 2170.024941276681
+    },
+    {
+     "parcela": 32,
+     "juros": 169.22212844818173,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 31853.577119657737,
+     "prestacao": 2160.070698426788
+    },
+    {
+     "parcela": 33,
+     "juros": 159.2678855982887,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 29862.72854967913,
+     "prestacao": 2150.116455576895
+    },
+    {
+     "parcela": 34,
+     "juros": 149.31364274839567,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 27871.879979700523,
+     "prestacao": 2140.162212727002
+    },
+    {
+     "parcela": 35,
+     "juros": 139.35939989850263,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 25881.031409721916,
+     "prestacao": 2130.207969877109
+    },
+    {
+     "parcela": 36,
+     "juros": 129.4051570486096,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 23890.18283974331,
+     "prestacao": 2120.253727027216
+    },
+    {
+     "parcela": 37,
+     "juros": 119.45091419871655,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 21899.334269764702,
+     "prestacao": 2110.299484177323
+    },
+    {
+     "parcela": 38,
+     "juros": 109.49667134882351,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 19908.485699786095,
+     "prestacao": 2100.34524132743
+    },
+    {
+     "parcela": 39,
+     "juros": 99.54242849893048,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 17917.63712980749,
+     "prestacao": 2090.390998477537
+    },
+    {
+     "parcela": 40,
+     "juros": 89.58818564903744,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 15926.788559828881,
+     "prestacao": 2080.436755627644
+    },
+    {
+     "parcela": 41,
+     "juros": 79.6339427991444,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 13935.939989850274,
+     "prestacao": 2070.482512777751
+    },
+    {
+     "parcela": 42,
+     "juros": 69.67969994925137,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 11945.091419871667,
+     "prestacao": 2060.5282699278578
+    },
+    {
+     "parcela": 43,
+     "juros": 59.72545709935834,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 9954.24284989306,
+     "prestacao": 2050.5740270779647
+    },
+    {
+     "parcela": 44,
+     "juros": 49.7712142494653,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 7963.394279914454,
+     "prestacao": 2040.6197842280717
+    },
+    {
+     "parcela": 45,
+     "juros": 39.816971399572274,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 5972.545709935848,
+     "prestacao": 2030.6655413781787
+    },
+    {
+     "parcela": 46,
+     "juros": 29.862728549679243,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 3981.697139957242,
+     "prestacao": 2020.7112985282856
+    },
+    {
+     "parcela": 47,
+     "juros": 19.908485699786212,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 1990.8485699786359,
+     "prestacao": 2010.7570556783926
+    },
+    {
+     "parcela": 48,
+     "juros": 9.954242849893179,
+     "amortizacao": 1990.8485699786063,
+     "saldo": 2.955857780762017e-11,
+     "prestacao": 2000.8028128284996
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,10 @@
+{
+  "name": "simulador-goiasfomento",
+  "version": "0.1.0",
+  "description": "Simulador financeiro GoiásFomento — motor, parâmetros e testes",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\""
+  }
+}

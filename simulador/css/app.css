@@ -1,0 +1,705 @@
+/**
+ * Folha de estilo do simulador.
+ *
+ * Sóbria de propósito: é um instrumento de trabalho de uma agência de fomento,
+ * e o que precisa saltar aos olhos é o número, não a decoração. Uma cor de
+ * acento só, tipografia do sistema, e contraste suficiente para ler numa tela
+ * de celular ao sol.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --tinta: #16211c;
+  --tinta-suave: #55635c;
+  --tinta-tenue: #7d8b84;
+  --fundo: #f6f7f6;
+  --superficie: #ffffff;
+  --borda: #dfe4e1;
+  --borda-forte: #c3ccc7;
+  --acento: #0f3d2e;
+  --acento-claro: #e7efe9;
+  --alerta: #8a4b12;
+  --alerta-fundo: #fdf3e6;
+  --erro: #8c2f22;
+  --erro-fundo: #fceceb;
+
+  --raio: 10px;
+  --sombra: 0 1px 2px rgb(22 33 28 / 6%), 0 4px 14px rgb(22 33 28 / 5%);
+  --largura: 62rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tinta: #e6ebe8;
+    --tinta-suave: #a9b5af;
+    --tinta-tenue: #7e8a85;
+    --fundo: #121613;
+    --superficie: #1a201d;
+    --borda: #2b332e;
+    --borda-forte: #3a443e;
+    --acento: #8fd0b0;
+    --acento-claro: #1e2a24;
+    --alerta: #e8b878;
+    --alerta-fundo: #2a2118;
+    --erro: #f0a49a;
+    --erro-fundo: #2d1c1a;
+    --sombra: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px rgb(0 0 0 / 25%);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 1rem 4rem;
+  background: var(--fundo);
+  color: var(--tinta);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────── topo */
+
+.topo {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 1.5rem 0 0;
+}
+
+.marca { margin-bottom: 1rem; }
+
+.marca .produto {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.marca .instituicao {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--acento);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--borda);
+}
+
+.menu button {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tinta-suave);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.menu button:hover { background: var(--acento-claro); color: var(--tinta); }
+
+.menu button[aria-current="page"] {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--superficie);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu button[aria-current="page"] { color: var(--fundo); }
+}
+
+/* ────────────────────────────────────────────────────────── conteúdo */
+
+main {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding-top: 1.75rem;
+}
+
+h1 { margin: 0 0 0.25rem; font-size: 1.5rem; letter-spacing: -0.02em; }
+h2 { margin: 2rem 0 0.75rem; font-size: 1.05rem; letter-spacing: -0.01em; }
+h3 { margin: 1.5rem 0 0.5rem; font-size: 0.95rem; }
+
+.subtitulo { margin: 0 0 1.5rem; color: var(--tinta-suave); }
+.meta { color: var(--tinta-suave); font-size: 0.88rem; }
+.texto p { max-width: 46rem; }
+
+/* ─────────────────────────────────────────────────────────── formulário */
+
+.formulario { max-width: 34rem; }
+.formulario h2:first-child { margin-top: 0; }
+
+.campo { margin-bottom: 1rem; }
+
+.campo label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.campo input, .campo select {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font: inherit;
+}
+
+.campo input:focus-visible, .campo select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+.ajuda {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--tinta-tenue);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.limites {
+  margin: -0.5rem 0 1rem;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+/* ───────────────────────────────────────────────────────────── botões */
+
+.acoes { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.75rem; }
+
+button {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) { border-color: var(--acento); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.principal {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--superficie);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) { button.principal { color: var(--fundo); } }
+
+button.perigo { color: var(--erro); }
+button.perigo:hover:not(:disabled) { border-color: var(--erro); }
+
+/* ──────────────────────────────────────────────────────────── avisos */
+
+.erro, .aviso {
+  max-width: var(--largura);
+  margin: 1rem auto 0;
+  padding: 0.8rem 1rem;
+  border-radius: var(--raio);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.erro { background: var(--erro-fundo); color: var(--erro); border: 1px solid currentcolor; }
+.aviso { background: var(--alerta-fundo); color: var(--alerta); border: 1px solid currentcolor; }
+.aviso-bloqueio { margin: 0 0 1rem; }
+
+.vazio {
+  padding: 1.25rem;
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--raio);
+  color: var(--tinta-suave);
+}
+
+/* ─────────────────────────────────────────────────────────── abas */
+
+.abas {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--borda);
+}
+
+.abas button {
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--tinta-suave);
+  padding: 0.5rem 0.2rem;
+  margin-right: 1rem;
+}
+
+.abas button[aria-current="true"] {
+  color: var(--tinta);
+  border-bottom-color: var(--acento);
+  font-weight: 600;
+}
+
+/* ────────────────────────────────────────────────────────── resultado */
+
+.cabecalho-resultado { margin-bottom: 1.5rem; }
+
+.bloco {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.bloco h2 { margin-top: 0; }
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(15rem, 100%), 1fr));
+  gap: 0.1rem 2rem;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.item .rotulo { color: var(--tinta-suave); font-size: 0.9rem; }
+.item .valor { font-variant-numeric: tabular-nums; text-align: right; }
+.item-destaque .valor { font-weight: 650; }
+
+.derivacao { margin: 0; }
+.derivacao dt {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.derivacao dd { margin: 0.15rem 0 0; font-variant-numeric: tabular-nums; }
+
+.seletor-parcela {
+  width: 100%;
+  max-width: 32rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  background: var(--fundo);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.detalhe-parcela { margin-top: 1rem; }
+
+.regra-aplicada { margin: 1rem 0 0; }
+.regra-aplicada code {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  background: var(--fundo);
+  border-radius: var(--raio);
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+  overflow-x: auto;
+}
+
+.procedencia p { margin: 0; color: var(--tinta-suave); font-size: 0.88rem; }
+
+/* ──────────────────────────────────────────────────────────── tabelas */
+
+.barra-cronograma { margin-bottom: 0.75rem; color: var(--tinta-suave); font-size: 0.9rem; }
+.barra-cronograma p { margin: 0; }
+
+/* A tabela rola dentro do próprio quadro; a página nunca rola para o lado. */
+.rolagem-tabela {
+  overflow-x: auto;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  -webkit-overflow-scrolling: touch;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+th, td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--borda);
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--superficie);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  border-bottom: 1px solid var(--borda-forte);
+}
+
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+tbody tr.em-carencia { color: var(--tinta-suave); background: var(--acento-claro); }
+tbody tr.indisponivel { color: var(--tinta-tenue); }
+tbody tr.indisponivel td:first-child { white-space: normal; max-width: 22rem; }
+
+tfoot th, tfoot td {
+  font-weight: 650;
+  border-top: 2px solid var(--borda-forte);
+  border-bottom: none;
+  background: var(--superficie);
+}
+
+/* ────────────────────────────────────────────────────── lista salva */
+
+.lista-salvas { list-style: none; margin: 0; padding: 0; }
+
+.lista-salvas li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.6rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.resumo-salva { display: flex; flex-direction: column; gap: 0.15rem; }
+.acoes-linha { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.acoes-linha button { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+
+/* ───────────────────────────────────────────────────────────── rodapé */
+
+.rodape {
+  max-width: var(--largura);
+  margin: 3rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--borda);
+  color: var(--tinta-tenue);
+  font-size: 0.85rem;
+}
+
+.rodape p { margin: 0; }
+
+@media print {
+  .menu, .abas, .acoes, .rodape, #erro { display: none; }
+  body { background: #fff; padding: 0; }
+  .bloco { box-shadow: none; break-inside: avoid; }
+}
+
+/* ────────────────────────────────────────────── tabela em tela estreita */
+
+/*
+ * Ao rolar o cronograma para o lado, a coluna da parcela fica presa à
+ * esquerda: sem ela, quem chega na coluna da prestação não sabe mais de que
+ * parcela está lendo. O fundo é opaco de propósito — uma coluna fixa
+ * translúcida deixa o texto das outras passar por baixo.
+ */
+.cronograma th:first-child,
+.cronograma td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--superficie);
+  border-right: 1px solid var(--borda);
+}
+
+.cronograma thead th:first-child { z-index: 2; }
+.cronograma tbody tr.em-carencia td:first-child { background: var(--acento-claro); }
+
+@media (max-width: 40rem) {
+  .cronograma th, .cronograma td { padding: 0.45rem 0.55rem; font-size: 0.84rem; }
+  .bloco { padding: 1rem; }
+  .grade { grid-template-columns: 1fr; }
+  .marca .produto { font-size: 1.3rem; }
+}
+
+/* ─────────────────────────────────────────────────────────── gráficos */
+
+/*
+ * Duas cores categóricas, azul e laranja, escolhidas por separação e não por
+ * gosto: o par passa nas verificações de daltonismo (ΔE 24,7 protanopia no
+ * claro, 26,8 no escuro) e tem contraste acima de 3:1 sobre as duas
+ * superfícies. Os passos do modo escuro são escolhidos para o fundo escuro,
+ * e não a inversão automática dos claros.
+ */
+:root {
+  --serie-1: #2a78d6;
+  --serie-2: #eb6834;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --serie-1: #3987e5;
+    --serie-2: #d95926;
+  }
+}
+
+/*
+ * Duas colunas, não três. Com 20rem de mínimo cabiam três gráficos numa tela
+ * larga, e cada um ficava com menos de 300px — sobrava pouco para a linha
+ * depois de descontar os eixos. Vinte e seis rem dão dois gráficos largos no
+ * computador e um por vez no celular.
+ */
+.galeria {
+  display: grid;
+  /*
+   * O `min(…, 100%)` não é enfeite. `minmax(26rem, 1fr)` sozinho impõe uma
+   * coluna de 416px mesmo num contêiner de 358 — o grid não encolhe abaixo do
+   * mínimo, e o gráfico passa a escorar a página aberta, que então rola para o
+   * lado inteira. Com o `min`, o mínimo nunca passa da largura disponível.
+   */
+  grid-template-columns: repeat(auto-fit, minmax(min(26rem, 100%), 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.grafico {
+  position: relative;
+  margin: 0;
+  padding: 1rem 1rem 0.75rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.grafico figcaption {
+  font-size: 0.95rem;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  margin-bottom: 0.4rem;
+}
+
+.legenda { display: flex; gap: 1rem; margin-bottom: 0.5rem; }
+
+/* A legenda espelha a marca: traço para linhas, nunca um quadrado cheio. */
+.chave {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+}
+
+.chave .traco {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+  background: currentcolor;
+}
+
+.chave.serie-1 .traco { background: var(--serie-1); }
+.chave.serie-2 .traco { background: var(--serie-2); }
+
+.area-grafico { display: block; }
+.area-grafico:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; border-radius: 4px; }
+.tela { display: block; max-width: 100%; touch-action: pan-y; }
+
+.linha { fill: none; stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.linha.serie-1 { stroke: var(--serie-1); }
+.linha.serie-2 { stroke: var(--serie-2); }
+
+/* Anel na cor da superfície: sem ele, dois marcadores sobrepostos viram um. */
+.ponta, .marcador { stroke: var(--superficie); stroke-width: 2; }
+.ponta.serie-1, .marcador.serie-1 { fill: var(--serie-1); }
+.ponta.serie-2, .marcador.serie-2 { fill: var(--serie-2); }
+
+.grade { stroke: var(--borda); stroke-width: 1; }
+.cruzeta { stroke: var(--borda-forte); stroke-width: 1; }
+
+/* O texto nunca veste a cor da série: quem carrega a identidade é a marca. */
+.rotulo-eixo { fill: var(--tinta-tenue); font-size: 11px; font-family: inherit; }
+.rotulo-fim { fill: var(--tinta-suave); font-size: 11px; font-family: inherit; font-weight: 600; }
+
+.captura { fill: transparent; }
+
+.leitura {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 1rem;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--borda);
+  font-size: 0.85rem;
+  min-height: 1.6rem;
+}
+
+.leitura[hidden] { display: none; }
+.leitura strong { font-size: 0.82rem; color: var(--tinta-suave); font-weight: 600; }
+.linha-leitura { display: inline-flex; align-items: baseline; gap: 0.35rem; }
+/* O valor lidera; o nome da série vem depois, discreto. */
+.linha-leitura .numero { font-variant-numeric: tabular-nums; font-weight: 650; }
+.linha-leitura .nome { color: var(--tinta-suave); font-size: 0.8rem; }
+
+.comparacao th[scope="row"] { font-weight: 500; color: var(--tinta-suave); white-space: normal; }
+.comparacao thead .chave { justify-content: flex-end; }
+
+.dados-brutos summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+.dados-brutos .rolagem-tabela { margin-top: 1rem; }
+
+.nota { color: var(--tinta-suave); font-size: 0.9rem; margin: 0 0 1.25rem; max-width: 46rem; }
+
+@media print {
+  .galeria { grid-template-columns: 1fr 1fr; }
+  .grafico { break-inside: avoid; }
+  .leitura, .dados-brutos { display: none; }
+}
+
+/* ──────────────────────────────────────────────────────────── relatório */
+
+.relatorio { max-width: 52rem; }
+
+.topo-relatorio {
+  padding-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 2px solid var(--acento);
+}
+
+.topo-relatorio .orgao {
+  margin: 0 0 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--acento);
+}
+
+.topo-relatorio h1 { margin: 0; }
+.topo-relatorio .subtitulo { margin: 0.15rem 0 0; }
+
+.secao-relatorio { margin-bottom: 1.75rem; }
+.secao-relatorio h2 {
+  margin: 0 0 0.75rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--borda);
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--tinta-suave);
+}
+
+/* Rótulo à esquerda, valor à direita, ligados por uma linha pontilhada — é o
+   arranjo que se lê rápido no papel, sem precisar seguir a régua com o dedo. */
+.pares { display: grid; grid-template-columns: 1fr auto; gap: 0.1rem 1rem; margin: 0; }
+.pares dt { color: var(--tinta-suave); font-size: 0.9rem; }
+.pares dd {
+  margin: 0;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  border-bottom: 1px dotted var(--borda);
+  padding-bottom: 0.3rem;
+}
+.pares dt { border-bottom: 1px dotted var(--borda); padding-bottom: 0.3rem; }
+
+.observacoes { margin: 0; padding-left: 1.1rem; color: var(--tinta-suave); font-size: 0.9rem; }
+.observacoes li { margin-bottom: 0.4rem; }
+
+.galeria-relatorio { margin-bottom: 0; }
+.galeria-relatorio .grafico { box-shadow: none; }
+
+.cronograma-relatorio { border: 1px solid var(--borda); border-radius: var(--raio); }
+
+.rodape-relatorio {
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--borda);
+  color: var(--tinta-tenue);
+  font-size: 0.82rem;
+}
+.rodape-relatorio p { margin: 0 0 0.3rem; }
+
+@media print {
+  /*
+   * No papel o documento é o relatório e mais nada: menu, abas e botões saem.
+   * O cronograma pode ter duzentas e quarenta linhas e vai atravessar páginas —
+   * daí o cabeçalho que se repete em cada uma e a proibição de quebrar uma
+   * linha ao meio. Sem isso, a última linha de cada página fica cortada na
+   * horizontal, e a primeira da seguinte chega sem saber a que coluna pertence.
+   */
+  @page { margin: 14mm; }
+
+  /* O cabeçalho do site duplicaria o do relatório, que já se identifica. */
+  .topo { display: none; }
+  .acoes-relatorio { display: none; }
+  .relatorio { max-width: none; }
+
+  /*
+   * As seções curtas não se partem; o cronograma, sim. Forçar uma quebra antes
+   * dele desperdiçava uma folha quase inteira quando as observações ocupavam
+   * duas linhas — e uma tabela de duzentas e quarenta parcelas vai atravessar
+   * páginas de qualquer jeito. O que precisa ficar junto é o título com o
+   * começo da sua seção, e cada linha consigo mesma.
+   */
+  .secao-relatorio { break-inside: avoid; }
+  .secao-relatorio h2 { break-after: avoid; }
+  .secao-cronograma { break-inside: auto; }
+
+  .cronograma-relatorio thead { display: table-header-group; }
+  .cronograma-relatorio tfoot { display: table-footer-group; }
+  .cronograma-relatorio tr { break-inside: avoid; }
+  .cronograma-relatorio th, .cronograma-relatorio td { padding: 0.3rem 0.5rem; font-size: 0.78rem; }
+  .cronograma th:first-child, .cronograma td:first-child { position: static; }
+
+  .galeria-relatorio { grid-template-columns: 1fr 1fr; }
+  .grafico { border-color: #ccc; }
+
+  .topo-relatorio { border-bottom-color: #333; }
+  .rodape-relatorio { break-inside: avoid; }
+}
+
+/* ───────────────────────────────────────────── instalação e atualização */
+
+.atualizacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: var(--largura);
+  margin: 1rem auto 0;
+  padding: 0.7rem 1rem;
+  border: 1px solid var(--acento);
+  border-radius: var(--raio);
+  background: var(--acento-claro);
+  font-size: 0.92rem;
+}
+
+.atualizacao[hidden] { display: none; }
+.atualizacao button { padding: 0.35rem 0.8rem; font-size: 0.85rem; }
+
+.menu button.instalar {
+  margin-left: auto;
+  border-color: var(--acento);
+  color: var(--acento);
+  font-weight: 600;
+}
+
+.menu button.instalar[hidden] { display: none; }
+
+@media print { .atualizacao { display: none; } }
