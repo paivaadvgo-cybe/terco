@@ -28,12 +28,29 @@ não podem virar código sem decisão; estão em
 | 7 | Testes do PRICE | concluída |
 | 8 | Encargos: TAC, IOF, FGI, FAMPE, FUNDEQ, garantias | concluída |
 | 9 | Indexadores: INPC, TR, SELIC | concluída |
-| 10 | Produtos: nove famílias, TIR e a simulação completa | concluída — 109 passando ao todo |
-| 11–15 | Interface, comparador, relatórios, PWA, equivalência | aguardando |
+| 10 | Produtos: nove famílias, TIR e a simulação completa | concluída |
+| 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída — 118 passando ao todo |
+| 12–15 | Comparador, relatórios, PWA, equivalência | aguardando |
 
 ```
 cd simulador && npm test
 ```
+
+Para abrir o aplicativo, sirva a pasta e acesse `/simulador/`:
+
+```
+python3 -m http.server 8000
+```
+
+Não há etapa de compilação. Os módulos são carregados como ES modules pelo
+próprio navegador, e por isso é preciso um servidor — abrir o `index.html`
+direto do disco não funciona.
+
+O comportamento da tela é verificado dirigindo o aplicativo num navegador de
+verdade, com o Playwright, fora do repositório: preencher, calcular, conferir
+os números na tela, o cronograma, a mensagem de erro e a largura no celular.
+Isso não virou teste do repositório porque exigiria uma dependência de
+instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 
 ## Onde está o quê
 
@@ -48,6 +65,9 @@ cd simulador && npm test
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
 | `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
 | `js/produtos/` | As nove famílias de linha de crédito, e a simulação de ponta a ponta |
+| `js/ui/` | Formulário, resultado, cronograma e formatação |
+| `js/storage/` | Simulações salvas no próprio aparelho, em IndexedDB |
+| `index.html`, `css/` | O aplicativo |
 | `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |
 | `tests/` | Testes automatizados, incluindo as âncoras da planilha |
 | `ferramentas/auditar_planilha.py` | Gera o inventário completo da pasta de trabalho |

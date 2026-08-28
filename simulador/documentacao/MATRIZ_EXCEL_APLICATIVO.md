@@ -7,9 +7,10 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 10 concluídas. O motor está completo: SAC, PRICE, encargos,
-indexadores, TIR e as nove famílias de produto, validados contra as células da
-planilha, valor a valor. A interface e o PWA seguem em `MAPEADO`.
+Fases 1 a 11 concluídas. O motor está completo e validado contra as células da
+planilha, valor a valor, e a interface já permite simular, ver o cronograma,
+ler a memória de cálculo e salvar no aparelho. Comparador, relatórios e PWA
+seguem em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 

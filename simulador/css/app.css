@@ -1,0 +1,439 @@
+/**
+ * Folha de estilo do simulador.
+ *
+ * Sóbria de propósito: é um instrumento de trabalho de uma agência de fomento,
+ * e o que precisa saltar aos olhos é o número, não a decoração. Uma cor de
+ * acento só, tipografia do sistema, e contraste suficiente para ler numa tela
+ * de celular ao sol.
+ */
+
+:root {
+  color-scheme: light dark;
+
+  --tinta: #16211c;
+  --tinta-suave: #55635c;
+  --tinta-tenue: #7d8b84;
+  --fundo: #f6f7f6;
+  --superficie: #ffffff;
+  --borda: #dfe4e1;
+  --borda-forte: #c3ccc7;
+  --acento: #0f3d2e;
+  --acento-claro: #e7efe9;
+  --alerta: #8a4b12;
+  --alerta-fundo: #fdf3e6;
+  --erro: #8c2f22;
+  --erro-fundo: #fceceb;
+
+  --raio: 10px;
+  --sombra: 0 1px 2px rgb(22 33 28 / 6%), 0 4px 14px rgb(22 33 28 / 5%);
+  --largura: 62rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --tinta: #e6ebe8;
+    --tinta-suave: #a9b5af;
+    --tinta-tenue: #7e8a85;
+    --fundo: #121613;
+    --superficie: #1a201d;
+    --borda: #2b332e;
+    --borda-forte: #3a443e;
+    --acento: #8fd0b0;
+    --acento-claro: #1e2a24;
+    --alerta: #e8b878;
+    --alerta-fundo: #2a2118;
+    --erro: #f0a49a;
+    --erro-fundo: #2d1c1a;
+    --sombra: 0 1px 2px rgb(0 0 0 / 30%), 0 4px 14px rgb(0 0 0 / 25%);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 0 1rem 4rem;
+  background: var(--fundo);
+  color: var(--tinta);
+  font: 16px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ─────────────────────────────────────────────────────────────── topo */
+
+.topo {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding: 1.5rem 0 0;
+}
+
+.marca { margin-bottom: 1rem; }
+
+.marca .produto {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.marca .instituicao {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--acento);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--borda);
+}
+
+.menu button {
+  padding: 0.45rem 0.85rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tinta-suave);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+.menu button:hover { background: var(--acento-claro); color: var(--tinta); }
+
+.menu button[aria-current="page"] {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--superficie);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) {
+  .menu button[aria-current="page"] { color: var(--fundo); }
+}
+
+/* ────────────────────────────────────────────────────────── conteúdo */
+
+main {
+  max-width: var(--largura);
+  margin: 0 auto;
+  padding-top: 1.75rem;
+}
+
+h1 { margin: 0 0 0.25rem; font-size: 1.5rem; letter-spacing: -0.02em; }
+h2 { margin: 2rem 0 0.75rem; font-size: 1.05rem; letter-spacing: -0.01em; }
+h3 { margin: 1.5rem 0 0.5rem; font-size: 0.95rem; }
+
+.subtitulo { margin: 0 0 1.5rem; color: var(--tinta-suave); }
+.meta { color: var(--tinta-suave); font-size: 0.88rem; }
+.texto p { max-width: 46rem; }
+
+/* ─────────────────────────────────────────────────────────── formulário */
+
+.formulario { max-width: 34rem; }
+.formulario h2:first-child { margin-top: 0; }
+
+.campo { margin-bottom: 1rem; }
+
+.campo label {
+  display: block;
+  margin-bottom: 0.3rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+}
+
+.campo input, .campo select {
+  width: 100%;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font: inherit;
+}
+
+.campo input:focus-visible, .campo select:focus-visible, button:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 2px;
+}
+
+.ajuda {
+  display: block;
+  margin-top: 0.3rem;
+  color: var(--tinta-tenue);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.limites {
+  margin: -0.5rem 0 1rem;
+  color: var(--tinta-suave);
+  font-size: 0.85rem;
+}
+
+/* ───────────────────────────────────────────────────────────── botões */
+
+.acoes { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1.75rem; }
+
+button {
+  padding: 0.6rem 1.1rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 0.92rem;
+  cursor: pointer;
+}
+
+button:hover:not(:disabled) { border-color: var(--acento); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+button.principal {
+  background: var(--acento);
+  border-color: var(--acento);
+  color: var(--superficie);
+  font-weight: 600;
+}
+
+@media (prefers-color-scheme: dark) { button.principal { color: var(--fundo); } }
+
+button.perigo { color: var(--erro); }
+button.perigo:hover:not(:disabled) { border-color: var(--erro); }
+
+/* ──────────────────────────────────────────────────────────── avisos */
+
+.erro, .aviso {
+  max-width: var(--largura);
+  margin: 1rem auto 0;
+  padding: 0.8rem 1rem;
+  border-radius: var(--raio);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.erro { background: var(--erro-fundo); color: var(--erro); border: 1px solid currentcolor; }
+.aviso { background: var(--alerta-fundo); color: var(--alerta); border: 1px solid currentcolor; }
+.aviso-bloqueio { margin: 0 0 1rem; }
+
+.vazio {
+  padding: 1.25rem;
+  border: 1px dashed var(--borda-forte);
+  border-radius: var(--raio);
+  color: var(--tinta-suave);
+}
+
+/* ─────────────────────────────────────────────────────────── abas */
+
+.abas {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--borda);
+}
+
+.abas button {
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--tinta-suave);
+  padding: 0.5rem 0.2rem;
+  margin-right: 1rem;
+}
+
+.abas button[aria-current="true"] {
+  color: var(--tinta);
+  border-bottom-color: var(--acento);
+  font-weight: 600;
+}
+
+/* ────────────────────────────────────────────────────────── resultado */
+
+.cabecalho-resultado { margin-bottom: 1.5rem; }
+
+.bloco {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+}
+
+.bloco h2 { margin-top: 0; }
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 0.1rem 2rem;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.item .rotulo { color: var(--tinta-suave); font-size: 0.9rem; }
+.item .valor { font-variant-numeric: tabular-nums; text-align: right; }
+.item-destaque .valor { font-weight: 650; }
+
+.derivacao { margin: 0; }
+.derivacao dt {
+  margin-top: 0.7rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--tinta-suave);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.derivacao dd { margin: 0.15rem 0 0; font-variant-numeric: tabular-nums; }
+
+.seletor-parcela {
+  width: 100%;
+  max-width: 32rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid var(--borda-forte);
+  border-radius: var(--raio);
+  background: var(--fundo);
+  color: var(--tinta);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.detalhe-parcela { margin-top: 1rem; }
+
+.regra-aplicada { margin: 1rem 0 0; }
+.regra-aplicada code {
+  display: block;
+  padding: 0.6rem 0.75rem;
+  background: var(--fundo);
+  border-radius: var(--raio);
+  font-size: 0.82rem;
+  color: var(--tinta-suave);
+  overflow-x: auto;
+}
+
+.procedencia p { margin: 0; color: var(--tinta-suave); font-size: 0.88rem; }
+
+/* ──────────────────────────────────────────────────────────── tabelas */
+
+.barra-cronograma { margin-bottom: 0.75rem; color: var(--tinta-suave); font-size: 0.9rem; }
+.barra-cronograma p { margin: 0; }
+
+/* A tabela rola dentro do próprio quadro; a página nunca rola para o lado. */
+.rolagem-tabela {
+  overflow-x: auto;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  -webkit-overflow-scrolling: touch;
+}
+
+table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+
+th, td {
+  padding: 0.5rem 0.75rem;
+  text-align: left;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--borda);
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  background: var(--superficie);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--tinta-suave);
+  border-bottom: 1px solid var(--borda-forte);
+}
+
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+tbody tr.em-carencia { color: var(--tinta-suave); background: var(--acento-claro); }
+tbody tr.indisponivel { color: var(--tinta-tenue); }
+tbody tr.indisponivel td:first-child { white-space: normal; max-width: 22rem; }
+
+tfoot th, tfoot td {
+  font-weight: 650;
+  border-top: 2px solid var(--borda-forte);
+  border-bottom: none;
+  background: var(--superficie);
+}
+
+/* ────────────────────────────────────────────────────── lista salva */
+
+.lista-salvas { list-style: none; margin: 0; padding: 0; }
+
+.lista-salvas li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.9rem 1rem;
+  margin-bottom: 0.6rem;
+  background: var(--superficie);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+}
+
+.resumo-salva { display: flex; flex-direction: column; gap: 0.15rem; }
+.acoes-linha { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.acoes-linha button { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+
+/* ───────────────────────────────────────────────────────────── rodapé */
+
+.rodape {
+  max-width: var(--largura);
+  margin: 3rem auto 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--borda);
+  color: var(--tinta-tenue);
+  font-size: 0.85rem;
+}
+
+.rodape p { margin: 0; }
+
+@media print {
+  .menu, .abas, .acoes, .rodape, #erro { display: none; }
+  body { background: #fff; padding: 0; }
+  .bloco { box-shadow: none; break-inside: avoid; }
+}
+
+/* ────────────────────────────────────────────── tabela em tela estreita */
+
+/*
+ * Ao rolar o cronograma para o lado, a coluna da parcela fica presa à
+ * esquerda: sem ela, quem chega na coluna da prestação não sabe mais de que
+ * parcela está lendo. O fundo é opaco de propósito — uma coluna fixa
+ * translúcida deixa o texto das outras passar por baixo.
+ */
+.cronograma th:first-child,
+.cronograma td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--superficie);
+  border-right: 1px solid var(--borda);
+}
+
+.cronograma thead th:first-child { z-index: 2; }
+.cronograma tbody tr.em-carencia td:first-child { background: var(--acento-claro); }
+
+@media (max-width: 40rem) {
+  .cronograma th, .cronograma td { padding: 0.45rem 0.55rem; font-size: 0.84rem; }
+  .bloco { padding: 1rem; }
+  .grade { grid-template-columns: 1fr; }
+  .marca .produto { font-size: 1.3rem; }
+}
