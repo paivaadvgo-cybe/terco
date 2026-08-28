@@ -15,7 +15,8 @@ simulador/tests/
 ├── interface.test.js      Formatação, leitura de campo, escala dos gráficos e CSV
 ├── pwa.test.js            Coerência entre casca, arquivos em disco e manifesto
 ├── produtos.test.js       Cada linha de crédito, com os seus limites
-└── equivalencia.test.js   Planilha × aplicativo, valor a valor
+└── equivalencia.test.js   Planilha × aplicativo, valor a valor, sobre casos
+                        extraídos do próprio arquivo
 ```
 
 `indexadores.test.js` também não estava no plano, e existe por um risco que

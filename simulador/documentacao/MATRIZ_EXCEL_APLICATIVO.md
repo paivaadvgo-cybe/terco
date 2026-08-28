@@ -7,11 +7,12 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 14 concluídas. O motor está completo e validado contra as células da
-planilha, valor a valor; a interface permite simular, ver o cronograma, ler a
-memória de cálculo, salvar no aparelho, comparar SAC com PRICE, imprimir o
-relatório e exportar o cronograma; e o aplicativo funciona sem internet e pode
-ser instalado. Falta a Fase 15, o relatório de equivalência.
+**As quinze fases estão concluídas.** O motor reproduz a planilha em 1.872 de
+1.872 valores de cronograma, todos idênticos ao último bit — ver
+`EQUIVALENCIA_EXCEL.md`. As regras que restam em `ABERTO` são pontos da
+planilha que não podem virar código sem uma decisão da instituição, e nenhuma
+delas impede o aplicativo de funcionar: onde a regra não existe, ele recusa a
+simular em vez de produzir um número plausível.
 
 ## 1. Entrada e composição do valor
 

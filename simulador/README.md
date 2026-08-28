@@ -7,7 +7,7 @@ referência de validação.
 
 ## Estado
 
-**Fases 1 a 10 concluídas — o motor está completo.** O motor SAC reproduz a planilha valor a valor nos
+**As quinze fases estão concluídas.** O motor SAC reproduz a planilha valor a valor nos
 seis casos âncora — inclusive o resíduo de R$ 389,72 que a troca de base da
 amortização provoca, e o ruído de ponto flutuante junto. O PRICE, que é
 extensão e não migração, bate com a única âncora que a planilha oferece a menos
@@ -32,8 +32,8 @@ não podem virar código sem decisão; estão em
 | 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída |
 | 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída |
 | 13 | Relatórios: impressão, PDF e exportação em CSV | concluída |
-| 14 | PWA: funciona sem internet e instala | concluída — 135 passando ao todo |
-| 15 | Relatório de equivalência | aguardando |
+| 14 | PWA: funciona sem internet e instala | concluída |
+| 15 | Relatório de equivalência | concluída — 162 passando ao todo |
 
 ```
 cd simulador && npm test
@@ -63,6 +63,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `documentacao/ESPECIFICACAO_MATEMATICA.md` | Como o motor implementa, com contratos e tipos |
 | `documentacao/MATRIZ_EXCEL_APLICATIVO.md` | Cada regra, com origem, destino e status |
 | `documentacao/PLANO_DE_TESTES.md` | Casos de teste e âncoras extraídas da planilha |
+| `documentacao/EQUIVALENCIA_EXCEL.md` | Comparação célula a célula: planilha × aplicativo |
 | `dados/PARAMETROS_FINANCEIROS.json` | Taxas, prazos, limites e fatores, com unidade explícita |
 | `js/engine/` | Motor: SAC, PRICE, taxas, calendário, arredondamento, erros |
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
@@ -90,6 +91,12 @@ python3 simulador/ferramentas/auditar_planilha.py \
 python3 simulador/ferramentas/extrair_parametros.py \
     "simulador/referencia/Simulador_GoiasFomento 08-05-2025.xlsx" \
     simulador/dados/PARAMETROS_FINANCEIROS.json
+
+python3 simulador/ferramentas/extrair_casos.py \
+    "simulador/referencia/Simulador_GoiasFomento 08-05-2025.xlsx" \
+    simulador/tests/casos-equivalencia.json
+
+cd simulador && node ferramentas/gerar_equivalencia.mjs
 ```
 
 A auditoria produz `inventario.json`, `celulas.tsv` e `formulas.txt`, que são
@@ -132,3 +139,28 @@ salvar em PDF entrega o mesmo arquivo sem nenhum dos dois custos.
 
 Nenhum foi corrigido. O escopo é claro: reproduzir o comportamento existente,
 registrar a divergência e aguardar autorização.
+
+## Critério de conclusão
+
+O item 46 do escopo lista doze condições. Todas estão atendidas:
+
+| Condição | Onde se verifica |
+|---|---|
+| Abas relevantes mapeadas | `MAPA_DE_REGRAS_FINANCEIRAS.md` — as doze abas |
+| Regras documentadas | `MAPA_DE_REGRAS_FINANCEIRAS.md` e `MATRIZ_EXCEL_APLICATIVO.md` |
+| SAC validado | 1.872 valores idênticos ao último bit, em nove abas |
+| PRICE validado | contra a única âncora que a planilha tem, `AL18` |
+| Encargos validados | TAC, IOF, FGI, FAMPE, FUNDEQ, aval e alienação |
+| Parâmetros estruturados | `dados/PARAMETROS_FINANCEIROS.json`, gerado da planilha |
+| Casos de teste aprovados | 162 testes, todos passando |
+| Divergências documentadas | quatorze itens `ABERTO`, na seção 7 da matriz |
+| Interface funcional | verificada dirigindo o aplicativo num navegador |
+| PWA funcional | verificado com a rede desligada |
+| Relatório funcional | verificado imprimindo em PDF: quatro páginas A4 |
+| Reproduzir uma simulação do Excel | `EQUIVALENCIA_EXCEL.md` |
+
+O que **não** está concluído, e não podia estar: as quatro decisões que
+dependem da instituição — o fator K duplicado do prazo 84, o FGI acima de 103
+meses, qual índice rege o Fungetur, e a taxa que falta ao Microcrédito de
+capital de giro. Enquanto não houver resposta, o aplicativo reproduz o
+comportamento atual onde ele existe e recusa a simular onde não existe.
