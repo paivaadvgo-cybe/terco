@@ -63,10 +63,13 @@ export function desenharGrafico(raiz, opcoes) {
     criar('figcaption', { texto: opcoes.titulo }),
   ]);
 
-  const legenda = criar('div', { class: 'legenda' }, opcoes.series.map((s) => criar('span', {
-    class: `chave ${s.classe}`,
-  }, [criar('span', { class: 'traco' }), s.nome])));
-  quadro.append(legenda);
+  // Com uma série só, a legenda repete o título e não distingue nada; com duas
+  // ou mais, ela é obrigatória, para que a identidade nunca dependa só da cor.
+  if (opcoes.series.length > 1) {
+    quadro.append(criar('div', { class: 'legenda' }, opcoes.series.map((s) => criar('span', {
+      class: `chave ${s.classe}`,
+    }, [criar('span', { class: 'traco' }), s.nome]))));
+  }
 
   const area = criar('div', {
     class: 'area-grafico', tabindex: '0', role: 'img',

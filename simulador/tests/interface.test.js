@@ -15,8 +15,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  moeda, numero, taxa, percentual, data, meses, lerValor, lerPercentual,
+  moeda, numero, taxa, percentual, data, meses, lerValor, lerPercentual, textoDoAviso,
 } from '../js/ui/formatar.js';
+import { numeroCSV, campoCSV, cronogramaEmCSV, nomeDoArquivo } from '../js/ui/csv.js';
+import { simular } from '../js/produtos/produtos.js';
 import { passoLegivel, marcasDoEixo } from '../js/ui/grafico.js';
 import { acumular, noEixo, naPonta } from '../js/ui/comparador.js';
 
@@ -137,4 +139,65 @@ test('o eixo abrevia, a ponta não', () => {
   assert.equal(naPonta(2887.35), '2.887');
   assert.equal(naPonta(1961.68), '1.962');
   assert.notEqual(naPonta(2887.35), naPonta(1961.68));
+});
+
+// ─────────────────────────────────────────────────── avisos e exportação
+
+test('o aviso do motor é recomposto com o número em reais', () => {
+  // O motor escreve "432.81" com toFixed — ponto decimal, sem símbolo. Correto
+  // num log, errado num documento em português.
+  const aviso = { codigo: 'SALDO_RESIDUAL', valor: -432.8055, mensagem: 'Restou saldo devedor de -432.81…' };
+  const texto = textoDoAviso(aviso);
+  assert.match(texto, /R\$/);
+  assert.ok(!texto.includes('432.81'), 'o ponto decimal não deve sobreviver');
+  assert.match(texto, /ABERTO-07/);
+  // Um aviso sem tratamento próprio cai na mensagem do motor, sem se perder.
+  assert.equal(textoDoAviso({ codigo: 'OUTRO', mensagem: 'texto original' }), 'texto original');
+});
+
+test('o CSV usa ponto e vírgula, vírgula decimal e marca de ordem de byte', () => {
+  // São as três coisas que o Excel em português precisa: sem elas as colunas
+  // embaralham, os totais não somam e os acentos quebram.
+  const s = simular({
+    produto: 'giro', linha: 'GoiásFomento Giro',
+    valorSolicitado: 60000, prazo: 6, carencia: 2, dataProposta: '2026-08-06',
+  });
+  const csv = cronogramaEmCSV(s);
+  assert.equal(csv.charCodeAt(0), 0xFEFF, 'sem a marca de ordem o Excel abre em Latin-1');
+  assert.ok(csv.includes('\r\n'), 'fim de linha do Windows');
+
+  const linhas = csv.slice(1).split('\r\n');
+  const cabecalho = linhas.findIndex((l) => l.startsWith('Parcela;'));
+  assert.ok(cabecalho > 0, 'o cronograma vem depois da identificação');
+  assert.equal(linhas.length - cabecalho - 2, 6, 'uma linha por parcela');
+
+  const primeira = linhas[cabecalho + 1].split(';');
+  assert.equal(primeira[0], '1');
+  assert.match(primeira[4], /^\d+,\d{2}$/, 'decimal com vírgula, sem separador de milhar');
+});
+
+test('o CSV escapa o que precisa e só o que precisa', () => {
+  assert.equal(campoCSV('Pequeno Médio'), 'Pequeno Médio');
+  assert.equal(campoCSV('Pequeno; Médio'), '"Pequeno; Médio"');
+  assert.equal(campoCSV('linha "VIP"'), '"linha ""VIP"""');
+  assert.equal(campoCSV('com\nquebra'), '"com\nquebra"');
+  assert.equal(campoCSV(null), '');
+});
+
+test('numeroCSV entrega número, não texto', () => {
+  assert.equal(numeroCSV(1234.5), '1234,50');
+  assert.equal(numeroCSV(0), '0,00');
+  assert.equal(numeroCSV(0.0165, 6), '0,016500');
+  assert.equal(numeroCSV(null), '');
+  assert.equal(numeroCSV(Infinity), '');
+});
+
+test('o nome do arquivo sobrevive a qualquer sistema', () => {
+  const s = simular({
+    produto: 'giro', linha: 'GoiásFomento Giro - IMCF',
+    valorSolicitado: 10000, prazo: 12, carencia: 0, dataProposta: '2026-08-06',
+  });
+  const nome = nomeDoArquivo(s);
+  assert.match(nome, /^[a-z0-9-]+\.csv$/, `"${nome}" tem caractere que não deveria`);
+  assert.ok(nome.includes('imcf'));
 });

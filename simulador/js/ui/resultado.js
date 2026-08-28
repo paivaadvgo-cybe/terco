@@ -7,7 +7,7 @@
  */
 
 import { criar } from './formulario.js';
-import { moeda, taxa, percentual, meses, data, dataHora } from './formatar.js';
+import { moeda, taxa, percentual, meses, data, dataHora, textoDoAviso } from './formatar.js';
 
 function linhaDeResumo(rotulo, valor, destaque = false) {
   return criar('div', { class: destaque ? 'item item-destaque' : 'item' }, [
@@ -36,7 +36,7 @@ export function desenharResultado(raiz, s, acoes = {}) {
 
   for (const aviso of s.avisos ?? []) {
     raiz.append(criar('p', { class: 'aviso' }, [
-      criar('strong', { texto: 'Atenção. ' }), aviso.mensagem,
+      criar('strong', { texto: 'Atenção. ' }), textoDoAviso(aviso),
     ]));
   }
 
@@ -85,6 +85,8 @@ export function desenharResultado(raiz, s, acoes = {}) {
 
   const botoes = criar('div', { class: 'acoes' }, [
     acoes.aoSalvar ? criar('button', { class: 'principal', onClick: acoes.aoSalvar }, ['Salvar simulação']) : null,
+    acoes.aoImprimir ? criar('button', { onClick: acoes.aoImprimir }, ['Relatório']) : null,
+    acoes.aoExportar ? criar('button', { onClick: acoes.aoExportar }, ['Exportar CSV']) : null,
     acoes.aoVoltar ? criar('button', { onClick: acoes.aoVoltar }, ['Nova simulação']) : null,
   ].filter(Boolean));
   if (botoes.childElementCount) raiz.append(botoes);

@@ -13,6 +13,7 @@ import { Formulario, criar } from './ui/formulario.js';
 import { desenharResultado } from './ui/resultado.js';
 import { desenharCronograma } from './ui/cronograma.js';
 import { desenharComparador } from './ui/comparador.js';
+import { desenharRelatorio, baixarCSV } from './ui/relatorio.js';
 import { moeda, taxa, meses, dataHora } from './ui/formatar.js';
 import * as armazem from './storage/simulacoes.js';
 
@@ -176,8 +177,19 @@ const desenhar = {
   },
 
   relatorios() {
-    proximaFase('Relatórios', 13,
-      'Vai gerar o relatório completo para impressão e a exportação do cronograma em CSV.');
+    const raiz = $('#conteudo');
+    if (!app.simulacao) {
+      raiz.append(
+        criar('h1', { texto: 'Relatórios' }),
+        criar('p', { class: 'vazio' }, [
+          'O relatório parte de uma simulação. Faça uma em ',
+          criar('strong', { texto: 'Nova simulação' }),
+          ' — ou abra uma salva — e volte aqui.',
+        ]),
+      );
+      return;
+    }
+    desenharRelatorio(raiz, app.simulacao);
   },
 
   parametros() {
@@ -293,6 +305,8 @@ function mostrarResultado(abaInicial = 'resumo') {
         }
       },
       aoVoltar: () => navegar('nova'),
+      aoImprimir: () => navegar('relatorios'),
+      aoExportar: () => baixarCSV(app.simulacao),
     }),
     cronograma: () => desenharCronograma(painel, app.simulacao),
     comparacao: () => {

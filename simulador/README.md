@@ -30,8 +30,9 @@ não podem virar código sem decisão; estão em
 | 9 | Indexadores: INPC, TR, SELIC | concluída |
 | 10 | Produtos: nove famílias, TIR e a simulação completa | concluída |
 | 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída |
-| 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída — 122 passando ao todo |
-| 13–15 | Relatórios, PWA, equivalência | aguardando |
+| 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída |
+| 13 | Relatórios: impressão, PDF e exportação em CSV | concluída — 127 passando ao todo |
+| 14–15 | PWA, equivalência final | aguardando |
 
 ```
 cd simulador && npm test
@@ -66,7 +67,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
 | `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
 | `js/produtos/` | As nove famílias de linha de crédito, e a simulação de ponta a ponta |
-| `js/ui/` | Formulário, resultado, cronograma, comparador, gráficos e formatação |
+| `js/ui/` | Formulário, resultado, cronograma, comparador, gráficos, relatório, CSV e formatação |
 | `js/storage/` | Simulações salvas no próprio aparelho, em IndexedDB |
 | `index.html`, `css/` | O aplicativo |
 | `js/data/parametros.js` | Os mesmos parâmetros do JSON, como módulo — gerado |
@@ -91,6 +92,18 @@ python3 simulador/ferramentas/extrair_parametros.py \
 
 A auditoria produz `inventario.json`, `celulas.tsv` e `formulas.txt`, que são
 a base de tudo o que está documentado aqui.
+
+## Sobre o PDF
+
+O escopo pede PDF «quando houver infraestrutura adequada». Ela existe e já está
+no aparelho: a caixa de impressão de qualquer navegador moderno salva em PDF,
+no computador e no celular, e o relatório é formatado para isso — cabeçalho de
+tabela repetido a cada página, linhas que não se partem ao meio, e o conteúdo
+da tela que não pertence ao documento removido na impressão.
+
+Embutir uma biblioteca de PDF custaria um pacote por CDN, e o simulador precisa
+funcionar sem internet; ou uma etapa de compilação, que ele não tem. Imprimir e
+salvar em PDF entrega o mesmo arquivo sem nenhum dos dois custos.
 
 ## Os três achados que mudam números
 

@@ -7,10 +7,10 @@ implementada · `IMPLEMENTADO` — no código, com teste · `VALIDADO` — teste
 equivalência aprovado contra a planilha · `ABERTO` — regra quebrada, ambígua ou
 inconsistente, aguardando decisão · `EXTENSAO` — não existe na planilha.
 
-Fases 1 a 12 concluídas. O motor está completo e validado contra as células da
+Fases 1 a 13 concluídas. O motor está completo e validado contra as células da
 planilha, valor a valor; a interface permite simular, ver o cronograma, ler a
-memória de cálculo, salvar no aparelho e comparar SAC com PRICE. Relatórios e
-PWA seguem em `MAPEADO`.
+memória de cálculo, salvar no aparelho, comparar SAC com PRICE, imprimir o
+relatório e exportar o cronograma. O PWA segue em `MAPEADO`.
 
 ## 1. Entrada e composição do valor
 
@@ -108,6 +108,9 @@ PWA seguem em `MAPEADO`.
 | Investimento | `AL18` | `PMT(TIR; prazo; −valorSolicitado)` | R$ | `calcularPMT()` | `price` | VALIDADO |
 | — | — | Cronograma PRICE completo | — | `gerarCronogramaPRICE()` | `price` | EXTENSAO · IMPLEMENTADO |
 | — | — | Comparador SAC × PRICE, com os quatro gráficos | — | `desenharComparador()` | `ui/comparador` | EXTENSAO · IMPLEMENTADO |
+| — | — | Relatório para impressão, com os nove blocos do item 33 | — | `desenharRelatorio()` | `ui/relatorio` | EXTENSAO · IMPLEMENTADO |
+| — | — | Exportação do cronograma em CSV, para o Excel em pt-BR | — | `cronogramaEmCSV()` | `ui/csv` | EXTENSAO · IMPLEMENTADO |
+| — | — | PDF | — | pela caixa de impressão do navegador | `ui/relatorio` | EXTENSAO · IMPLEMENTADO |
 | mensais | `AL17:AR19` | Receita, despesa e margem da instituição | R$ | não migrado | — | fora de escopo |
 | FCO | `BB16:BD18` | idem | R$ | não migrado | — | fora de escopo |
 

@@ -91,3 +91,23 @@ export function lerPercentual(texto) {
   if (limpo === '' || !Number.isFinite(Number(limpo))) return NaN;
   return Number(`${limpo}e-2`);
 }
+
+/**
+ * Texto de um aviso do motor, na linguagem de quem lê.
+ *
+ * O motor escreve a mensagem com `toFixed`, que produz "432.81" — ponto
+ * decimal, sem símbolo, correto num log e errado num documento em português.
+ * Como o aviso carrega o valor estruturado ao lado do texto, a interface
+ * recompõe a frase com o número formatado, e o motor continua sem precisar
+ * saber o que é pt-BR.
+ */
+export function textoDoAviso(aviso) {
+  if (aviso.codigo === 'SALDO_RESIDUAL') {
+    return `Restou saldo devedor de ${moeda(aviso.valor)} depois da última parcela. `
+      + 'Não é arredondamento: o motor calcula em precisão total, como a planilha, e '
+      + 'arredonda apenas na exibição. Com a base de amortização da planilha, é o efeito '
+      + 'de ABERTO-07 — as parcelas até a 12 dividem o valor solicitado e as seguintes '
+      + 'dividem o financiado.';
+  }
+  return aviso.mensagem;
+}
