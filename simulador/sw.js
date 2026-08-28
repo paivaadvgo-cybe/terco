@@ -71,7 +71,6 @@ const CASCA = [
   './js/ui/csv.js',
   './js/ui/formatar.js',
   './js/ui/formulario.js',
-  './js/ui/grafico.js',
   './js/ui/relatorio.js',
   './js/ui/resultado.js',
 ];

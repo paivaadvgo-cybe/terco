@@ -30,7 +30,7 @@ não podem virar código sem decisão; estão em
 | 9 | Indexadores: INPC, TR, SELIC | concluída |
 | 10 | Produtos: nove famílias, TIR e a simulação completa | concluída |
 | 11 | Interface: nova simulação, resultado, cronograma, memória, salvas | concluída |
-| 12 | Comparador SAC × PRICE, com os quatro gráficos | concluída |
+| 12 | Comparador SAC × PRICE, em tabela | concluída |
 | 13 | Relatórios: impressão, PDF e exportação em CSV | concluída |
 | 14 | PWA: funciona sem internet e instala | concluída |
 | 15 | Relatório de equivalência | concluída — 162 passando ao todo |
@@ -70,7 +70,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
 | `js/indexadores/` | INPC, TR e SELIC, com a origem de cada referência |
 | `js/produtos/` | As nove famílias de linha de crédito, e a simulação de ponta a ponta |
-| `js/ui/` | Formulário, resultado, cronograma, comparador, gráficos, relatório, CSV e formatação |
+| `js/ui/` | Formulário, resultado, cronograma, comparador, relatório, CSV e formatação |
 | `js/storage/` | Simulações salvas no próprio aparelho, em IndexedDB |
 | `index.html`, `css/` | O aplicativo |
 | `sw.js`, `manifest.json`, `icones/` | Funcionamento sem internet e instalação |
@@ -131,7 +131,7 @@ entre os dois arquivos é, exatamente, tudo que a administração alterou.
 Depois da primeira visita o simulador funciona offline: o aplicativo inteiro —
 os quarenta e quatro arquivos da casca — fica guardado no navegador, e as
 simulações salvas ficam no próprio aparelho. Verificado desligando a rede e
-usando: simular, ver os quatro gráficos, abrir o relatório, salvar e recuperar.
+usando: simular, comparar SAC com PRICE, abrir o relatório, salvar e recuperar.
 
 A atualização não é automática. O aplicativo é feito de dezenas de módulos que
 se importam entre si, e deixar uma versão nova assumir no meio de uma sessão
