@@ -502,3 +502,36 @@ test('todo campo de produto tem rótulo e explicação, e as escolhas têm texto
     for (const o of opcoes) assert.ok(o.texto, `opção sem texto em ${campo.rotulo}`);
   }
 });
+
+test('o ato normativo da publicação anterior não serve para a próxima', () => {
+  // Enquanto o conjunto publicado não tinha ato normativo, o campo vinha vazio
+  // e ninguém publicava sem preenchê-lo. Assim que passou a ter, a edição
+  // seguinte o encontra pronto — e publicar sem reparar registraria a mudança
+  // nova sob a norma da anterior, que parece registro válido e não é.
+  const comAto = structuredClone(VIGENTES);
+  comAto.metadados = { ...comAto.metadados, atoNormativo: 'Resolução nº 1', publicadoPor: 'Fulano' };
+
+  const herdado = structuredClone(comAto);
+  herdado.tabelaDeEncargos[0].linhas[0].prazoMaximo = 36;
+  const r = validar(herdado, { referencia: comAto });
+  assert.equal(r.podePublicar, false);
+  assert.match(r.impedimentos.map((i) => i.mensagem).join(' '), /mesmo da publicação anterior/);
+
+  herdado.metadados.atoNormativo = 'Resolução nº 2';
+  assert.ok(validar(herdado, { referencia: comAto }).podePublicar);
+});
+
+test('a senha publicada não muda a vigência dos parâmetros de crédito', () => {
+  // Uma senha é configuração operacional. Carimbar a data de hoje faria toda
+  // simulação dizer que as taxas são de hoje, quando nenhuma taxa mudou.
+  assert.equal(VIGENTES.metadados.versao, VIGENTES.metadados.baseadoEm.versao);
+});
+
+test('o conjunto publicado não guarda senha em claro', () => {
+  const bruto = fs.readFileSync(path.join(raiz, 'dados/PARAMETROS_VIGENTES.json'), 'utf8');
+  if (!VIGENTES.acesso) return;
+  assert.equal(VIGENTES.acesso.algoritmo, 'PBKDF2-SHA-256');
+  assert.ok(VIGENTES.acesso.iteracoes >= 100000, 'poucas iterações tornam a adivinhação barata');
+  assert.ok(VIGENTES.acesso.sal && VIGENTES.acesso.resumo);
+  assert.equal(bruto.includes('"senha"'), false);
+});

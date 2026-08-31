@@ -60,7 +60,26 @@ const criar = (tag, atributos = {}, filhos = []) => {
  */
 
 const publicado = VIGENTES;
-let edicao = structuredClone(VIGENTES);
+let edicao = comMetadadosLimpos(structuredClone(VIGENTES));
+
+/**
+ * A edição começa sem os campos que descrevem a publicação **anterior**.
+ *
+ * Ato normativo, quem publicou e observações são desta alteração, não da
+ * passada. Deixá-los preenchidos com o que veio do arquivo faria o próximo
+ * administrador publicar sob a norma de outra pessoa sem reparar — e a
+ * conferência acusaria tarde demais. A vigência fica: ela é a data em que os
+ * parâmetros atuais passaram a valer, e serve de ponto de partida.
+ */
+function comMetadadosLimpos(conjunto) {
+  return {
+    ...conjunto,
+    metadados: {
+      ...conjunto.metadados,
+      atoNormativo: '', publicadoPor: '', observacoes: '',
+    },
+  };
+}
 let secaoAtual = 'linhas';
 
 const conteudo = document.getElementById('conteudo');
@@ -893,7 +912,7 @@ function abrirArquivo() {
     const arquivo = entrada.files?.[0];
     if (!arquivo) return;
     try {
-      edicao = lerConjunto(await arquivo.text());
+      edicao = comMetadadosLimpos(lerConjunto(await arquivo.text()));
       mostrarErro('');
       desenhar();
     } catch (e) {
@@ -932,7 +951,7 @@ function barraDeEstado() {
         type: 'button', class: 'secundario', texto: 'Descartar alterações',
         onClick: () => {
           if (!confirm('Descartar tudo que foi alterado e voltar ao que está publicado?')) return;
-          edicao = structuredClone(publicado);
+          edicao = comMetadadosLimpos(structuredClone(publicado));
           mostrarErro('');
           desenhar();
         },
