@@ -836,11 +836,34 @@ function secaoConferir() {
   }
 
   partes.push(criar('h3', { texto: 'Publicar' }));
-  if (!resultado.podePublicar) {
-    partes.push(criar('p', { class: 'achado impedimento', texto:
-      'Há impedimentos acima. Eles precisam ser resolvidos antes de gerar os arquivos.' }));
-  } else if (dif.total === 0) {
-    partes.push(criar('p', { class: 'somente-leitura', texto: 'Sem alterações a publicar.' }));
+
+  // O botão fica sempre visível, e desabilitado quando não dá para publicar,
+  // com o motivo ao lado.
+  //
+  // Escondê-lo foi erro de projeto: quem administra abria esta tela, procurava
+  // o botão que o manual descreve, não achava, e não tinha como saber por quê —
+  // o aviso existia, mas embaixo da lista de achados, que pode ser longa.
+  // Um botão ausente não ensina nada; um botão desabilitado diz que ele existe
+  // e o que falta para usá-lo.
+  const pendencias = resultado.impedimentos.map((i) => i.mensagem);
+  if (resultado.podePublicar && dif.total === 0) pendencias.push('Não há alteração nenhuma a publicar.');
+
+  if (pendencias.length > 0) {
+    partes.push(criar('div', { class: 'falta-para-publicar' }, [
+      criar('p', { texto: pendencias.length === 1
+        ? 'Falta uma coisa para poder publicar:'
+        : `Faltam ${pendencias.length} coisas para poder publicar:` }),
+      criar('ul', {}, pendencias.map((m) => criar('li', { texto: m }))),
+    ]));
+  }
+
+  if (pendencias.length > 0) {
+    partes.push(criar('p', {}, [
+      criar('button', {
+        type: 'button', disabled: true, texto: 'Baixar os arquivos para publicar',
+        title: pendencias.join(' '),
+      }),
+    ]));
   } else {
     partes.push(
       criar('ol', { class: 'passos-da-publicacao' }, [

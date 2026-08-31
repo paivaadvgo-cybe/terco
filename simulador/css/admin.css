@@ -201,3 +201,19 @@ h4.estrutural::before { content: '⚙ '; color: var(--alerta); }
 
 .porta { max-width: 30rem; margin: 3rem auto; }
 .porta h2 { margin-top: 0; }
+
+/* ── o que falta para publicar ────────────────────────────────────────────── */
+
+.falta-para-publicar {
+  padding: 0.9rem 1.1rem;
+  margin-bottom: 0.9rem;
+  background: var(--alerta-fundo);
+  border-left: 4px solid var(--alerta);
+  border-radius: 8px;
+  color: var(--alerta);
+}
+.falta-para-publicar p { margin: 0 0 0.4rem; font-weight: 600; }
+.falta-para-publicar ul { margin: 0; padding-left: 1.2rem; }
+.falta-para-publicar li { margin-bottom: 0.25rem; }
+
+button[disabled] { opacity: 0.55; cursor: not-allowed; }
