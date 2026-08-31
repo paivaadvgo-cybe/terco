@@ -17,7 +17,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { versaoDeclarada, versaoEsperada } from '../ferramentas/versionar_casca.mjs';
+import { versaoDeclarada, versaoEsperada, FORA_DO_RESUMO, cascaDe, resumoDaCasca } from '../ferramentas/versionar_casca.mjs';
 
 const raiz = new URL('..', import.meta.url).pathname;
 const ler = (relativo) => fs.readFileSync(path.join(raiz, relativo), 'utf8');
@@ -195,4 +195,43 @@ test('o worker só guarda e serve o que está na casca', () => {
   assert.match(sw, /if \(!daCasca\(url\.pathname\)\) return;/,
     'o que não é da casca precisa ir para a rede, sem passar pelo cache');
   assert.match(sw, /const ENDERECOS_DA_CASCA = new Set\(/);
+});
+
+test('o conjunto de parâmetros é guardado, mas não entra no resumo da versão', () => {
+  // Quem administra publica taxas, produtos e a senha do painel pelo próprio
+  // simulador, e o painel gera os dois arquivos de parâmetro — não o `sw.js`.
+  // Se o arquivo entrasse no resumo, toda publicação exigiria um `sw.js` novo
+  // que ninguém geraria: o worker não se atualizaria e a versão publicada
+  // ficaria presa no cache. Medido num navegador antes da correção: publicar o
+  // parâmetro não mudava nada na tela.
+  const sw = ler('sw.js');
+  const casca = cascaDe(sw);
+  const arquivo = './js/data/parametros-vigentes.js';
+
+  assert.ok(casca.includes(arquivo), 'precisa estar guardado, ou o aplicativo não abre sem internet');
+  assert.ok(FORA_DO_RESUMO.includes(arquivo), 'não pode entrar no resumo que dá nome ao cache');
+
+  // E de fato: alterá-lo não muda a versão exigida.
+  const caminho = path.join(raiz, 'js/data/parametros-vigentes.js');
+  const original = fs.readFileSync(caminho, 'utf8');
+  try {
+    fs.writeFileSync(caminho, `${original}\n// alteração de teste\n`, 'utf8');
+    assert.equal(resumoDaCasca(raiz, casca), resumoDaCasca(raiz, casca));
+    assert.equal(versaoDeclarada(sw), versaoEsperada(raiz, sw),
+      'publicar um parâmetro não pode exigir um sw.js novo');
+  } finally {
+    fs.writeFileSync(caminho, original, 'utf8');
+  }
+});
+
+test('o conjunto de parâmetros é servido rede primeiro, e sem o cache do navegador', () => {
+  const sw = ler('sw.js');
+  const trecho = sw.slice(sw.indexOf("parametros-vigentes.js'"), sw.indexOf('Só a casca é guardada'));
+  const codigo = trecho.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+
+  assert.match(codigo, /fetch\(new Request\([\s\S]*?cache:\s*'reload'/,
+    'um fetch comum é atendido pelo cache HTTP: o worker guardaria o arquivo novo '
+    + 'e a página continuaria usando o velho');
+  assert.match(codigo, /catch\([\s\S]*?caches\.match/,
+    'sem internet precisa cair no que ficou guardado, ou o aplicativo não abre offline');
 });
