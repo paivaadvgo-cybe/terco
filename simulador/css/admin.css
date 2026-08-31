@@ -196,3 +196,8 @@ h4.estrutural {
   font-size: 0.95rem;
 }
 h4.estrutural::before { content: '⚙ '; color: var(--alerta); }
+
+/* ── porta de entrada ─────────────────────────────────────────────────────── */
+
+.porta { max-width: 30rem; margin: 3rem auto; }
+.porta h2 { margin-top: 0; }

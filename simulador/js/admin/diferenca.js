@@ -215,6 +215,34 @@ function textoDaEscolha(campo, valor) {
   return opcao ? opcao.texto : `(${valor})`;
 }
 
+/**
+ * A senha do painel.
+ *
+ * Aparece na lista como qualquer alteração, e precisa aparecer: sem isso o
+ * painel diria «sem alterações a publicar» depois de a senha ser trocada, e a
+ * senha nova ficaria impublicável — o botão de publicar só surge quando há
+ * diferença. O resumo em si não é mostrado; o que interessa é que mudou.
+ */
+function compararAcesso(antes, depois, mudancas) {
+  const a = antes?.acesso ?? null;
+  const d = depois?.acesso ?? null;
+  if (a === null && d === null) return;
+  if (a?.resumo === d?.resumo && a?.sal === d?.sal) return;
+
+  mudancas.push({
+    tipo: a === null ? 'inclusao' : (d === null ? 'exclusao' : 'alteracao'),
+    onde: 'acesso',
+    rotulo: 'Senha do painel de administração',
+    de: a === null ? '(sem senha)' : `definida em ${a.definidaEm ?? '—'}`,
+    para: d === null ? '(sem senha)' : `definida em ${d.definidaEm ?? '—'}`,
+    relevancia: 'critica',
+    nota: d === null
+      ? 'O painel passa a abrir para quem tiver o endereço.'
+      : 'Passa a valer para todos os navegadores assim que for publicada. '
+        + 'Quem estiver com o painel aberto continua até fechar a aba.',
+  });
+}
+
 function compararProdutos(antes, depois, mudancas) {
   const a = antes?.produtos ?? {};
   const d = depois?.produtos ?? {};
@@ -342,6 +370,7 @@ export function diferencas(antes, depois) {
     );
   }
 
+  compararAcesso(antes, depois, mudancas);
   compararProdutos(antes, depois, mudancas);
   compararFatorK(antes, depois, mudancas);
   compararEncargos(antes, depois, mudancas);

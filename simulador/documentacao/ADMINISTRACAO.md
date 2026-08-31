@@ -32,6 +32,38 @@ porque o painel só oferece os que existem.
 
 ---
 
+## A senha do painel
+
+Na aba **Senha** você define, troca ou remove a senha que o painel pede ao
+abrir. Ela só passa a valer depois de publicada, como qualquer outro parâmetro.
+
+**Leia isto antes de confiar nela.** O simulador não tem servidor: tudo roda no
+navegador de quem abre a página, e o código é público. Uma senha conferida ali
+**não é controle de acesso**. Quem souber abrir as ferramentas do desenvolvedor
+passa por ela, e os parâmetros continuam legíveis no repositório de qualquer
+jeito — eles não são segredo, são a tabela de crédito que o simulador usa à
+vista de todos.
+
+O que ela faz, e faz bem: impede o acesso **acidental**. O clique errado, o
+visitante curioso, a aba esquecida aberta numa máquina compartilhada. E deixa
+explícito que a página não é para qualquer um. Publicar uma alteração de taxa
+por engano é dano real, e é contra esse engano que ela protege.
+
+Para impedir alteração de fato seria preciso um servidor que autentique de
+verdade — a mesma decisão que está pendente com o administrador de rede sobre
+por onde publicar.
+
+A senha nunca é guardada: fica um resumo dela, calculado com sal e trezentas e
+dez mil iterações, de modo que cada tentativa de adivinhação custa cerca de
+sessenta milésimos de segundo. Adivinhar uma senha de doze caracteres assim é
+inviável; uma senha curta ou óbvia, não — por isso o mínimo de doze caracteres é
+exigido.
+
+A liberação vale pela aba: fechou, pede de novo. Numa máquina compartilhada,
+deixar o painel aberto para sempre seria pior do que não ter senha.
+
+---
+
 ## O caminho de uma alteração
 
 ### 1. Abrir o painel

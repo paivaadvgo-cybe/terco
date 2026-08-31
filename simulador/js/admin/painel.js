@@ -34,6 +34,7 @@ import {
 import { validar } from './validar.js';
 import { diferencas } from './diferenca.js';
 import { arquivosParaPublicar, lerConjunto, metadadosDePublicacao } from './serializar.js';
+import { conferirSenha, definirSenha, exigeSenha, disponivel, TAMANHO_MINIMO } from './acesso.js';
 
 const criar = (tag, atributos = {}, filhos = []) => {
   const el = document.createElement(tag);
@@ -76,6 +77,7 @@ const SECOES = [
   { id: 'indexadores', titulo: 'Indexadores' },
   { id: 'teste', titulo: 'Testar' },
   { id: 'conferir', titulo: 'Conferir e publicar' },
+  { id: 'acesso', titulo: 'Senha' },
 ];
 
 function mostrarErro(mensagem) {
@@ -688,6 +690,87 @@ function secaoTeste() {
   return partes;
 }
 
+/* ── seção: senha ─────────────────────────────────────────────────────────── */
+
+function secaoAcesso() {
+  const configurada = exigeSenha(edicao);
+  const partes = [
+    criar('h2', { texto: 'Senha do painel' }),
+    criar('p', { class: 'achado alerta', texto:
+      'Leia antes de confiar nela. O simulador não tem servidor: tudo roda no navegador de '
+      + 'quem abre a página, e o código é público. Uma senha conferida aqui impede o acesso '
+      + 'acidental — o clique errado, a aba aberta na máquina compartilhada —, e deixa '
+      + 'explícito que a página não é para qualquer um. Não impede quem saiba abrir as '
+      + 'ferramentas do desenvolvedor. Para isso seria preciso um servidor que autentique '
+      + 'de verdade.' }),
+    criar('p', { class: 'ajuda', texto:
+      'A senha nunca é guardada: fica um resumo dela, calculado com sal e trezentas e dez mil '
+      + 'iterações, de modo que cada tentativa de adivinhação custa caro. Por isso o mínimo de '
+      + `${TAMANHO_MINIMO} caracteres — o resumo fica num arquivo público, e senha curta se `
+      + 'quebra mesmo com o cálculo caro.' }),
+  ];
+
+  if (!disponivel()) {
+    partes.push(criar('p', { class: 'achado impedimento', texto:
+      'Esta página está aberta fora de um contexto seguro, e o navegador não oferece as funções '
+      + 'de criptografia. Abra pelo endereço https do site.' }));
+    return partes;
+  }
+
+  partes.push(criar('p', { class: configurada ? 'somente-leitura' : 'achado alerta', texto: configurada
+    ? `Há senha definida em ${edicao.acesso.definidaEm}. Trocá-la exige publicar, como qualquer parâmetro.`
+    : 'Não há senha definida: o painel abre para quem tiver o endereço.' }));
+
+  const campoSenha = criar('input', { type: 'password', id: 'senha-nova', autocomplete: 'new-password' });
+  const campoRepete = criar('input', { type: 'password', id: 'senha-repete', autocomplete: 'new-password' });
+
+  partes.push(criar('div', { class: 'campos' }, [
+    criar('div', { class: 'campo' }, [
+      criar('label', { for: 'senha-nova', texto: configurada ? 'Nova senha' : 'Senha' }),
+      campoSenha,
+      criar('p', { class: 'ajuda', texto: `Ao menos ${TAMANHO_MINIMO} caracteres.` }),
+    ]),
+    criar('div', { class: 'campo' }, [
+      criar('label', { for: 'senha-repete', texto: 'Repita' }),
+      campoRepete,
+      criar('p', { class: 'ajuda', texto: 'Se as duas não baterem, nada é alterado.' }),
+    ]),
+  ]));
+
+  partes.push(criar('p', {}, [
+    criar('button', {
+      type: 'button', texto: configurada ? 'Trocar a senha' : 'Definir a senha',
+      onClick: async () => {
+        if (campoSenha.value !== campoRepete.value) {
+          mostrarErro('As duas senhas não são iguais.');
+          return;
+        }
+        try {
+          edicao.acesso = await definirSenha(campoSenha.value);
+          mostrarErro('');
+          desenhar();
+        } catch (e) {
+          mostrarErro(e.message);
+        }
+      },
+    }),
+    configurada ? ' ' : null,
+    configurada ? criar('button', {
+      type: 'button', class: 'secundario', texto: 'Remover a senha',
+      onClick: () => {
+        if (!confirm('Remover a senha? O painel passa a abrir para quem tiver o endereço.')) return;
+        delete edicao.acesso;
+        desenhar();
+      },
+    }) : null,
+  ]));
+
+  partes.push(criar('p', { class: 'ajuda', texto:
+    'A senha só passa a valer depois de publicada, como qualquer outro parâmetro: ela vai '
+    + 'junto no arquivo, na aba Conferir e publicar.' }));
+  return partes;
+}
+
 /* ── seção: conferir e publicar ───────────────────────────────────────────── */
 
 function secaoConferir() {
@@ -859,6 +942,7 @@ function barraDeEstado() {
 }
 
 const DESENHOS = {
+  acesso: secaoAcesso,
   produtos: secaoProdutos,
   linhas: secaoLinhas,
   fatorK: secaoFatorK,
@@ -884,4 +968,58 @@ function desenhar() {
   atualizarBarra();
 }
 
-desenhar();
+/**
+ * A porta.
+ *
+ * Nada do painel é desenhado antes de a senha bater. Não é controle de acesso —
+ * o código é público e a verificação roda no navegador de quem abre —, mas é o
+ * que impede o acesso acidental, que é o dano real: publicar uma alteração de
+ * taxa por engano.
+ *
+ * A liberação vale pela aba, e não pelo aparelho: `sessionStorage` some quando
+ * a aba fecha. Numa máquina compartilhada, deixar o painel aberto para sempre
+ * seria pior do que não ter senha nenhuma.
+ */
+const CHAVE_DA_SESSAO = 'simulador-goiasfomento:painel-liberado';
+
+function pedirSenha() {
+  const campo = criar('input', { type: 'password', id: 'senha', autocomplete: 'current-password' });
+  const aviso = criar('p', { class: 'achado impedimento', hidden: true });
+
+  const tentar = async () => {
+    try {
+      if (await conferirSenha(campo.value, publicado.acesso)) {
+        sessionStorage.setItem(CHAVE_DA_SESSAO, '1');
+        desenhar();
+        return;
+      }
+    } catch { /* cai no aviso */ }
+    aviso.textContent = 'Senha incorreta.';
+    aviso.hidden = false;
+    campo.select();
+  };
+
+  campo.addEventListener('keydown', (ev) => { if (ev.key === 'Enter') tentar(); });
+
+  conteudo.replaceChildren(criar('section', { class: 'grupo-de-linhas porta' }, [
+    criar('h2', { texto: 'Painel de administração' }),
+    criar('p', { class: 'ajuda', texto:
+      'Esta página altera os parâmetros que todo mundo vê. Informe a senha para continuar.' }),
+    aviso,
+    criar('div', { class: 'campo' }, [
+      criar('label', { for: 'senha', texto: 'Senha' }), campo,
+    ]),
+    criar('p', {}, [criar('button', { type: 'button', texto: 'Entrar', onClick: tentar })]),
+    criar('p', { class: 'ajuda', texto:
+      'Quem só quer conferir os parâmetros em vigor não precisa de senha: eles estão na aba '
+      + 'Parâmetros do simulador, sem possibilidade de alteração.' }),
+  ]));
+  menu.replaceChildren();
+  campo.focus();
+}
+
+if (exigeSenha(publicado) && sessionStorage.getItem(CHAVE_DA_SESSAO) !== '1') {
+  pedirSenha();
+} else {
+  desenhar();
+}

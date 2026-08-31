@@ -42,6 +42,7 @@ const FORA_DA_CASCA = [
   './js/admin/validar.js',
   './js/admin/diferenca.js',
   './js/admin/serializar.js',
+  './js/admin/acesso.js',
   './js/admin/painel.js',
   './css/admin.css',
 ];
