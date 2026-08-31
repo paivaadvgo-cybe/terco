@@ -30,7 +30,7 @@
  * arquivo alterado muda este nome, e o teste em `tests/pwa.test.js` acusa a
  * diferença antes de a publicação sair.
  */
-const VERSAO = 'simulador-goiasfomento-e6d8a42ccd53';
+const VERSAO = 'simulador-goiasfomento-f5848243fd27';
 const BASE = new URL('./', self.location).pathname;
 
 /**
@@ -150,6 +150,33 @@ self.addEventListener('fetch', (evento) => {
           return resposta;
         })
         .catch(() => caches.match(BASE + 'index.html').then((r) => r || caches.match(BASE))),
+    );
+    return;
+  }
+
+  // O conjunto de parâmetros: rede primeiro, cache como reserva.
+  //
+  // É o único arquivo da casca que muda sem passar por código: quem administra
+  // publica taxas, produtos e a senha do painel pelo próprio simulador. Servi-lo
+  // do cache prenderia a versão antiga até alguém gerar um `sw.js` novo — que o
+  // painel não gera, e não deveria precisar gerar. Com internet vem sempre o que
+  // está publicado; sem internet, o último que ficou guardado.
+  if (url.pathname === BASE + 'js/data/parametros-vigentes.js') {
+    // `cache: 'reload'` de novo, e pelo mesmo motivo da instalação: um `fetch`
+    // comum é atendido pelo cache HTTP do navegador. Sem isto o worker guarda o
+    // arquivo novo e a página continua usando o velho — medido num navegador,
+    // com internet aparecia a vigência antiga e sem internet a nova, que é o
+    // avesso do que se espera e do que faz sentido.
+    evento.respondWith(
+      fetch(new Request(requisicao.url, { cache: 'reload' }))
+        .then((resposta) => {
+          if (resposta && resposta.status === 200 && resposta.type === 'basic') {
+            const copia = resposta.clone();
+            caches.open(VERSAO).then((c) => c.put(requisicao, copia)).catch(() => {});
+          }
+          return resposta;
+        })
+        .catch(() => caches.match(requisicao)),
     );
     return;
   }

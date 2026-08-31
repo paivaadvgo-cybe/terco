@@ -175,8 +175,13 @@ No repositório, substitua:
     simulador/dados/PARAMETROS_VIGENTES.json
 
 pelos arquivos baixados, descrevendo o ato normativo na confirmação. A
-publicação leva cerca de um minuto. Quem já estiver com o simulador aberto verá
-o aviso de atualização.
+publicação leva cerca de um minuto.
+
+**São só esses dois arquivos.** Nada mais precisa ser tocado: o simulador busca
+os parâmetros da rede a cada visita, e a alteração chega sem depender de
+atualização do aplicativo — quem abrir depois da publicação já recebe os valores
+novos, sem aviso e sem clique. Sem internet, vale o último conjunto que ficou
+guardado no aparelho.
 
 Antes de sair da tela, use **Imprimir o relatório de alterações**: sai a lista
 do que mudou, com a norma e a data, para juntar ao processo.

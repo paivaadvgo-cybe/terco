@@ -29,6 +29,22 @@ const raiz = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const arquivoSW = path.join(raiz, 'sw.js');
 const PREFIXO = 'simulador-goiasfomento-';
 
+/**
+ * O que fica de fora do resumo, ainda que esteja na casca.
+ *
+ * O conjunto de parâmetros é publicado pelo painel, por quem administra, sem
+ * tocar em código — e o painel gera os dois arquivos de parâmetro, não o
+ * `sw.js`. Se o arquivo entrasse no resumo, toda publicação exigiria um
+ * `sw.js` novo que ninguém geraria, o worker não se atualizaria, e a versão
+ * publicada ficaria presa no cache: exatamente o defeito que o resumo existe
+ * para impedir, só que do lado do dado.
+ *
+ * Ele continua guardado, para o aplicativo abrir sem internet, mas é servido
+ * **rede primeiro**: com internet vem sempre o que está publicado, e sem
+ * internet vale o último que ficou guardado.
+ */
+export const FORA_DO_RESUMO = ['./js/data/parametros-vigentes.js'];
+
 /** Os caminhos listados na casca, na ordem em que estão no arquivo. */
 export function cascaDe(textoDoSW) {
   const inicio = textoDoSW.indexOf('const CASCA = [');
@@ -46,7 +62,7 @@ export function cascaDe(textoDoSW) {
 export function resumoDaCasca(raizDoProjeto, casca) {
   const soma = crypto.createHash('sha256');
   for (const caminho of casca) {
-    if (caminho === './') continue;
+    if (caminho === './' || FORA_DO_RESUMO.includes(caminho)) continue;
     soma.update(caminho);
     soma.update(fs.readFileSync(path.join(raizDoProjeto, caminho)));
   }
