@@ -16,6 +16,7 @@ import { plural } from './../ui/formatar.js';
 import {
   CAMPOS_DA_LINHA, CAMPOS_IOF, CAMPOS_SIMPLES, CAMPOS_DO_INDEXADOR,
   lerCaminho, tipoDe, blocosDeTaxa, TIPOS,
+  CAMPOS_DO_PRODUTO, CAMPOS_ESTRUTURAIS_DO_PRODUTO, ESCOLHAS_DE_COMPORTAMENTO,
 } from './esquema.js';
 
 const CAMPO_POR_CHAVE = new Map(CAMPOS_DA_LINHA.map((c) => [c.chave, c]));
@@ -207,6 +208,79 @@ function descreverFaixa(faixa) {
   return JSON.stringify(faixa);
 }
 
+/** O texto de uma escolha de comportamento, e não o código dela. */
+function textoDaEscolha(campo, valor) {
+  const opcao = ESCOLHAS_DE_COMPORTAMENTO[campo.escolhas]
+    .find((o) => String(o.valor) === String(valor ?? ''));
+  return opcao ? opcao.texto : `(${valor})`;
+}
+
+function compararProdutos(antes, depois, mudancas) {
+  const a = antes?.produtos ?? {};
+  const d = depois?.produtos ?? {};
+
+  for (const [codigo, produto] of Object.entries(d)) {
+    const anterior = a[codigo];
+    if (anterior === undefined) {
+      mudancas.push({
+        tipo: 'inclusao', onde: `produtos.${codigo}`,
+        rotulo: `Produto novo "${produto.nome}"`,
+        para: plural((produto.gruposDeEncargos ?? []).length, 'grupo de linhas', 'grupos de linhas'),
+        relevancia: 'alta',
+      });
+      continue;
+    }
+
+    for (const campo of CAMPOS_DO_PRODUTO) {
+      if (anterior[campo.chave] !== produto[campo.chave]) {
+        mudancas.push(mudanca({
+          onde: `produtos.${codigo}.${campo.chave}`,
+          rotulo: `${produto.nome} · ${campo.rotulo}`,
+          de: anterior[campo.chave] || '(vazio)', para: produto[campo.chave] || '(vazio)',
+          relevancia: 'media',
+        }));
+      }
+    }
+
+    for (const campo of CAMPOS_ESTRUTURAIS_DO_PRODUTO) {
+      const va = lerCaminho(anterior, campo.chave);
+      const vd = lerCaminho(produto, campo.chave);
+      if (String(va ?? '') === String(vd ?? '')) continue;
+      mudancas.push(mudanca({
+        onde: `produtos.${codigo}.${campo.chave}`,
+        rotulo: `${produto.nome} · ${campo.rotulo}`,
+        de: textoDaEscolha(campo, va), para: textoDaEscolha(campo, vd),
+        relevancia: 'critica',
+        nota: 'Muda o cálculo de todas as linhas desta família de uma vez, e não de uma linha só.',
+      }));
+    }
+
+    const gruposA = (anterior.gruposDeEncargos ?? []).join(' · ');
+    const gruposD = (produto.gruposDeEncargos ?? []).join(' · ');
+    if (gruposA !== gruposD) {
+      mudancas.push(mudanca({
+        onde: `produtos.${codigo}.gruposDeEncargos`,
+        rotulo: `${produto.nome} · Grupos de linhas`,
+        de: gruposA || '(nenhum)', para: gruposD || '(nenhum)',
+        relevancia: 'critica',
+        nota: 'Muda quais linhas este produto oferece a quem simula.',
+      }));
+    }
+  }
+
+  for (const [codigo, produto] of Object.entries(a)) {
+    if (codigo in d) continue;
+    mudancas.push({
+      tipo: 'exclusao', onde: `produtos.${codigo}`,
+      rotulo: `Produto excluído "${produto.nome}"`,
+      de: plural((produto.gruposDeEncargos ?? []).length, 'grupo de linhas', 'grupos de linhas'),
+      relevancia: 'critica',
+      nota: 'As linhas desta família deixam de ser oferecidas. Simulações salvas continuam '
+        + 'guardadas, mas não poderão ser refeitas.',
+    });
+  }
+}
+
 function compararIndexadores(antes, depois, mudancas) {
   const codigos = [...new Set([
     ...Object.keys(antes?.indexadores ?? {}),
@@ -268,6 +342,7 @@ export function diferencas(antes, depois) {
     );
   }
 
+  compararProdutos(antes, depois, mudancas);
   compararFatorK(antes, depois, mudancas);
   compararEncargos(antes, depois, mudancas);
   compararIndexadores(antes, depois, mudancas);

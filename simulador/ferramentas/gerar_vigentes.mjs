@@ -17,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { PARAMETROS } from '../js/data/parametros.js';
+import { PRODUTOS } from '../js/produtos/produtos.js';
 import { arquivosParaPublicar } from '../js/admin/serializar.js';
 
 const raiz = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -40,6 +41,12 @@ const conjunto = {
   linhasPorAba: PARAMETROS.linhasPorAba,
   encargos: PARAMETROS.encargos,
   indexadores: PARAMETROS.indexadores,
+  // Os perfis de produto entram como dado. Nos módulos de `js/produtos/` fica
+  // a base, com o comentário que explica por que cada família é como é; aqui
+  // fica a cópia que o aplicativo usa e que o painel edita. Um produto é uma
+  // combinação de comportamentos que o motor já implementa, e por isso pode
+  // ser composto sem código.
+  produtos: PRODUTOS,
 };
 
 for (const { nome, conteudo } of arquivosParaPublicar(conjunto)) {
@@ -52,3 +59,4 @@ for (const { nome, conteudo } of arquivosParaPublicar(conjunto)) {
 const linhas = Object.values(conjunto.linhasPorAba).reduce((n, a) => n + a.linhas.length, 0);
 console.log(`linhas de crédito: ${linhas}`);
 console.log(`prazos com fator K: ${Object.keys(conjunto.fatorKFGI.fatores).length}`);
+console.log(`produtos: ${Object.keys(conjunto.produtos).length}`);

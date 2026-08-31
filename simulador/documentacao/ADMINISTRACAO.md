@@ -12,20 +12,23 @@ O endereço do painel é o do simulador com `/admin.html` no fim:
 
 ## O que se administra pelo painel, e o que não
 
-**Pelo painel:** linhas de crédito — incluir, alterar e excluir —, prazos
-máximos, carências máximas, limites, valores mínimos, taxas cheias e taxas com
-bônus; a tabela do fator K do FGI; as alíquotas do IOF; a escada da TAC; os
-fatores do FAMPE e do FUNDEQ; a renda exigida para aval; a cobertura da
-alienação de imóvel; e os valores de referência dos indexadores.
+**Pelo painel:** produtos — incluir, alterar e excluir família inteira —, com o
+comportamento de cálculo de cada um; linhas de crédito — incluir, alterar e
+excluir —, prazos máximos, carências máximas, limites, valores mínimos, taxas
+cheias e taxas com bônus; a tabela do fator K do FGI; as alíquotas do IOF; a
+escada da TAC; os fatores do FAMPE e do FUNDEQ; a renda exigida para aval; a
+cobertura da alienação de imóvel; e os valores de referência dos indexadores.
 
-**Não pelo painel:** o sistema de amortização de cada família, o tratamento da
-carência, a convenção de conversão da taxa, e qual base a amortização divide.
-Isso não são parâmetros — é o que a linha de crédito *é*, lido da planilha de
-origem e coberto por teste. Mudar isso é trabalho de desenvolvimento, não de
-preenchimento de formulário. Se uma norma nova criar uma linha que se comporta
-de um jeito que não existe hoje, o painel vai deixar cadastrá-la, mas ela
-calculará pelo comportamento da família a que pertence — e é o caso de avisar
-antes de publicar.
+**Não pelo painel:** um comportamento de cálculo que ainda não exista. Um
+sistema de amortização que não seja SAC nem PRICE, uma convenção de taxa que
+não seja nenhuma das duas, um encargo que a planilha nunca teve. Isso é
+desenvolvimento.
+
+A distinção importa e é simples: **compor um produto novo com o que já existe
+não é código; inventar um comportamento novo, é.** Cada campo de comportamento
+no painel é uma escolha entre dois ou três valores, e a lista deles é a lista
+do que o motor sabe executar — não há como escolher um que ele não conheça,
+porque o painel só oferece os que existem.
 
 ---
 
@@ -40,6 +43,26 @@ Se você estiver retomando um trabalho de outro dia, use **Abrir arquivo** e
 escolha o rascunho que tinha baixado.
 
 ### 2. Alterar
+
+#### Produtos
+
+Um produto é uma família de linhas que compartilham a forma de calcular —
+Capital de Giro, Investimento, FCO Empresarial, e assim por diante. Na aba
+**Produtos** você inclui, renomeia e exclui famílias, e escolhe:
+
+- **quais grupos de linhas** o produto oferece, marcando as caixas. Um produto
+  sem grupo nenhum não tem o que oferecer, e a conferência avisa;
+- **o comportamento de cálculo**, num bloco marcado com ⚙: convenção da taxa,
+  base da amortização, tratamento da carência, variante da TAC, tipo de bônus e
+  indexador.
+
+Cada um desses campos tem duas ou três opções, com a explicação do que cada uma
+faz embaixo. **Elas mudam o cálculo de todas as linhas da família de uma vez** —
+por isso aparecem em vermelho na conferência, e por isso a aba Testar existe.
+
+Para criar uma família nova: **Incluir produto**, dê o nome, marque os grupos de
+linhas que ela oferece, ajuste o comportamento, e teste. O produto novo aparece
+na aba Testar assim que for criado.
 
 Cada campo traz embaixo a explicação do que ele faz. Campos alterados ficam com
 a borda alaranjada, e a faixa do alto passa a contar quantas alterações há

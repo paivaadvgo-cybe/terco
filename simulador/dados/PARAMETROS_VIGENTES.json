@@ -2219,5 +2219,322 @@
       "descricao": "Índice de inflação medido pelo IBGE para famílias de renda baixa.",
       "referencia": null
     }
+  },
+  "produtos": {
+    "giro": {
+      "codigo": "giro",
+      "nome": "Capital de Giro",
+      "abaDeOrigem": "Linhas Giro Puro",
+      "gruposDeEncargos": [
+        "Linhas para Capital de Giro",
+        "Linhas Especiais de Giro Puro"
+      ],
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "giroPuro",
+        "baseAmortizacao": "valorFinanciado",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "fator",
+          "fator": 0.77
+        },
+        "alienacao": {
+          "descontaParteGarantida": true
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2
+      },
+      "linhasEmAberto": []
+    },
+    "investimento": {
+      "codigo": "investimento",
+      "nome": "Investimento",
+      "abaDeOrigem": "Linhas Investimento",
+      "gruposDeEncargos": [
+        "Linhas para Investimentos",
+        "Linhas Especiais Investimentos"
+      ],
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "planilha",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "fator",
+          "fator": 0.77
+        },
+        "alienacao": {
+          "descontaParteGarantida": true
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2
+      },
+      "linhasEmAberto": []
+    },
+    "transportes": {
+      "codigo": "transportes",
+      "nome": "Transportes",
+      "abaDeOrigem": "Linhas Transportes",
+      "gruposDeEncargos": [
+        "Linhas Especiais para Transportes"
+      ],
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "planilha",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "tabelado"
+        },
+        "alienacao": {
+          "descontaParteGarantida": true
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2
+      },
+      "linhasEmAberto": []
+    },
+    "microcredito": {
+      "codigo": "microcredito",
+      "nome": "Microcrédito Produtivo",
+      "abaDeOrigem": "Mais Crédito",
+      "gruposDeEncargos": [
+        "Linha Microcrédito"
+      ],
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "planilha",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "tabelado"
+        },
+        "alienacao": {
+          "descontaParteGarantida": true
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2,
+        "percentualGarantidoPadrao": 1
+      },
+      "linhasEmAberto": [
+        {
+          "nome": "GoiásFomento Microcrédito Produtivo - Capital de Giro",
+          "celula": "'Tabela de Encargos'!C34 e E34",
+          "codigo": "TAXA_NAO_PARAMETRIZADA",
+          "motivo": "A tabela oficial traz prazo, carência e limite desta linha, mas as duas células de taxa estão vazias. Ver ABERTO-14."
+        }
+      ]
+    },
+    "fungetur": {
+      "codigo": "fungetur",
+      "nome": "Fungetur — Turismo",
+      "abaDeOrigem": "Linhas Fungetur",
+      "gruposDeEncargos": [
+        "Linhas Fungetur"
+      ],
+      "regras": {
+        "convencaoTaxa": "diasUteis",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "valorFinanciado",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "nenhum"
+        },
+        "alienacao": {
+          "descontaParteGarantida": true
+        },
+        "indexador": "SELIC",
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2
+      },
+      "linhasEmAberto": []
+    },
+    "finep": {
+      "codigo": "finep",
+      "nome": "FINEP — Inovação",
+      "abaDeOrigem": "Linhas FINEP",
+      "gruposDeEncargos": [
+        "Linhas FINEP - PORTE I e II",
+        "Linhas FINEP - PORTE III"
+      ],
+      "regras": {
+        "convencaoTaxa": "diasUteis",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "valorFinanciado",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "nenhum"
+        },
+        "alienacao": {
+          "descontaParteGarantida": true
+        },
+        "indexador": "TR",
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2,
+        "exigePorte": true,
+        "portes": {
+          "1": "Linhas FINEP - PORTE I e II",
+          "2": "Linhas FINEP - PORTE I e II",
+          "3": "Linhas FINEP - PORTE III"
+        }
+      },
+      "linhasEmAberto": []
+    },
+    "fco": {
+      "codigo": "fco",
+      "nome": "FCO Empresarial",
+      "abaDeOrigem": "FCO Empresarial",
+      "gruposDeEncargos": [
+        "Linhas FCO Empresarial"
+      ],
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "planilha",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "tabelado"
+        },
+        "alienacao": {
+          "descontaParteGarantida": false
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "exigeMunicipio": true,
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2
+      },
+      "linhasEmAberto": [
+        {
+          "nome": "FCO PNMPO Giro Dissociado",
+          "celula": "'FCO Empresarial'!C11",
+          "motivo": "A célula que seleciona a taxa desta linha contém #REF!. Ver ABERTO-12."
+        },
+        {
+          "nome": "FCO Mini e Micro Geração de Energia",
+          "celula": "'FCO Empresarial'!C12",
+          "motivo": "A célula que seleciona a taxa desta linha contém #REF!. Ver ABERTO-12."
+        }
+      ]
+    },
+    "fcoRural": {
+      "codigo": "fcoRural",
+      "nome": "FCO Rural e Verde",
+      "abaDeOrigem": "FCO Rural",
+      "gruposDeEncargos": [
+        "Linhas FCO Rural e Verde"
+      ],
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "valorFinanciado",
+        "tratamentoCarencia": "pagos",
+        "bonus": {
+          "tipo": "tabelado"
+        },
+        "alienacao": {
+          "descontaParteGarantida": false
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "exigeMunicipio": false,
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2
+      },
+      "linhasEmAberto": []
+    },
+    "produtorEmpreendedor": {
+      "codigo": "produtorEmpreendedor",
+      "nome": "Produtor Empreendedor",
+      "abaDeOrigem": "Produtor Empreendedor",
+      "gruposDeEncargos": [],
+      "linhasDaAba": "Produtor Empreendedor",
+      "regras": {
+        "convencaoTaxa": "mensalComposta",
+        "varianteTAC": "padrao",
+        "baseAmortizacao": "valorFinanciado",
+        "tratamentoCarencia": "pagos",
+        "tratamentoCarenciaPorLinha": {
+          "Produtor Empreendedor Fruticultura": "capitalizados"
+        },
+        "bonus": {
+          "tipo": "tabelado"
+        },
+        "alienacao": {
+          "descontaParteGarantida": false,
+          "valorMinimo": 50000
+        },
+        "indexador": null,
+        "periodicidades": [
+          1
+        ],
+        "modalidadesDeGarantia": [
+          "FAMPE",
+          "FGI",
+          "FUNDEQ"
+        ],
+        "percentualGarantidoMinimo": 0.2,
+        "percentualGarantidoPadrao": 1
+      },
+      "linhasEmAberto": []
+    }
   }
 }

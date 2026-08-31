@@ -28,6 +28,7 @@ import { moeda, numero, plural, taxa as formatarTaxa } from './../ui/formatar.js
 import {
   CAMPOS_DA_LINHA, CAMPOS_IOF, CAMPOS_SIMPLES, CAMPOS_DO_INDEXADOR, CAMPOS_DA_PUBLICACAO,
   CAMPOS_DA_FAIXA_DE_TAC, ABAS_QUE_ALIMENTAM_PRODUTO,
+  CAMPOS_DO_PRODUTO, CAMPOS_ESTRUTURAIS_DO_PRODUTO, ESCOLHAS_DE_COMPORTAMENTO,
   lerCaminho, escreverCaminho, lerCampo, tipoDe, blocosDeTaxa,
 } from './esquema.js';
 import { validar } from './validar.js';
@@ -65,8 +66,11 @@ const conteudo = document.getElementById('conteudo');
 const menu = document.querySelector('.menu');
 const painelDeErro = document.getElementById('erro');
 
+// Linhas primeiro porque é o que mais se altera: taxa, prazo, limite. Produtos
+// logo depois, que é onde se inclui ou exclui uma família inteira.
 const SECOES = [
   { id: 'linhas', titulo: 'Linhas de crédito' },
+  { id: 'produtos', titulo: 'Produtos' },
   { id: 'fatorK', titulo: 'Fator K do FGI' },
   { id: 'encargos', titulo: 'Encargos' },
   { id: 'indexadores', titulo: 'Indexadores' },
@@ -213,7 +217,7 @@ function linhaEditavel(linha, caminho, aoExcluir) {
 
 /** Que produtos leem de um grupo — dito na tela, para não se editar em vão. */
 function quemUsa(nomeDoGrupo) {
-  const produtos = listarProdutos()
+  const produtos = listarProdutos(edicao)
     .filter((p) => {
       try {
         return listarLinhas(p.codigo, {}, edicao).some((l) => l.grupo === nomeDoGrupo);
@@ -292,6 +296,160 @@ function secaoLinhas() {
     ]));
   }
   return partes;
+}
+
+/* ── seção: produtos ──────────────────────────────────────────────────────
+ *
+ * Um produto é uma combinação de comportamentos que o motor já implementa, e
+ * cada campo estrutural é uma escolha entre os que existem. Não há campo livre
+ * ali: escolher um comportamento que o motor não saiba executar é impossível
+ * por construção, porque as opções saem do esquema.
+ *
+ * O que exige desenvolvimento é um comportamento **novo** — um sistema de
+ * amortização que não seja SAC nem PRICE, uma convenção de taxa que não seja
+ * nenhuma das duas. Compor um produto novo com o que já existe, não.
+ */
+
+function escolhaDe(produto, codigo, campo) {
+  const caminho = `produtos.${codigo}.${campo.chave}`;
+  const atual = lerCaminho(edicao, caminho) ?? '';
+  const opcoes = ESCOLHAS_DE_COMPORTAMENTO[campo.escolhas];
+  const id = `c-${caminho.replace(/[^\w]/g, '-')}`;
+  const publicadoAgora = lerCaminho(publicado, caminho) ?? '';
+
+  const seletor = criar('select', { id }, opcoes.map((o) => criar('option', {
+    value: o.valor, texto: o.texto, selected: String(o.valor) === String(atual),
+  })));
+
+  const escolhida = opcoes.find((o) => String(o.valor) === String(atual));
+  const envolucro = criar('div', { class: 'campo' }, [
+    criar('label', { for: id, texto: campo.rotulo }),
+    seletor,
+    criar('p', { class: 'ajuda', texto: escolhida?.ajuda ?? campo.ajuda }),
+  ]);
+
+  seletor.addEventListener('change', () => {
+    // O indexador guarda `null`, e não string vazia: um indexador «vazio» que
+    // fosse texto passaria pela busca e daria erro de código desconhecido.
+    const valor = campo.chave === 'regras.indexador' && seletor.value === '' ? null : seletor.value;
+    escreverCaminho(edicao, caminho, valor);
+    desenhar();
+  });
+
+  if (String(atual) !== String(publicadoAgora)) envolucro.classList.add('alterado');
+  return envolucro;
+}
+
+function gruposDoProduto(codigo) {
+  const caminho = `produtos.${codigo}.gruposDeEncargos`;
+  const atuais = lerCaminho(edicao, caminho) ?? [];
+  const todos = edicao.tabelaDeEncargos.map((g) => g.grupo);
+
+  return criar('div', { class: 'campo' }, [
+    criar('label', { texto: 'Grupos de linhas que este produto oferece' }),
+    criar('div', { class: 'caixas' }, todos.map((nome) => {
+      const marcada = atuais.includes(nome);
+      const caixa = criar('input', { type: 'checkbox', checked: marcada, id: `g-${codigo}-${nome.replace(/\W/g, '')}` });
+      caixa.addEventListener('change', () => {
+        const lista = new Set(lerCaminho(edicao, caminho) ?? []);
+        if (caixa.checked) lista.add(nome); else lista.delete(nome);
+        escreverCaminho(edicao, caminho, [...lista]);
+        desenhar();
+      });
+      return criar('label', { class: 'caixa' }, [caixa, nome]);
+    })),
+    criar('p', { class: 'ajuda', texto:
+      'As linhas que este produto oferece saem dos grupos marcados. Um produto sem grupo '
+      + 'nenhum não tem o que oferecer, e a conferência avisa.' }),
+  ]);
+}
+
+function secaoProdutos() {
+  const partes = [
+    criar('h2', { texto: 'Produtos' }),
+    criar('p', { class: 'ajuda', texto:
+      'Um produto é uma família de linhas de crédito que compartilham a forma de calcular. '
+      + 'Os campos marcados como estruturais mudam o cálculo de todas as linhas da família '
+      + 'de uma vez — altere-os e confira na aba Testar antes de publicar.' }),
+  ];
+
+  for (const [codigo, produto] of Object.entries(edicao.produtos ?? {})) {
+    let quantasLinhas = 0;
+    try { quantasLinhas = listarLinhas(codigo, {}, edicao).length; } catch { quantasLinhas = 0; }
+
+    partes.push(criar('section', { class: 'grupo-de-linhas' }, [
+      criar('h3', { texto: produto.nome || codigo }),
+      criar('p', { class: 'quem-usa', texto:
+        `Código ${codigo} · ${plural(quantasLinhas, 'linha oferecida', 'linhas oferecidas')}.` }),
+
+      criar('div', { class: 'campos' },
+        CAMPOS_DO_PRODUTO.map((c) => campoDe(c, `produtos.${codigo}.${c.chave}`))),
+
+      gruposDoProduto(codigo),
+
+      criar('h4', { class: 'estrutural', texto: 'Comportamento de cálculo' }),
+      criar('p', { class: 'ajuda', texto:
+        'Vale para todas as linhas desta família. Cada opção é um comportamento que o motor '
+        + 'implementa; não há como escolher um que ele não saiba executar.' }),
+      criar('div', { class: 'campos' },
+        CAMPOS_ESTRUTURAIS_DO_PRODUTO.map((c) => escolhaDe(produto, codigo, c))),
+
+      criar('p', {}, [
+        criar('button', {
+          type: 'button', class: 'secundario', texto: 'Excluir este produto',
+          onClick: () => {
+            if (!confirm(`Excluir o produto "${produto.nome}"?\n\n`
+              + 'As linhas dele deixam de ser oferecidas. Simulações já salvas continuam '
+              + 'guardadas, mas não poderão ser refeitas.')) return;
+            delete edicao.produtos[codigo];
+            desenhar();
+          },
+        }),
+      ]),
+    ]));
+  }
+
+  partes.push(criar('p', {}, [
+    criar('button', {
+      type: 'button', texto: 'Incluir produto',
+      onClick: () => {
+        const nome = prompt('Nome do produto:');
+        if (nome === null || nome.trim() === '') return;
+        const codigo = novoCodigo(nome);
+        if (codigo in (edicao.produtos ?? {})) { mostrarErro(`Já existe um produto com o código ${codigo}.`); return; }
+        edicao.produtos[codigo] = {
+          codigo,
+          nome: nome.trim(),
+          abaDeOrigem: '',
+          gruposDeEncargos: [],
+          regras: {
+            convencaoTaxa: 'mensalComposta',
+            varianteTAC: 'padrao',
+            baseAmortizacao: 'valorFinanciado',
+            tratamentoCarencia: 'pagos',
+            bonus: { tipo: 'tabelado' },
+            alienacao: { descontaParteGarantida: true },
+            indexador: null,
+            periodicidades: [1],
+            modalidadesDeGarantia: ['FAMPE', 'FGI', 'FUNDEQ'],
+            percentualGarantidoMinimo: 0.2,
+          },
+          linhasEmAberto: [],
+        };
+        secaoAtual = 'produtos';
+        desenhar();
+      },
+    }),
+  ]));
+  return partes;
+}
+
+/** Código a partir do nome: sem acento, sem espaço, começando por letra. */
+function novoCodigo(nome) {
+  const base = nome.normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9]+(.)/g, (_, c) => c.toUpperCase())
+    .replace(/[^a-zA-Z0-9]/g, '');
+  return /^[a-zA-Z]/.test(base) ? base.charAt(0).toLowerCase() + base.slice(1) : `p${base}`;
 }
 
 /* ── seção: fator K ───────────────────────────────────────────────────────── */
@@ -429,7 +587,7 @@ function secaoIndexadores() {
 const testeAtual = { produto: null, linha: null, valor: 50000, prazo: 24, carencia: 0 };
 
 function secaoTeste() {
-  const produtos = listarProdutos();
+  const produtos = listarProdutos(edicao);
   if (testeAtual.produto === null) testeAtual.produto = produtos[0]?.codigo ?? null;
 
   let linhas = [];
@@ -701,6 +859,7 @@ function barraDeEstado() {
 }
 
 const DESENHOS = {
+  produtos: secaoProdutos,
   linhas: secaoLinhas,
   fatorK: secaoFatorK,
   encargos: secaoEncargos,

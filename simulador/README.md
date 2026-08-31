@@ -107,9 +107,11 @@ a base de tudo o que está documentado aqui.
 
 ## Administrar os parâmetros
 
-Quando a política de crédito mudar — taxa, prazo, carência, limite, linha nova
-ou linha extinta, alíquota, fator —, a alteração é feita em `admin.html`, sem
-tocar em código. O painel valida, mostra o que mudou por extenso, roda uma
+Quando a política de crédito mudar — produto novo ou extinto, taxa, prazo,
+carência, limite, linha nova ou linha extinta, alíquota, fator —, a alteração é
+feita em `admin.html`, sem tocar em código. Um produto é uma combinação de
+comportamentos que o motor já implementa, e por isso pode ser composto por
+formulário; o que exige desenvolvimento é um comportamento que ainda não exista. O painel valida, mostra o que mudou por extenso, roda uma
 simulação de teste com os valores novos ao lado dos atuais, e gera os dois
 arquivos a publicar.
 
