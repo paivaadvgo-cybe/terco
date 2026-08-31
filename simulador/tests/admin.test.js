@@ -549,3 +549,17 @@ test('os dois arquivos de uma publicação carregam o mesmo instante', () => {
   assert.equal(a.metadados.publicadoEm, b.metadados.publicadoEm);
   assert.deepEqual(a, b);
 });
+
+test('o módulo pode ser refeito a partir do JSON, sem perder nada', () => {
+  // Quando só o JSON chega — o navegador barra o segundo download automático
+  // de uma página, e quem administra acaba com um arquivo só —, o módulo é
+  // reconstruído em vez de a alteração ter de ser refeita.
+  const json = fs.readFileSync(path.join(raiz, 'dados/PARAMETROS_VIGENTES.json'), 'utf8');
+  const doJson = JSON.parse(json);
+  const refeito = lerConjunto(paraModulo(doJson));
+  assert.deepEqual(refeito, doJson);
+
+  // E o texto reconstruído é exatamente o arquivo versionado: refazer o módulo
+  // não pode produzir um diff que não seja alteração nenhuma.
+  assert.equal(paraModulo(doJson), fs.readFileSync(path.join(raiz, 'js/data/parametros-vigentes.js'), 'utf8'));
+});

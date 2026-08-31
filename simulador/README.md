@@ -80,6 +80,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `ferramentas/extrair_parametros.py` | Gera o JSON de parâmetros a partir da planilha |
 | `ferramentas/gerar_vigentes.mjs` | Recria o conjunto vigente a partir da base extraída |
 | `ferramentas/versionar_casca.mjs` | Carimba na versão do cache o resumo dos arquivos guardados |
+| `ferramentas/gerar_modulo.mjs` | Refaz o módulo de parâmetros a partir do JSON publicado |
 | `referencia/` | A planilha, versionada |
 
 ## Reproduzir a auditoria
