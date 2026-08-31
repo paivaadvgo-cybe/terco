@@ -867,7 +867,8 @@ function secaoConferir() {
   } else {
     partes.push(
       criar('ol', { class: 'passos-da-publicacao' }, [
-        criar('li', {}, ['Baixe os dois arquivos no botão abaixo.']),
+        criar('li', {}, ['Baixe os dois arquivos, um em cada botão abaixo. '
+          + 'São dois cliques porque o navegador barra o segundo download automático.']),
         criar('li', {}, [
           'No repositório, substitua ', criar('code', { texto: 'simulador/js/data/parametros-vigentes.js' }),
           ' e ', criar('code', { texto: 'simulador/dados/PARAMETROS_VIGENTES.json' }),
@@ -875,18 +876,14 @@ function secaoConferir() {
         ]),
         criar('li', {}, [
           'Confirme a alteração descrevendo o ato normativo. A publicação leva cerca de um minuto, '
-          + 'e quem já tiver o simulador aberto verá o aviso de atualização.',
+          + 'e quem abrir o simulador depois disso já recebe os valores novos — sem aviso e sem clique.',
         ]),
         criar('li', {}, [
           'Guarde o relatório desta tela junto do processo: é o registro do que mudou e por quê.',
         ]),
       ]),
+      botoesDeDownload(),
       criar('p', {}, [
-        criar('button', {
-          type: 'button', texto: 'Baixar os arquivos para publicar',
-          onClick: () => baixarArquivos(),
-        }),
-        ' ',
         criar('button', {
           type: 'button', class: 'secundario', texto: 'Imprimir o relatório de alterações',
           onClick: () => window.print(),
@@ -908,8 +905,23 @@ function baixar(nome, conteudo, tipo) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function baixarArquivos() {
+/**
+ * Carimba os metadados da publicação e devolve os dois arquivos prontos.
+ *
+ * O carimbo do instante é feito **uma vez** por publicação, e não a cada
+ * clique. Refazê-lo daria aos dois arquivos um `publicadoEm` diferente: o
+ * módulo que o aplicativo carrega e o JSON que o auditor lê passariam a
+ * discordar, sendo que existem justamente para dizer a mesma coisa. Encontrado
+ * ao conferir os dois arquivos baixados, que não batiam.
+ *
+ * O carimbo é descartado quando a edição muda, para que uma alteração feita
+ * depois do primeiro download não seja publicada sob o instante anterior.
+ */
+let carimboDaPublicacao = null;
+
+function prepararPublicacao() {
   const meta = edicao.metadados ?? {};
+  if (carimboDaPublicacao === null) carimboDaPublicacao = new Date().toISOString();
   edicao.metadados = {
     ...meta,
     ...metadadosDePublicacao(publicado, {
@@ -918,11 +930,87 @@ function baixarArquivos() {
       publicadoPor: meta.publicadoPor,
       observacoes: meta.observacoes,
     }),
+    publicadoEm: carimboDaPublicacao,
     baseadoEm: meta.baseadoEm ?? publicado.metadados?.baseadoEm ?? null,
   };
-  for (const arquivo of arquivosParaPublicar(edicao)) {
-    baixar(arquivo.nome, arquivo.conteudo, arquivo.tipo);
+  return arquivosParaPublicar(edicao);
+}
+
+/**
+ * O conteúdo da edição, ignorando o que é da publicação em si.
+ *
+ * Serve para perceber que algo mudou depois de um download: aí o carimbo e as
+ * marcas de «já baixado» são descartados, porque o arquivo que está na pasta
+ * de downloads deixou de corresponder ao que está na tela — e publicar um
+ * arquivo velho junto de um novo é o pior desfecho possível.
+ */
+function assinaturaDaEdicao() {
+  const { metadados, ...resto } = edicao;
+  const m = metadados ?? {};
+  // Lista do que conta, e não do que se ignora. Preparar a publicação escreve
+  // `versao`, `sucedeVersao` e `publicadoEm` nos metadados; com uma lista de
+  // exclusões, esquecer um deles fazia a assinatura mudar sozinha logo após o
+  // primeiro download, e as marcas de «já baixado» sumiam sem nada ter mudado.
+  return JSON.stringify({
+    ...resto,
+    digitado: {
+      vigenciaInicio: m.vigenciaInicio ?? '',
+      atoNormativo: m.atoNormativo ?? '',
+      publicadoPor: m.publicadoPor ?? '',
+      observacoes: m.observacoes ?? '',
+    },
+  });
+}
+
+let assinaturaVista = null;
+
+function esquecerDownloadsSeMudou() {
+  const agora = assinaturaDaEdicao();
+  if (assinaturaVista !== null && agora !== assinaturaVista) {
+    carimboDaPublicacao = null;
+    jaBaixados.clear();
   }
+  assinaturaVista = agora;
+}
+
+/**
+ * Um arquivo por clique.
+ *
+ * Baixar os dois de uma vez é o que se esperaria, e foi como estava — mas o
+ * navegador barra o segundo download automático de uma mesma página sem
+ * autorização, e o aviso disso é um ícone discreto na barra de endereço. O
+ * efeito para quem administra foi só um dos dois arquivos aparecer na pasta,
+ * sem nada explicando a ausência do outro; e publicar um sem o outro deixa os
+ * dois em desacordo.
+ *
+ * Cada botão baixa o seu, no clique da pessoa, que é o que o navegador sempre
+ * permite. Ao lado deles fica a marca de qual já foi baixado, para que a falta
+ * de um seja visível na própria tela.
+ */
+const jaBaixados = new Set();
+
+function baixarUm(indice) {
+  const arquivo = prepararPublicacao()[indice];
+  baixar(arquivo.nome, arquivo.conteudo, arquivo.tipo);
+  jaBaixados.add(arquivo.nome);
+  desenhar();
+}
+
+function botoesDeDownload() {
+  const arquivos = arquivosParaPublicar(edicao);
+  return criar('div', { class: 'arquivos-a-baixar' }, arquivos.map((arquivo, i) => {
+    const baixado = jaBaixados.has(arquivo.nome);
+    return criar('p', { class: 'arquivo-a-baixar' }, [
+      criar('button', {
+        type: 'button',
+        class: baixado ? 'secundario' : '',
+        texto: `${baixado ? 'Baixar de novo' : 'Baixar'} ${arquivo.nome.split('/').pop()}`,
+        onClick: () => baixarUm(i),
+      }),
+      criar('span', { class: baixado ? 'ja-baixado' : 'falta-baixar',
+        texto: baixado ? ' ✓ baixado' : ' ainda não baixado' }),
+    ]);
+  }));
 }
 
 function baixarRascunho() {
@@ -1005,6 +1093,7 @@ function desenharMenu() {
 }
 
 function desenhar() {
+  esquecerDownloadsSeMudou();
   desenharMenu();
   conteudo.replaceChildren(barraDeEstado(), ...(DESENHOS[secaoAtual] ?? secaoLinhas)());
   atualizarBarra();

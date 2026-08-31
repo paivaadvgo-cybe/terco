@@ -535,3 +535,17 @@ test('o conjunto publicado não guarda senha em claro', () => {
   assert.ok(VIGENTES.acesso.sal && VIGENTES.acesso.resumo);
   assert.equal(bruto.includes('"senha"'), false);
 });
+
+test('os dois arquivos de uma publicação carregam o mesmo instante', () => {
+  // Encontrado conferindo os arquivos baixados no navegador: o painel
+  // carimbava o instante a cada clique, e como cada arquivo é baixado num
+  // clique, o módulo que o aplicativo carrega e o JSON que o auditor lê saíam
+  // com `publicadoEm` diferente — discordando sobre a mesma publicação.
+  const conjunto = comMetadados();
+  conjunto.metadados.publicadoEm = '2026-08-31T12:00:00.000Z';
+  const [modulo, json] = arquivosParaPublicar(conjunto);
+  const a = lerConjunto(modulo.conteudo);
+  const b = JSON.parse(json.conteudo);
+  assert.equal(a.metadados.publicadoEm, b.metadados.publicadoEm);
+  assert.deepEqual(a, b);
+});
