@@ -65,6 +65,7 @@ instalação, e o simulador não tem nenhuma — `npm test` roda só com o Node.
 | `documentacao/PLANO_DE_TESTES.md` | Casos de teste e âncoras extraídas da planilha |
 | `documentacao/EQUIVALENCIA_EXCEL.md` | Comparação célula a célula: planilha × aplicativo |
 | `documentacao/ADMINISTRACAO.md` | Manual de quem altera os parâmetros, sem mexer no código |
+| `documentacao/CONTINUIDADE.md` | Passagem do projeto: o que saber antes de tocar em qualquer coisa |
 | `dados/PARAMETROS_FINANCEIROS.json` | Taxas, prazos, limites e fatores, com unidade explícita |
 | `js/engine/` | Motor: SAC, PRICE, taxas, calendário, arredondamento, erros |
 | `js/encargos/` | TAC, IOF, FGI, FAMPE, FUNDEQ e garantias |
