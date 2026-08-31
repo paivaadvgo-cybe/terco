@@ -16,10 +16,10 @@ export const VIGENTES = Object.freeze(
   "metadados": {
     "versao": "2024-12-16",
     "vigenciaInicio": "2024-12-16",
-    "atoNormativo": "",
-    "publicadoPor": "",
-    "publicadoEm": null,
-    "observacoes": "Conjunto inicial, igual ao que a planilha de referência traz. Nenhuma alteração da administração foi aplicada ainda.",
+    "atoNormativo": "Definição da senha do painel — configuração operacional, sem alteração de parâmetro de crédito",
+    "publicadoPor": "Administração do simulador",
+    "publicadoEm": "2026-08-31T12:30:15.253Z",
+    "observacoes": "Senha do painel definida. As taxas, prazos e limites seguem os da vigência 2024-12-16.",
     "sucedeVersao": null,
     "baseadoEm": {
       "versao": "2024-12-16",
@@ -2550,6 +2550,13 @@ export const VIGENTES = Object.freeze(
       },
       "linhasEmAberto": []
     }
+  },
+  "acesso": {
+    "algoritmo": "PBKDF2-SHA-256",
+    "iteracoes": 310000,
+    "sal": "e0420eb71c91d066e8d503d24aa93e06",
+    "resumo": "bd74c3d68726ec9db494c1c01d38dd3463418fc933f60b7b787dae367ac1e308",
+    "definidaEm": "2026-08-31"
   }
 }
 );

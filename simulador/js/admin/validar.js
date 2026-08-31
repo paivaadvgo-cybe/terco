@@ -389,7 +389,7 @@ function validarProdutos(conjunto) {
   return achados;
 }
 
-function validarPublicacao(conjunto) {
+function validarPublicacao(conjunto, referencia) {
   const achados = [];
   const meta = conjunto.metadados ?? {};
   for (const campo of CAMPOS_DA_PUBLICACAO) {
@@ -398,6 +398,18 @@ function validarPublicacao(conjunto) {
       achados.push(impedimento(`metadados.${campo.chave}`,
         `${campo.rotulo} precisa ser preenchido antes de publicar.`));
     }
+  }
+
+  // O ato normativo descreve **esta** alteração. Como ele fica gravado no
+  // conjunto publicado, a edição seguinte o encontra preenchido, e publicar sem
+  // reparar nisso registraria a mudança nova sob a norma da anterior — que é
+  // pior do que não registrar nada, porque parece registro válido.
+  const anterior = referencia?.metadados?.atoNormativo;
+  if (anterior && meta.atoNormativo && String(meta.atoNormativo).trim() === String(anterior).trim()) {
+    achados.push(impedimento('metadados.atoNormativo',
+      'O ato normativo é o mesmo da publicação anterior. Cada alteração tem a sua norma; '
+      + 'aproveitar a anterior registraria esta mudança sob uma norma que não a determinou.',
+      { anterior }));
   }
   if (meta.vigenciaInicio && !/^\d{4}-\d{2}-\d{2}$/.test(meta.vigenciaInicio)) {
     achados.push(impedimento('metadados.vigenciaInicio', 'A data de vigência está em formato não reconhecido.'));
@@ -437,7 +449,7 @@ const identidade = (a) => `${a.onde}\u0000${a.mensagem}`;
 export function validar(conjunto, opcoes = {}) {
   const agora = opcoes.agora ?? Date.now();
 
-  const daPublicacao = validarPublicacao(conjunto);
+  const daPublicacao = validarPublicacao(conjunto, opcoes.referencia);
   const doConteudo = [
     ...validarTabelaDeEncargos(conjunto),
     ...validarProdutos(conjunto),
