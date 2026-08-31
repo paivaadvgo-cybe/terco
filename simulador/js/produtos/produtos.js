@@ -50,18 +50,37 @@ export const PRODUTOS = Object.freeze({
   produtorEmpreendedor: PERFIL_PRODUTOR,
 });
 
-export function obterProduto(codigo) {
-  const produto = PRODUTOS[codigo];
+/**
+ * O catálogo em vigor.
+ *
+ * Os módulos acima são a base: cada um documenta por que a sua família é como
+ * é, e é contra eles que os testes provam que o motor reproduz a planilha. O
+ * catálogo que o aplicativo usa, porém, vem do conjunto de parâmetros — é o
+ * que permite incluir, alterar e excluir produto pelo painel, sem código.
+ *
+ * Um produto não é código: é uma combinação de comportamentos que o motor já
+ * implementa, cada um com duas ou três opções. Compor uma combinação nova é
+ * preencher formulário. O que exige código é um comportamento que ainda não
+ * exista — um sistema de amortização novo, uma convenção de taxa nova.
+ */
+function catalogo(parametros) {
+  return parametros?.produtos ?? PRODUTOS;
+}
+
+export function obterProduto(codigo, parametros = VIGENTES) {
+  const disponiveis = catalogo(parametros);
+  const produto = disponiveis[codigo];
   if (produto === undefined) {
     erro('PARAMETRO_INCOMPATIVEL',
-      `Produto desconhecido: ${JSON.stringify(codigo)}. Conhecidos: ${Object.keys(PRODUTOS).join(', ')}.`,
+      `Produto desconhecido: ${JSON.stringify(codigo)}. Conhecidos: ${Object.keys(disponiveis).join(', ')}.`,
       { codigo });
   }
   return produto;
 }
 
-export function listarProdutos() {
-  return Object.values(PRODUTOS).map(({ codigo, nome, abaDeOrigem }) => ({ codigo, nome, abaDeOrigem }));
+export function listarProdutos(parametros = VIGENTES) {
+  return Object.values(catalogo(parametros))
+    .map(({ codigo, nome, abaDeOrigem }) => ({ codigo, nome, abaDeOrigem }));
 }
 
 /** Uma linha do FCO tem duas taxas; as demais, uma. Esta é a forma comum. */
@@ -102,7 +121,7 @@ function normalizarLinha(bruta, grupo, perfil) {
  * isso `porte` filtra o grupo em vez de deixar a primeira ocorrência ganhar.
  */
 export function listarLinhas(codigoDoProduto, opcoes = {}, parametros = VIGENTES) {
-  const perfil = obterProduto(codigoDoProduto);
+  const perfil = obterProduto(codigoDoProduto, parametros);
   const { porte = null } = opcoes;
   const grupoDoPorte = porte !== null && perfil.regras.portes
     ? perfil.regras.portes[porte] : null;
@@ -133,7 +152,7 @@ export function listarLinhas(codigoDoProduto, opcoes = {}, parametros = VIGENTES
 }
 
 export function obterLinha(codigoDoProduto, nomeDaLinha, opcoes = {}, parametros = VIGENTES) {
-  const perfil = obterProduto(codigoDoProduto);
+  const perfil = obterProduto(codigoDoProduto, parametros);
   if (perfil.regras.exigePorte && (opcoes.porte === undefined || opcoes.porte === null)) {
     erro('PARAMETRO_INCOMPATIVEL',
       `${perfil.nome} exige o porte: a mesma linha tem taxa diferente conforme ele. `
@@ -269,7 +288,7 @@ function validarOperacao(perfil, linha, entrada) {
  * financiado, então ela é conhecida antes de o financiado existir.
  */
 export function simular(entrada, parametros = VIGENTES) {
-  const perfil = obterProduto(entrada.produto);
+  const perfil = obterProduto(entrada.produto, parametros);
   const linha = obterLinha(entrada.produto, entrada.linha, { porte: entrada.porte ?? null }, parametros);
   validarOperacao(perfil, linha, entrada);
 

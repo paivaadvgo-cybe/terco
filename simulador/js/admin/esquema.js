@@ -321,6 +321,107 @@ export const CAMPOS_DO_INDEXADOR = Object.freeze([
   },
 ]);
 
+/* ── produtos ─────────────────────────────────────────────────────────────
+ *
+ * Um produto não é código: é uma combinação de comportamentos que o motor já
+ * implementa. Cada campo abaixo tem duas ou três opções, e a lista delas é a
+ * lista do que existe — não há como escolher um comportamento que o motor não
+ * saiba executar, porque as opções saem daqui e nada mais é aceito.
+ *
+ * O que exige desenvolvimento é um comportamento **novo**: um sistema de
+ * amortização que não seja SAC nem PRICE, uma convenção de taxa que não seja
+ * nenhuma das duas, um encargo que não exista. Compor um produto novo com o
+ * que já existe, não.
+ *
+ * Estes campos mudam o cálculo de todas as linhas da família de uma vez, e por
+ * isso vêm marcados como estruturais: o painel exige conferência no teste
+ * antes de deixar publicar uma alteração neles.
+ */
+
+export const ESCOLHAS_DE_COMPORTAMENTO = Object.freeze({
+  convencaoTaxa: [
+    { valor: 'mensalComposta', texto: 'Mensal composta — (1+i)^(1/12) − 1',
+      ajuda: 'A conversão do FCO e das famílias mensais.' },
+    { valor: 'diasUteis', texto: 'Dias úteis — (1+i)^(22/252) − 1',
+      ajuda: 'A convenção do Fungetur e do FINEP. Difere da mensal em cerca de 4,8%.' },
+  ],
+  baseAmortizacao: [
+    { valor: 'valorFinanciado', texto: 'Valor financiado',
+      ajuda: 'A amortização divide o valor com encargos embutidos. O saldo fecha em zero.' },
+    { valor: 'valorSolicitado', texto: 'Valor solicitado',
+      ajuda: 'Divide o valor pedido, sem os encargos financiados.' },
+    { valor: 'planilha', texto: 'Como a planilha faz — troca na parcela 13',
+      ajuda: 'Reproduz o ABERTO-07: as doze primeiras parcelas dividem o valor solicitado e '
+        + 'as seguintes o financiado. O saldo não fecha, e sobra resíduo ao fim.' },
+  ],
+  tratamentoCarencia: [
+    { valor: 'pagos', texto: 'Juros pagos na carência',
+      ajuda: 'O saldo fica parado e os juros são cobrados mês a mês.' },
+    { valor: 'capitalizados', texto: 'Juros capitalizados na carência',
+      ajuda: 'Os juros entram no saldo, que cresce durante a carência.' },
+  ],
+  varianteTAC: [
+    { valor: 'padrao', texto: 'Escada padrão',
+      ajuda: 'A forma que doze das treze células da planilha aplicam.' },
+    { valor: 'giroPuro', texto: 'Variante de Linhas Giro Puro',
+      ajuda: 'Reproduz o ABERTO-02: o fator 1,015 entra de forma irregular, e o teto de '
+        + 'R$ 420 é testado sobre uma base e cobrado sobre outra.' },
+  ],
+  tipoDeBonus: [
+    { valor: 'nenhum', texto: 'Sem bônus de adimplência' },
+    { valor: 'fator', texto: 'Fator sobre a taxa cheia',
+      ajuda: 'A taxa com bônus é a cheia multiplicada por um fator — 0,77 em treze linhas.' },
+    { valor: 'tabelado', texto: 'Taxa com bônus vem da tabela',
+      ajuda: 'Cada linha traz a sua própria taxa com bônus, sem fator.' },
+  ],
+  indexador: [
+    { valor: '', texto: 'Sem indexador' },
+    { valor: 'SELIC', texto: 'Selic' },
+    { valor: 'TR', texto: 'TR' },
+    { valor: 'INPC', texto: 'INPC' },
+  ],
+});
+
+export const CAMPOS_DO_PRODUTO = Object.freeze([
+  {
+    chave: 'nome', rotulo: 'Nome do produto', tipo: 'texto', obrigatorio: true,
+    ajuda: 'Como a família aparece para quem simula.',
+  },
+  {
+    chave: 'abaDeOrigem', rotulo: 'Aba de origem', tipo: 'texto', opcional: true,
+    ajuda: 'De que aba da planilha esta família veio. Serve de registro; não afeta o cálculo.',
+  },
+]);
+
+/** Os campos que mudam o cálculo de todas as linhas da família de uma vez. */
+export const CAMPOS_ESTRUTURAIS_DO_PRODUTO = Object.freeze([
+  {
+    chave: 'regras.convencaoTaxa', rotulo: 'Convenção da taxa', escolhas: 'convencaoTaxa',
+    ajuda: 'Como a taxa informada é convertida para o período de cálculo.',
+  },
+  {
+    chave: 'regras.baseAmortizacao', rotulo: 'Base da amortização', escolhas: 'baseAmortizacao',
+    ajuda: 'Que valor a amortização divide ao longo do cronograma.',
+  },
+  {
+    chave: 'regras.tratamentoCarencia', rotulo: 'Carência', escolhas: 'tratamentoCarencia',
+    ajuda: 'O que acontece com os juros durante a carência.',
+  },
+  {
+    chave: 'regras.varianteTAC', rotulo: 'Variante da TAC', escolhas: 'varianteTAC',
+    ajuda: 'Qual forma de cobrança da TAC esta família usa.',
+  },
+  {
+    chave: 'regras.bonus.tipo', rotulo: 'Bônus de adimplência', escolhas: 'tipoDeBonus',
+    ajuda: 'De onde sai a taxa com bônus.',
+  },
+  {
+    chave: 'regras.indexador', rotulo: 'Indexador', escolhas: 'indexador',
+    ajuda: 'Segundo componente de juros, cobrado à parte. A planilha não soma o indexador '
+      + 'à taxa base — ele rende separadamente e entra na base do juro fixo do mesmo período.',
+  },
+]);
+
 /* ── metadados da publicação ─────────────────────────────────────────────── */
 
 export const CAMPOS_DA_PUBLICACAO = Object.freeze([

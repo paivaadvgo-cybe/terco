@@ -26,9 +26,10 @@ import path from 'node:path';
 
 import { PARAMETROS } from '../js/data/parametros.js';
 import { VIGENTES } from '../js/data/parametros-vigentes.js';
-import { simular } from '../js/produtos/produtos.js';
+import { simular, listarLinhas } from '../js/produtos/produtos.js';
 import { calcularTAC } from '../js/encargos/tac.js';
 import {
+  CAMPOS_DO_PRODUTO, CAMPOS_ESTRUTURAIS_DO_PRODUTO, ESCOLHAS_DE_COMPORTAMENTO,
   TIPOS, CAMPOS_DA_LINHA, CAMPOS_IOF, CAMPOS_SIMPLES, CAMPOS_DO_INDEXADOR,
   CAMPOS_DA_PUBLICACAO, CAMPOS_DA_FAIXA_DE_TAC,
   lerCaminho, escreverCaminho, lerCampo, blocosDeTaxa,
@@ -377,4 +378,127 @@ test('o conjunto vigente parte da base extraída da planilha, e a base não é e
   }
   assert.equal(VIGENTES.metadados.baseadoEm.versao, PARAMETROS.versao);
   assert.deepEqual(VIGENTES.encargos, PARAMETROS.encargos);
+});
+
+/* ── 7. produtos ────────────────────────────────────────────────────────── */
+
+test('os produtos são dado, e o motor os lê do conjunto de parâmetros', () => {
+  // Se ficassem no código, incluir um produto exigiria desenvolvedor — que é
+  // exatamente o que o painel existe para dispensar.
+  assert.ok(Object.keys(VIGENTES.produtos).length >= 9);
+  for (const [codigo, produto] of Object.entries(VIGENTES.produtos)) {
+    assert.equal(produto.codigo, codigo, 'a chave que guarda o produto precisa bater com o código dele');
+    assert.ok(produto.nome, `${codigo} sem nome`);
+    assert.ok(produto.regras, `${codigo} sem regras`);
+  }
+});
+
+test('um produto novo, composto pelo painel, calcula sem precisar de código', () => {
+  const editado = comMetadados();
+  editado.produtos.novaLinhaDeFomento = {
+    codigo: 'novaLinhaDeFomento',
+    nome: 'Nova Linha de Fomento',
+    abaDeOrigem: '',
+    gruposDeEncargos: ['Linhas para Capital de Giro'],
+    regras: {
+      convencaoTaxa: 'mensalComposta',
+      varianteTAC: 'padrao',
+      baseAmortizacao: 'valorFinanciado',
+      tratamentoCarencia: 'pagos',
+      bonus: { tipo: 'tabelado' },
+      alienacao: { descontaParteGarantida: true },
+      indexador: null,
+      periodicidades: [1],
+      modalidadesDeGarantia: ['FAMPE', 'FGI', 'FUNDEQ'],
+      percentualGarantidoMinimo: 0.2,
+    },
+    linhasEmAberto: [],
+  };
+
+  assert.ok(validar(editado, { referencia: VIGENTES }).podePublicar);
+
+  const linhas = listarLinhas('novaLinhaDeFomento', {}, editado);
+  assert.ok(linhas.length > 0, 'o produto novo precisa oferecer as linhas do grupo escolhido');
+
+  const s = simular({
+    produto: 'novaLinhaDeFomento', linha: linhas[0].nome,
+    valorSolicitado: 50000, prazo: 24, carencia: 0,
+  }, editado);
+  assert.ok(Number.isFinite(s.primeiraParcela) && s.primeiraParcela > 0);
+  assert.equal(s.cronograma.length, 24);
+});
+
+test('trocar o comportamento de um produto muda o cálculo de todas as linhas da família', () => {
+  // Investimento, e não Giro: a carência precisa ser longa o bastante para a
+  // diferença aparecer, e GoiásFomento Giro admite três meses.
+  const base = {
+    produto: 'investimento', linha: 'GoiásFomento Investimento',
+    valorSolicitado: 50000, prazo: 48, carencia: 12,
+  };
+  const antes = simular(base, VIGENTES);
+
+  const editado = clonar();
+  editado.produtos.investimento.regras.tratamentoCarencia = 'capitalizados';
+  const depois = simular(base, editado);
+
+  assert.notEqual(depois.totalJuros, antes.totalJuros,
+    'o comportamento escolhido no painel precisa atravessar até a conta');
+  assert.ok(depois.totalJuros > antes.totalJuros, 'capitalizar na carência cobra mais juros');
+});
+
+test('um comportamento que o motor não implementa é recusado antes de publicar', () => {
+  for (const campo of CAMPOS_ESTRUTURAIS_DO_PRODUTO) {
+    const editado = comMetadados();
+    escreverCaminho(editado, `produtos.giro.${campo.chave}`, 'comportamentoInexistente');
+    const r = validar(editado, { referencia: VIGENTES });
+    assert.equal(r.podePublicar, false, `${campo.rotulo} aceitou um valor fora do vocabulário`);
+  }
+});
+
+test('um produto que aponta para grupo inexistente é recusado', () => {
+  const editado = comMetadados();
+  editado.produtos.giro.gruposDeEncargos = ['Grupo Que Não Existe'];
+  const r = validar(editado, { referencia: VIGENTES });
+  assert.equal(r.podePublicar, false);
+  assert.match(r.impedimentos.map((i) => i.mensagem).join(' '), /não existe na tabela de encargos/);
+});
+
+test('excluir o último produto é impedido', () => {
+  const editado = comMetadados();
+  editado.produtos = {};
+  assert.equal(validar(editado, { referencia: VIGENTES }).podePublicar, false);
+});
+
+test('o vocabulário de comportamentos cobre o que os produtos publicados usam', () => {
+  // Uma opção que existisse no motor e faltasse no esquema desapareceria do
+  // painel: quem administra deixaria de poder escolhê-la, sem nada explicar.
+  for (const [codigo, produto] of Object.entries(VIGENTES.produtos)) {
+    for (const campo of CAMPOS_ESTRUTURAIS_DO_PRODUTO) {
+      const valor = lerCaminho(produto, campo.chave);
+      const previstos = ESCOLHAS_DE_COMPORTAMENTO[campo.escolhas].map((o) => String(o.valor));
+      assert.ok(previstos.includes(String(valor ?? '')),
+        `${codigo}: ${campo.rotulo} usa "${valor}", que não está entre as opções do painel`);
+    }
+  }
+});
+
+test('a exclusão de um produto aparece como crítica na conferência', () => {
+  const editado = clonar();
+  delete editado.produtos.transportes;
+  const r = diferencas(VIGENTES, editado);
+  assert.equal(r.criticas, 1);
+  assert.match(r.mudancas[0].rotulo, /Produto excluído/);
+  assert.match(r.mudancas[0].nota, /deixam de ser oferecidas/);
+});
+
+test('todo campo de produto tem rótulo e explicação, e as escolhas têm texto', () => {
+  for (const campo of CAMPOS_DO_PRODUTO) {
+    assert.ok(campo.rotulo && campo.ajuda, `campo de produto incompleto: ${campo.chave}`);
+  }
+  for (const campo of CAMPOS_ESTRUTURAIS_DO_PRODUTO) {
+    assert.ok(campo.rotulo && campo.ajuda, `campo estrutural incompleto: ${campo.chave}`);
+    const opcoes = ESCOLHAS_DE_COMPORTAMENTO[campo.escolhas];
+    assert.ok(Array.isArray(opcoes) && opcoes.length >= 2, `${campo.rotulo} sem vocabulário`);
+    for (const o of opcoes) assert.ok(o.texto, `opção sem texto em ${campo.rotulo}`);
+  }
 });

@@ -200,6 +200,17 @@ const desenhar = {
       'Motor ', VERSAO_DO_MOTOR, '.',
     ]));
 
+    // O painel existia, estava publicado, e ninguém o encontrava: não havia
+    // link nenhum para ele. Fica aqui, junto da tabela que ele altera, e não
+    // no menu — quem simula não precisa dele, e quem administra chega por esta
+    // página, que é onde vai conferir o que está em vigor.
+    raiz.append(criar('p', { class: 'nota' }, [
+      'Estes valores são alterados no ',
+      criar('a', { href: 'admin.html', texto: 'painel de administração' }),
+      ', sem mexer no código. Lá se incluem, alteram e excluem produtos e linhas de crédito, '
+      + 'e se ajustam as tabelas de encargos e os indexadores.',
+    ]));
+
     for (const familia of listarProdutos()) {
       const perfil = PRODUTOS[familia.codigo];
       const opcoes = perfil.regras.exigePorte ? { porte: 1 } : {};

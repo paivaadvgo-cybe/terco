@@ -23,6 +23,7 @@
 import {
   CAMPOS_DA_LINHA, CAMPOS_IOF, CAMPOS_SIMPLES, CAMPOS_DA_PUBLICACAO,
   lerCaminho, tipoDe, blocosDeTaxa,
+  CAMPOS_ESTRUTURAIS_DO_PRODUTO, ESCOLHAS_DE_COMPORTAMENTO,
 } from './esquema.js';
 
 /** Uma taxa mensal acima disto é possível, mas merece um segundo olhar. */
@@ -320,6 +321,74 @@ function validarIndexadores(conjunto, hoje) {
   return achados;
 }
 
+/**
+ * Os produtos.
+ *
+ * O que se confere aqui é sobretudo coerência de referência: um produto que
+ * aponta para um grupo de linhas que não existe simplesmente não oferece nada,
+ * e um comportamento fora do vocabulário faria o motor recusar toda simulação
+ * daquela família — os dois falham na hora de simular, longe de quem publicou.
+ */
+function validarProdutos(conjunto) {
+  const achados = [];
+  const produtos = conjunto.produtos ?? {};
+
+  if (Object.keys(produtos).length === 0) {
+    return [impedimento('produtos', 'Não sobrou nenhum produto; o simulador não teria o que oferecer.')];
+  }
+
+  const gruposExistentes = new Set((conjunto.tabelaDeEncargos ?? []).map((g) => g.grupo));
+
+  for (const [codigo, produto] of Object.entries(produtos)) {
+    const onde = `produtos.${codigo}`;
+
+    if (!produto.nome || String(produto.nome).trim() === '') {
+      achados.push(impedimento(onde, 'O produto está sem nome.'));
+    }
+    if (produto.codigo !== undefined && produto.codigo !== codigo) {
+      achados.push(impedimento(onde,
+        `O código interno do produto ("${produto.codigo}") não bate com a chave que o guarda ("${codigo}").`));
+    }
+
+    const grupos = produto.gruposDeEncargos ?? [];
+    const daAba = produto.linhasDaAba ? 1 : 0;
+    if (grupos.length === 0 && daAba === 0) {
+      achados.push(alerta(onde,
+        `"${produto.nome ?? codigo}" não está ligado a nenhum grupo de linhas, e por isso `
+        + 'não tem o que oferecer a quem simula.'));
+    }
+    for (const grupo of grupos) {
+      if (!gruposExistentes.has(grupo)) {
+        achados.push(impedimento(`${onde}.gruposDeEncargos`,
+          `"${produto.nome ?? codigo}" aponta para o grupo "${grupo}", que não existe na tabela de encargos.`,
+          { grupo }));
+      }
+    }
+
+    for (const campo of CAMPOS_ESTRUTURAIS_DO_PRODUTO) {
+      const valor = lerCaminho(produto, campo.chave);
+      const previstos = ESCOLHAS_DE_COMPORTAMENTO[campo.escolhas].map((o) => o.valor);
+      const normalizado = valor === null || valor === undefined ? '' : String(valor);
+      if (!previstos.map(String).includes(normalizado)) {
+        achados.push(impedimento(`${onde}.${campo.chave}`,
+          `${campo.rotulo} de "${produto.nome ?? codigo}" está em "${valor}", que o motor não implementa. `
+          + `Previstos: ${previstos.filter(Boolean).join(', ')}.`,
+          { valor }));
+      }
+    }
+
+    if (produto.regras?.indexador && !(produto.regras.indexador in (conjunto.indexadores ?? {}))) {
+      achados.push(impedimento(`${onde}.regras.indexador`,
+        `O indexador "${produto.regras.indexador}" não está cadastrado.`));
+    }
+    if (!Array.isArray(produto.regras?.periodicidades) || produto.regras.periodicidades.length === 0) {
+      achados.push(impedimento(`${onde}.regras.periodicidades`,
+        'O produto precisa admitir ao menos uma periodicidade de pagamento.'));
+    }
+  }
+  return achados;
+}
+
 function validarPublicacao(conjunto) {
   const achados = [];
   const meta = conjunto.metadados ?? {};
@@ -371,6 +440,7 @@ export function validar(conjunto, opcoes = {}) {
   const daPublicacao = validarPublicacao(conjunto);
   const doConteudo = [
     ...validarTabelaDeEncargos(conjunto),
+    ...validarProdutos(conjunto),
     ...validarFatorK(conjunto),
     ...validarEncargos(conjunto),
     ...validarIndexadores(conjunto, agora),
@@ -380,6 +450,7 @@ export function validar(conjunto, opcoes = {}) {
     opcoes.referencia
       ? [
         ...validarTabelaDeEncargos(opcoes.referencia),
+        ...validarProdutos(opcoes.referencia),
         ...validarFatorK(opcoes.referencia),
         ...validarEncargos(opcoes.referencia),
         ...validarIndexadores(opcoes.referencia, agora),

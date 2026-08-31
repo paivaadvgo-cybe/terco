@@ -30,7 +30,7 @@
  * arquivo alterado muda este nome, e o teste em `tests/pwa.test.js` acusa a
  * diferença antes de a publicação sair.
  */
-const VERSAO = 'simulador-goiasfomento-453cdcaa4411';
+const VERSAO = 'simulador-goiasfomento-a4ad6d5ec0cc';
 const BASE = new URL('./', self.location).pathname;
 
 /**
