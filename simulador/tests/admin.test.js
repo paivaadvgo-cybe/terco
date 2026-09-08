@@ -26,7 +26,9 @@ import path from 'node:path';
 
 import { PARAMETROS } from '../js/data/parametros.js';
 import { VIGENTES } from '../js/data/parametros-vigentes.js';
-import { simular, listarLinhas } from '../js/produtos/produtos.js';
+import {
+  simular, listarLinhas, listarProdutos, obterProduto,
+} from '../js/produtos/produtos.js';
 import { ehPraticamenteZero } from '../js/engine/arredondamento.js';
 import { calcularTAC } from '../js/encargos/tac.js';
 import {
@@ -582,38 +584,79 @@ test('o módulo pode ser refeito a partir do JSON, sem perder nada', () => {
   assert.equal(paraModulo(doJson), fs.readFileSync(path.join(raiz, 'js/data/parametros-vigentes.js'), 'utf8'));
 });
 
-test('o FCO Empresarial amortiza o valor financiado, e o saldo zera', () => {
-  // Decisão da administração, 2026-09-08: o ABERTO-07 foi corrigido nesta
-  // família. As demais seguem reproduzindo a planilha — ver o teste seguinte.
-  assert.equal(VIGENTES.produtos.fco.regras.baseAmortizacao, 'valorFinanciado');
+test('nenhuma família publicada usa mais a base da planilha', () => {
+  // Decisão da administração: o ABERTO-07 foi corrigido no FCO Empresarial em
+  // 08/09/2026 e estendido às três famílias restantes no mesmo dia, depois de
+  // uma varredura mostrar 207 casos com saldo residual — entre eles um contrato
+  // em que os encargos financiados ficavam devendo por inteiro.
+  for (const [codigo, produto] of Object.entries(VIGENTES.produtos)) {
+    assert.notEqual(produto.regras.baseAmortizacao, 'planilha',
+      `${codigo} voltou a reproduzir a troca de base sem nova decisão`);
+  }
+});
 
+test('o pior caso do ABERTO-07 passou a fechar', () => {
+  // Investimento, prazo 12 e carência 11: uma única parcela amortizante, que
+  // dividia o valor solicitado. O tomador amortizava exatamente o que pediu e
+  // nenhum centavo dos encargos — R$ 3.911,68 sobre R$ 103.911,68, 3,76%.
   const s = simular({
-    produto: 'fco', porte: 2, linha: 'FCO Empresarial - (Pequeno Médio, Médio I)',
-    valorSolicitado: 2000000, prazo: 120, carencia: 11, municipioPrioritario: true,
+    produto: 'investimento', linha: 'GoiásFomento Investimento',
+    valorSolicitado: 100000, prazo: 12, carencia: 11,
   }, VIGENTES);
 
-  // `ehPraticamenteZero`, e não igualdade: somar 109 parcelas acumula ruído de
+  // `ehPraticamenteZero`, e não igualdade: somar as parcelas acumula ruído de
   // ponto flutuante na ordem de 10⁻⁹ de real. O que se afirma é que não sobra
-  // dinheiro, não que a soma de 109 doubles caia no mesmo bit.
+  // dinheiro, não que a soma caia no mesmo bit.
   assert.ok(ehPraticamenteZero(s.totalAmortizacao - s.valorFinanciado),
-    `tudo que foi financiado precisa ser amortizado; faltaram ${s.valorFinanciado - s.totalAmortizacao}`);
+    `faltaram ${s.valorFinanciado - s.totalAmortizacao}`);
   assert.ok(ehPraticamenteZero(s.saldoResidual), `sobrou ${s.saldoResidual}`);
   assert.equal(s.avisos.length, 0, 'sem saldo residual, não há o que avisar');
 });
 
-test('as demais famílias seguem reproduzindo a base da planilha', () => {
-  // A decisão foi específica do FCO Empresarial. Reproduzir continua sendo o
-  // padrão, e este teste existe para que a mudança de uma família não vaze
-  // para as outras sem decisão.
-  for (const codigo of ['investimento', 'transportes', 'microcredito']) {
-    assert.equal(VIGENTES.produtos[codigo].regras.baseAmortizacao, 'planilha',
-      `${codigo} não pode ter sido alterado junto`);
+test('nenhum produto, em nenhum prazo e carência, deixa saldo devedor', () => {
+  // A varredura que motivou a decisão, reduzida ao que cabe num teste. Cobre
+  // todas as linhas de todos os produtos com uma grade de prazos e carências.
+  //
+  // O que se afirma é o saldo zerado, e não que o total amortizado seja igual
+  // ao financiado: na Fruticultura do Produtor Empreendedor a carência é
+  // capitalizada, o saldo cresce durante ela, e o que se amortiza é o saldo ao
+  // fim da carência — legitimamente maior. Confundir as duas coisas foi um
+  // falso positivo da primeira varredura.
+  let simulacoes = 0;
+  const sobrando = [];
+
+  for (const { codigo } of listarProdutos(VIGENTES)) {
+    const perfil = obterProduto(codigo, VIGENTES);
+    const portes = perfil.regras.exigePorte ? Object.keys(perfil.regras.portes).map(Number) : [null];
+    for (const porte of portes) {
+      let linhas = [];
+      try { linhas = listarLinhas(codigo, porte === null ? {} : { porte }, VIGENTES); } catch { continue; }
+      for (const linha of linhas) {
+        const prazos = [...new Set([12, 36, linha.prazoMaximo])]
+          .filter((p) => p >= 2 && p <= linha.prazoMaximo);
+        for (const prazo of prazos) {
+          const carencias = [...new Set([0, 11, 12, linha.carenciaMaxima])]
+            .filter((c) => c >= 0 && c <= linha.carenciaMaxima && c < prazo);
+          for (const carencia of carencias) {
+            const entrada = {
+              produto: codigo, linha: linha.nome, prazo, carencia,
+              valorSolicitado: Math.min(100000, linha.limite), valorDoIndexador: 0.1,
+            };
+            if (porte !== null) entrada.porte = porte;
+            if (perfil.regras.exigeMunicipio) entrada.municipioPrioritario = true;
+
+            let s;
+            try { s = simular(entrada, VIGENTES); } catch { continue; }  // linha sem taxa: ABERTO-12 e 14
+            simulacoes += 1;
+            if (!ehPraticamenteZero(s.saldoResidual)) {
+              sobrando.push(`${linha.nome} · prazo ${prazo} · carência ${carencia}: ${s.saldoResidual}`);
+            }
+          }
+        }
+      }
+    }
   }
 
-  const s = simular({
-    produto: 'investimento', linha: 'GoiásFomento Investimento',
-    valorSolicitado: 100000, prazo: 48, carencia: 0,
-  }, VIGENTES);
-  assert.ok(s.saldoResidual > 0, 'o resíduo do ABERTO-07 precisa continuar aparecendo aqui');
-  assert.ok(s.avisos.some((a) => a.codigo === 'SALDO_RESIDUAL'), 'e continuar sendo avisado');
+  assert.ok(simulacoes > 200, `a varredura precisa cobrir o catálogo; cobriu ${simulacoes}`);
+  assert.deepEqual(sobrando, [], 'estas operações terminam com saldo devedor');
 });
