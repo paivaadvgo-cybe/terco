@@ -269,6 +269,31 @@ Com carência de doze meses ou mais, a troca acontece depois que a amortização
 já começou pela base certa, e o defeito não aparece — o que ajuda a explicar por
 que ele passou tanto tempo despercebido.
 
+**Varredura de 08/09/2026.** Rodadas 867 simulações cobrindo todos os produtos e
+todas as linhas, com prazos de 6 a máximo e carências de 0 ao máximo. Resultado:
+
+| Família | Casos com resíduo | Maior resto |
+|---|---:|---:|
+| Investimento | 118 | R$ 3.911,68 |
+| Transportes | 75 | R$ 3.404,92 |
+| Microcrédito Produtivo | 14 | R$ 608,87 |
+| **Todas as demais** | **0** | — |
+
+Nenhum outro produto apresenta saldo residual, e **a fórmula acima prevê os 207
+casos sem uma única divergência**. Ou seja: há uma causa só, e é esta. Não existe
+um segundo defeito escondido produzindo resto por outro caminho.
+
+**O pior caso é patológico.** Investimento, R$ 100.000, prazo 12 e carência 11 —
+uma única parcela amortizante, que divide o valor solicitado:
+
+    valor financiado    R$ 103.911,68
+    total amortizado    R$ 100.000,00
+    saldo residual      R$   3.911,68   ← 100% dos encargos financiados
+
+O tomador amortiza exatamente o que pediu e **nenhum centavo dos encargos**, que
+ficam devendo por inteiro. É 3,76% do valor financiado. Nas três famílias que
+seguem reproduzindo, este contrato é admissível hoje.
+
 ### ABERTO-08 · Totais somam faixas fixas de linhas
 
 **Regra encontrada.** `SUM(F23:F242)`, `SUM(AG30:AG83)` e semelhantes somam
