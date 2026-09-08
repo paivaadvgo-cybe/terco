@@ -279,20 +279,37 @@ test('as linhas sem regra recusam em vez de devolver número', () => {
   }
 });
 
-test('a base da amortização segue o perfil da família', () => {
-  // Cinco abas trocam de base na parcela 13 (ABERTO-07); Giro Puro não.
+test('a base da planilha, quando usada, ainda reproduz o resíduo do ABERTO-07', () => {
+  // Os perfis de `js/produtos/` são a base documentada, e conservam a troca de
+  // base na parcela 13 — é o que a planilha faz, e é contra isso que a
+  // equivalência é provada. O conjunto **vigente** já não a usa: a
+  // administração autorizou a correção em 08/09/2026, e nenhuma família
+  // publicada divide mais o valor solicitado.
   assert.equal(PRODUTOS.giro.regras.baseAmortizacao, 'valorFinanciado');
   assert.equal(PRODUTOS.investimento.regras.baseAmortizacao, 'planilha');
   assert.equal(PRODUTOS.transportes.regras.baseAmortizacao, 'planilha');
   assert.equal(PRODUTOS.fungetur.regras.baseAmortizacao, 'valorFinanciado');
 
+  // Simulado com a base da planilha, e não com o conjunto vigente: o que se
+  // prova aqui é que o motor continua sabendo reproduzir o comportamento
+  // original, caso a instituição volte atrás ou precise refazer uma simulação
+  // antiga.
+  const s = simular({
+    ...operacaoDe('investimento', obterLinha('investimento', 'GoiásFomento Investimento')),
+    valorSolicitado: 100000, prazo: 60, carencia: 6,
+  }, PARAMETROS);
+  assert.ok(Math.abs(s.saldoResidual) > 1,
+    'com a base da planilha, sobra saldo — é ABERTO-07 reproduzido');
+  assert.equal(s.avisos[0].codigo, 'SALDO_RESIDUAL');
+});
+
+test('o conjunto vigente já não deixa resíduo nesta mesma operação', () => {
   const s = simular({
     ...operacaoDe('investimento', obterLinha('investimento', 'GoiásFomento Investimento')),
     valorSolicitado: 100000, prazo: 60, carencia: 6,
   });
-  assert.ok(Math.abs(s.saldoResidual) > 1,
-    'com a base da planilha, sobra saldo — é ABERTO-07 reproduzido');
-  assert.equal(s.avisos[0].codigo, 'SALDO_RESIDUAL');
+  assert.ok(Math.abs(s.saldoResidual) < 1e-6, `sobrou ${s.saldoResidual}`);
+  assert.deepEqual(s.avisos, []);
 });
 
 test('o PRICE fecha o saldo mesmo nas famílias que o SAC deixa com resíduo', () => {

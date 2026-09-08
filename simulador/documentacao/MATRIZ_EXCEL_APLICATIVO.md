@@ -215,14 +215,21 @@ autorização.
 
 ### ABERTO-07 · Base da amortização muda no meio da coluna
 
-> **DECIDIDO EM PARTE — 08/09/2026.** A administração autorizou a correção **no
-> FCO Empresarial**, que passou a dividir o valor financiado do começo ao fim.
-> `Linhas Investimento`, `Linhas Transportes` e `Mais Crédito` **seguem
-> reproduzindo** a planilha, por decisão. O registro abaixo continua descrevendo
-> o que a planilha faz, que é o que essas três reproduzem.
+> **RESOLVIDO — 08/09/2026.** A administração autorizou a correção em **todas as
+> famílias**. A amortização divide o valor financiado do começo ao fim, e o saldo
+> devedor zera na última parcela. Nenhuma família publicada usa mais a base da
+> planilha.
 >
-> Consequência a ter em conta: produtos semelhantes passam a calcular de formas
-> diferentes. Foi apontado a quem decidiu, e a decisão foi mantida.
+> A decisão foi em duas etapas no mesmo dia: primeiro o FCO Empresarial, a
+> família em que o resíduo foi notado; depois, à vista da varredura registrada
+> mais abaixo, as três restantes — Investimento, Transportes e Microcrédito
+> Produtivo.
+>
+> O registro abaixo continua descrevendo o que a **planilha** faz, e continua
+> valendo: os perfis de `js/produtos/` conservam `baseAmortizacao: "planilha"`, e
+> é contra eles que a equivalência é provada. O motor sabe reproduzir o
+> comportamento original quando recebe os parâmetros originais — o que permite
+> refazer uma simulação antiga, se for preciso.
 
 
 **Regra encontrada.** Em `Linhas Investimento`, `Linhas Transportes`,
@@ -242,9 +249,9 @@ ordem de grandeza é de centenas de reais.
 **Sugestão.** Usar o valor financiado em toda a coluna, que é o que
 `Linhas Giro Puro` faz e o que fecha o saldo em zero.
 
-**O que foi feito.** Autorizado e aplicado no FCO Empresarial em 08/09/2026;
-nas demais famílias o parâmetro `baseAmortizacao: "planilha"` segue reproduzindo
-a troca. A escolha é por família e está no painel — não exige código.
+**O que foi feito.** Autorizado e aplicado em todas as famílias em 08/09/2026,
+em duas etapas: o FCO Empresarial primeiro, as demais depois da varredura. A
+escolha é por família e está no painel — não exigiu código.
 
 O teste de equivalência não é afetado: ele passa a base explicitamente, caso a
 caso, extraída da própria planilha. A prova de que o motor reproduz o arquivo
@@ -290,9 +297,20 @@ uma única parcela amortizante, que divide o valor solicitado:
     total amortizado    R$ 100.000,00
     saldo residual      R$   3.911,68   ← 100% dos encargos financiados
 
-O tomador amortiza exatamente o que pediu e **nenhum centavo dos encargos**, que
-ficam devendo por inteiro. É 3,76% do valor financiado. Nas três famílias que
-seguem reproduzindo, este contrato é admissível hoje.
+O tomador amortizava exatamente o que pediu e **nenhum centavo dos encargos**,
+que ficavam devendo por inteiro — 3,76% do valor financiado, num contrato
+admissível pelas regras da linha. Foi o que motivou estender a correção às três
+famílias restantes.
+
+**Varredura de conferência, depois da correção.** As mesmas 867 simulações:
+**nenhuma** deixa saldo devedor. Um falso positivo apareceu e vale registrar,
+para não confundir quem repetir a varredura: na linha `Produtor Empreendedor
+Fruticultura` o total amortizado é maior que o valor financiado — R$ 106.973,98
+contra R$ 103.820,18 num contrato de 24 meses com 6 de carência. Não é resíduo:
+é a única linha com carência **capitalizada**, o saldo cresce durante ela, e o
+que se amortiza é o saldo ao fim da carência. O saldo devedor fecha em zero. A
+invariante correta é o saldo zerado, e não a igualdade entre amortizado e
+financiado.
 
 ### ABERTO-08 · Totais somam faixas fixas de linhas
 

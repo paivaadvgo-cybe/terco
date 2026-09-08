@@ -57,14 +57,13 @@ Os que mais mudam números:
 - **ABERTO-02** — o teto de R$ 420 da TAC é testado sobre uma base e cobrado
   sobre outra, e o fator 1,015 de `Linhas Giro Puro` entra de forma irregular
   nas quatro faixas.
-- **ABERTO-07** — a base da amortização troca na parcela 13: as doze primeiras
-  dividem o valor solicitado, as seguintes o financiado, e o saldo não fecha em
-  zero. **Decidido em parte, 08/09/2026:** corrigido no FCO Empresarial, que
-  passou a dividir o financiado do começo ao fim; Investimento, Transportes e
-  Microcrédito Produtivo **seguem reproduzindo**, por decisão. Produtos
-  semelhantes calculam, portanto, de formas diferentes — foi apontado a quem
-  decidiu, e a decisão foi mantida. O resíduo dessas três é correto; não
-  "conserte" sem nova autorização.
+- **ABERTO-07** — a base da amortização trocava na parcela 13: as doze primeiras
+  dividiam o valor solicitado, as seguintes o financiado, e o saldo não fechava
+  em zero. **RESOLVIDO em 08/09/2026**, em todas as famílias, por decisão da
+  administração. Os perfis de `js/produtos/` conservam a troca porque são a base
+  contra a qual a equivalência é provada; o conjunto vigente não a usa mais.
+  Uma varredura de 867 simulações confirma que nenhum produto deixa saldo
+  devedor. **Não reverta sem nova decisão.**
 - **ABERTO-08** — os totais somam faixas fixas de linhas, de modo que um prazo
   longo totaliza menos parcelas do que o contrato tem. Em `Linhas Giro Puro`
   isso chega à TIR, que sai **negativa** para um contrato que rende juros.
