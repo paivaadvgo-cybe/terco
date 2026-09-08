@@ -215,6 +215,16 @@ autorização.
 
 ### ABERTO-07 · Base da amortização muda no meio da coluna
 
+> **DECIDIDO EM PARTE — 08/09/2026.** A administração autorizou a correção **no
+> FCO Empresarial**, que passou a dividir o valor financiado do começo ao fim.
+> `Linhas Investimento`, `Linhas Transportes` e `Mais Crédito` **seguem
+> reproduzindo** a planilha, por decisão. O registro abaixo continua descrevendo
+> o que a planilha faz, que é o que essas três reproduzem.
+>
+> Consequência a ter em conta: produtos semelhantes passam a calcular de formas
+> diferentes. Foi apontado a quem decidiu, e a decisão foi mantida.
+
+
 **Regra encontrada.** Em `Linhas Investimento`, `Linhas Transportes`,
 `Mais Crédito`, `Mais Crédito (2)` e `FCO Empresarial`, as parcelas 1 a 12
 dividem o valor solicitado e as parcelas 13 em diante dividem o financiado.
@@ -230,9 +240,34 @@ dos encargos financiados. Não é arredondamento: a planilha não arredonda, e a
 ordem de grandeza é de centenas de reais.
 
 **Sugestão.** Usar o valor financiado em toda a coluna, que é o que
-`Linhas Giro Puro` faz e o que fecha o saldo em zero. Aguarda autorização. Até
-lá, o parâmetro `baseAmortizacao: "planilha"` reproduz a troca, para que o
-teste de equivalência passe.
+`Linhas Giro Puro` faz e o que fecha o saldo em zero.
+
+**O que foi feito.** Autorizado e aplicado no FCO Empresarial em 08/09/2026;
+nas demais famílias o parâmetro `baseAmortizacao: "planilha"` segue reproduzindo
+a troca. A escolha é por família e está no painel — não exige código.
+
+O teste de equivalência não é afetado: ele passa a base explicitamente, caso a
+caso, extraída da própria planilha. A prova de que o motor reproduz o arquivo
+original continua valendo mesmo onde o aplicativo foi autorizado a divergir dele.
+
+**Quanto o resíduo vale.** É uma cota de amortização dos encargos financiados,
+multiplicada pelo número de parcelas que caíram na base errada:
+
+    resíduo = (financiado − solicitado) ÷ parcelas amortizantes × parcelas antes da 13ª
+
+Daí ele depender da carência. No mesmo contrato de R$ 2.000.000 por 120 meses,
+com R$ 50.652,03 de encargos financiados:
+
+| Carência | Parcelas na base errada | Resíduo |
+|---:|---:|---:|
+| 0 | 12 | R$ 4.922,01 |
+| 3 | 9 | R$ 3.834,14 |
+| 11 | 1 | R$ 464,70 |
+| 12 ou mais | 0 | zero |
+
+Com carência de doze meses ou mais, a troca acontece depois que a amortização
+já começou pela base certa, e o defeito não aparece — o que ajuda a explicar por
+que ele passou tanto tempo despercebido.
 
 ### ABERTO-08 · Totais somam faixas fixas de linhas
 

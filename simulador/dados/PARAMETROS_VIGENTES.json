@@ -1,11 +1,11 @@
 {
   "metadados": {
-    "versao": "2024-12-16",
-    "vigenciaInicio": "2024-12-16",
-    "atoNormativo": "Definição da senha do painel — configuração operacional, sem alteração de parâmetro de crédito",
+    "versao": "2026-09-08",
+    "vigenciaInicio": "2026-09-08",
+    "atoNormativo": "Correção do ABERTO-07 no FCO Empresarial — decisão da administração do simulador, sem número de norma",
     "publicadoPor": "Administração do simulador",
-    "publicadoEm": "2026-08-31T12:30:15.253Z",
-    "observacoes": "Senha do painel definida. As taxas, prazos e limites seguem os da vigência 2024-12-16.",
+    "publicadoEm": "2026-09-08T13:33:49.600Z",
+    "observacoes": "A amortização do FCO Empresarial passa a dividir o valor financiado do começo ao fim, e o saldo devedor zera na última parcela. Antes, as parcelas até a décima segunda dividiam o valor solicitado, deixando saldo residual — o ABERTO-07, reproduzido da planilha. Investimento, Transportes e Microcrédito Produtivo seguem reproduzindo o comportamento da planilha, por decisão.",
     "sucedeVersao": null,
     "baseadoEm": {
       "versao": "2024-12-16",
@@ -2436,7 +2436,7 @@
       "regras": {
         "convencaoTaxa": "mensalComposta",
         "varianteTAC": "padrao",
-        "baseAmortizacao": "planilha",
+        "baseAmortizacao": "valorFinanciado",
         "tratamentoCarencia": "pagos",
         "bonus": {
           "tipo": "tabelado"
