@@ -27,6 +27,7 @@ import path from 'node:path';
 import { PARAMETROS } from '../js/data/parametros.js';
 import { VIGENTES } from '../js/data/parametros-vigentes.js';
 import { simular, listarLinhas } from '../js/produtos/produtos.js';
+import { ehPraticamenteZero } from '../js/engine/arredondamento.js';
 import { calcularTAC } from '../js/encargos/tac.js';
 import {
   CAMPOS_DO_PRODUTO, CAMPOS_ESTRUTURAIS_DO_PRODUTO, ESCOLHAS_DE_COMPORTAMENTO,
@@ -36,7 +37,9 @@ import {
 } from '../js/admin/esquema.js';
 import { validar } from '../js/admin/validar.js';
 import { diferencas } from '../js/admin/diferenca.js';
-import { paraModulo, paraJSON, lerConjunto, arquivosParaPublicar } from '../js/admin/serializar.js';
+import {
+  paraModulo, paraJSON, lerConjunto, arquivosParaPublicar, metadadosDePublicacao,
+} from '../js/admin/serializar.js';
 
 const raiz = new URL('..', import.meta.url).pathname;
 const clonar = () => structuredClone(VIGENTES);
@@ -521,10 +524,25 @@ test('o ato normativo da publicação anterior não serve para a próxima', () =
   assert.ok(validar(herdado, { referencia: comAto }).podePublicar);
 });
 
-test('a senha publicada não muda a vigência dos parâmetros de crédito', () => {
-  // Uma senha é configuração operacional. Carimbar a data de hoje faria toda
-  // simulação dizer que as taxas são de hoje, quando nenhuma taxa mudou.
-  assert.equal(VIGENTES.metadados.versao, VIGENTES.metadados.baseadoEm.versao);
+test('a vigência sai da data que o administrador informa, e não da data de hoje', () => {
+  // Uma alteração operacional — trocar a senha, por exemplo — não deve
+  // recarimbar a vigência: toda simulação passaria a dizer que as taxas são de
+  // hoje, quando nenhuma taxa mudou. Como a vigência vem do campo, e o painel o
+  // abre com o valor que está publicado, deixar o campo em paz preserva a data.
+  // Já uma alteração que muda o cálculo, como a correção do ABERTO-07 no FCO,
+  // recarimba de propósito, e a data informada é a que vale.
+  const anterior = { metadados: { versao: '2024-12-16', vigenciaInicio: '2024-12-16' } };
+
+  const semTocarNaData = metadadosDePublicacao(anterior, {
+    vigenciaInicio: '2024-12-16', atoNormativo: 'X', publicadoPor: 'Y',
+  });
+  assert.equal(semTocarNaData.versao, '2024-12-16', 'sem mexer na data, a vigência não muda');
+
+  const comDataNova = metadadosDePublicacao(anterior, {
+    vigenciaInicio: '2026-09-08', atoNormativo: 'X', publicadoPor: 'Y',
+  });
+  assert.equal(comDataNova.versao, '2026-09-08');
+  assert.equal(comDataNova.sucedeVersao, '2024-12-16', 'a versão anterior fica registrada');
 });
 
 test('o conjunto publicado não guarda senha em claro', () => {
@@ -562,4 +580,40 @@ test('o módulo pode ser refeito a partir do JSON, sem perder nada', () => {
   // E o texto reconstruído é exatamente o arquivo versionado: refazer o módulo
   // não pode produzir um diff que não seja alteração nenhuma.
   assert.equal(paraModulo(doJson), fs.readFileSync(path.join(raiz, 'js/data/parametros-vigentes.js'), 'utf8'));
+});
+
+test('o FCO Empresarial amortiza o valor financiado, e o saldo zera', () => {
+  // Decisão da administração, 2026-09-08: o ABERTO-07 foi corrigido nesta
+  // família. As demais seguem reproduzindo a planilha — ver o teste seguinte.
+  assert.equal(VIGENTES.produtos.fco.regras.baseAmortizacao, 'valorFinanciado');
+
+  const s = simular({
+    produto: 'fco', porte: 2, linha: 'FCO Empresarial - (Pequeno Médio, Médio I)',
+    valorSolicitado: 2000000, prazo: 120, carencia: 11, municipioPrioritario: true,
+  }, VIGENTES);
+
+  // `ehPraticamenteZero`, e não igualdade: somar 109 parcelas acumula ruído de
+  // ponto flutuante na ordem de 10⁻⁹ de real. O que se afirma é que não sobra
+  // dinheiro, não que a soma de 109 doubles caia no mesmo bit.
+  assert.ok(ehPraticamenteZero(s.totalAmortizacao - s.valorFinanciado),
+    `tudo que foi financiado precisa ser amortizado; faltaram ${s.valorFinanciado - s.totalAmortizacao}`);
+  assert.ok(ehPraticamenteZero(s.saldoResidual), `sobrou ${s.saldoResidual}`);
+  assert.equal(s.avisos.length, 0, 'sem saldo residual, não há o que avisar');
+});
+
+test('as demais famílias seguem reproduzindo a base da planilha', () => {
+  // A decisão foi específica do FCO Empresarial. Reproduzir continua sendo o
+  // padrão, e este teste existe para que a mudança de uma família não vaze
+  // para as outras sem decisão.
+  for (const codigo of ['investimento', 'transportes', 'microcredito']) {
+    assert.equal(VIGENTES.produtos[codigo].regras.baseAmortizacao, 'planilha',
+      `${codigo} não pode ter sido alterado junto`);
+  }
+
+  const s = simular({
+    produto: 'investimento', linha: 'GoiásFomento Investimento',
+    valorSolicitado: 100000, prazo: 48, carencia: 0,
+  }, VIGENTES);
+  assert.ok(s.saldoResidual > 0, 'o resíduo do ABERTO-07 precisa continuar aparecendo aqui');
+  assert.ok(s.avisos.some((a) => a.codigo === 'SALDO_RESIDUAL'), 'e continuar sendo avisado');
 });
