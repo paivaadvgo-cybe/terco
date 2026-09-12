@@ -1,0 +1,44 @@
+{
+  "id": "/lava-rapido/",
+  "name": "Lava-Rápido Lite",
+  "short_name": "Lava-Rápido",
+  "description": "Registra a lavagem, recebe o pagamento e fecha o dia. Os dados ficam no aparelho e funcionam sem internet.",
+  "lang": "pt-BR",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait",
+  "background_color": "#eef1f5",
+  "theme_color": "#0b6bcb",
+  "categories": ["business", "productivity", "finance"],
+  "icons": [
+    { "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icones/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icones/icone-mascara-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Nova lavagem",
+      "short_name": "Nova",
+      "description": "Registrar um veículo agora",
+      "url": "./#/nova",
+      "icons": [{ "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Lavagem rápida",
+      "short_name": "Rápida",
+      "description": "Registrar sem tela de confirmação",
+      "url": "./#/nova?rapido=1",
+      "icons": [{ "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Caixa",
+      "short_name": "Caixa",
+      "description": "Faturamento do dia",
+      "url": "./#/caixa",
+      "icons": [{ "src": "icones/icone-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ]
+}
