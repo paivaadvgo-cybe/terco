@@ -1,0 +1,13 @@
+{
+  "name": "lava-rapido-lite",
+  "version": "1.0.0",
+  "description": "Gestão simples de lava-rápido: lavagens, pagamentos, caixa e fechamento, no próprio aparelho e sem internet",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "node --test \"tests/*.test.js\"",
+    "versao": "node ferramentas/versionar_casca.mjs --gravar",
+    "icones": "node ferramentas/gerar_icones.mjs",
+    "servir": "python3 -m http.server 8000 --directory .."
+  }
+}

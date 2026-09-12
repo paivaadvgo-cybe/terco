@@ -13,6 +13,8 @@ imagem. Depois de instalado, funciona sem internet.
 | `index.html` | O aplicativo inteiro — interface, áudio, visão computacional, manifesto e ícones. |
 | `sw.js`      | Service worker: guarda o app e o modelo de mãos para uso sem internet. |
 | `terco/`     | O aplicativo **Santo Terço**, que antes ocupava a raiz. Continua funcionando, agora em `/terco/`. |
+| `simulador/` | O **Simulador Financeiro GoiásFomento**, em `/simulador/`. |
+| `lava-rapido/` | O **Lava-Rápido Lite**, gestão de lava-rápido pelo celular, em `/lava-rapido/`. |
 
 O aplicativo é um arquivo só, como pedido. O `sw.js` existe porque os
 navegadores exigem que um service worker seja um `.js` servido pelo mesmo
