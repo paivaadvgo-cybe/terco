@@ -37,13 +37,19 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 
 ## O que ele faz
 
+- **A tela não desliza** — o painel é exatamente do tamanho da janela, e o que
+  não é instrumento saiu do caminho: os comandos viraram um trilho estreito na
+  borda direita (gravar, vídeo, detalhes, modo cheio, editar) e o resto — estado
+  da conexão, máximos, explicações — mora numa gaveta que abre quando se pede.
+  Num carro, o número que exige rolar para aparecer é um número que não se lê.
 - **Painel que você monta** — arraste para mover, puxe o canto para
   redimensionar, toque para escolher o que cada mostrador mostra e em que escala.
   Três formatos: ponteiro analógico (com escala numerada e o valor exato
   embaixo), número e barra. Até **cinco disposições salvas** — uma para a
   cidade, outra para a estrada, outra para a oficina. Começa de um modelo:
   **Instrumentos** (velocímetro grande no centro, conta-giros ao lado),
-  **Completo** ou **Vazio**.
+  **Completo** ou **Vazio**. O editor também cabe na janela, e com a mesma
+  geometria do painel — o que se arrasta tem a forma do que se vê dirigindo.
 - **Modo quadro de instrumentos** — esconde título, abas e o resto, e deixa só o
   painel, de ponta a ponta, sobre fundo preto. Toque em qualquer lugar para
   sair. É o modo para o celular preso ao painel do carro.
@@ -82,7 +88,9 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 - **Vídeo da estrada** — grava a câmera traseira junto com a viagem, em trechos
   de 30 segundos, e na tela da viagem o vídeo aparece com os dados do instante
   que está tocando. É o que transforma «4.300 rpm às 14h32» em ver a
-  ultrapassagem acontecendo. Opcional, desligado por padrão.
+  ultrapassagem acontecendo. Enquanto grava, a imagem ocupa a **lateral
+  esquerda** da tela e os instrumentos ficam à direita, cada um com altura
+  inteira. Opcional, desligado por padrão.
 - **Simulação** — um ELM327 de mentira com um carro de mentira dentro (turbo,
   para exercitar o medidor), para conhecer o aplicativo sem adaptador e para
   testar a pilha inteira no `node --test`, sem carro.
@@ -91,7 +99,8 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 
 O aplicativo é feito para a **tela deitada**: o manifesto pede paisagem, a grade
 tem oito colunas e os modelos são desenhados para as três linhas que a altura de
-um celular em paisagem comporta.
+um celular em paisagem comporta. O painel e o editor se prendem à janela — as
+linhas dividem a altura disponível, e nenhuma das duas telas rola.
 
 1. Abra o aplicativo em **https** (GitHub Pages serve), e instale na tela
    inicial se quiser.
@@ -119,7 +128,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 165 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 173 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones e carimba a versão do cache. |
 
 ## Desenvolvimento

@@ -18,6 +18,8 @@
  * atrás. É a causa número um de arrasto que não funciona em celular.
  */
 
+import { COLUNAS } from '../dominio/painel.js';
+
 /** Quanto o dedo precisa andar para virar arrasto, em pixels. */
 const FOLGA = 8;
 
@@ -33,7 +35,7 @@ export function ligarGrade(grade, {
   aoMover,
   aoRedimensionar,
   aoTocarItem,
-  colunas = 4,
+  colunas = COLUNAS,
 } = {}) {
   let arrasto = null;
 
@@ -43,8 +45,21 @@ export function ligarGrade(grade, {
     const estilo = getComputedStyle(grade);
     const vao = Number.parseFloat(estilo.gap || estilo.columnGap || '8') || 8;
     const largura = (caixa.width - vao * (colunas - 1)) / colunas;
-    const linha = Number.parseFloat(estilo.gridAutoRows) || largura;
-    return { largura, altura: linha, vao, caixa };
+
+    /*
+     * A altura vem das linhas **já resolvidas**, e não de `grid-auto-rows`.
+     *
+     * Quando as linhas dividem a altura disponível — `minmax(0, 1fr)`, que é o
+     * que a tela deitada exige —, `gridAutoRows` devolve o texto da função, e
+     * `parseFloat` disso não é número. O arrasto passava a medir a linha com a
+     * largura da coluna, e o item pulava duas células a cada célula que o dedo
+     * andava para baixo.
+     */
+    const primeira = Number.parseFloat(estilo.gridTemplateRows);
+    const altura = Number.isFinite(primeira) && primeira > 0
+      ? primeira
+      : (Number.parseFloat(estilo.gridAutoRows) || largura);
+    return { largura, altura, vao, caixa };
   }
 
   function sacudir(no) {
@@ -172,7 +187,7 @@ export function posicionarNaGrade(no, item) {
  *
  * Devolve a função que desliga a observação; a tela a chama ao sair.
  */
-export function manterCelulasQuadradas(grade, colunas = 4) {
+export function manterCelulasQuadradas(grade, colunas = COLUNAS) {
   const medir = () => {
     const vao = Number.parseFloat(getComputedStyle(grade).columnGap || '8') || 8;
     const largura = (grade.clientWidth - vao * (colunas - 1)) / colunas;

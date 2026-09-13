@@ -16,14 +16,14 @@
  * e desistir no meio deixaria o layout pela metade.
  */
 
-import { el, botao, cartao, campo, selecao, entrada, vazio } from '../elementos.js';
+import { el, botao, campo, selecao, entrada } from '../elementos.js';
 import { avisar, confirmar, abrirFolha } from '../avisos.js';
 import { criarVisor } from '../medidor.js';
-import { ligarGrade, posicionarNaGrade, manterCelulasQuadradas } from '../grade.js';
+import { ligarGrade, posicionarNaGrade } from '../grade.js';
 import { tudoQueSeMostra, definicaoDe } from '../../obd/pids.js';
 import {
   COLUNAS, LIMITE_DE_PAINEIS, TIPOS, MODELOS, criarItem, escalaDe,
-  mover, redimensionar, primeiroLugarVago, alturaDoPainel,
+  mover, redimensionar, primeiroLugarVago, alturaDoPainel, linhasDoEditor,
 } from '../../dominio/painel.js';
 
 /**
@@ -48,7 +48,7 @@ export async function telaEditor(contexto, parametros = {}) {
   let itens = paineis[indice].itens;
   let sujo = false;
 
-  const tela = el('div', { classe: 'tela' });
+  const tela = el('div', { classe: 'tela tela-editor' });
 
   /* ------------------------------------------------------- os cinco painéis */
 
@@ -141,7 +141,7 @@ export async function telaEditor(contexto, parametros = {}) {
       posicionarNaGrade(no, item);
       return no;
     }));
-    grade.style.setProperty('--linhas', String(Math.max(4, alturaDoPainel(itens))));
+    grade.style.setProperty('--linhas', String(linhasDoEditor(itens)));
   }
 
   ligarGrade(grade, {
@@ -173,7 +173,7 @@ export async function telaEditor(contexto, parametros = {}) {
         const no = grade.querySelector(`.item-do-painel[data-id="${id}"]`);
         const item = itens.find((i) => i.id === id);
         if (no && item) posicionarNaGrade(no, item);
-        grade.style.setProperty('--linhas', String(Math.max(4, alturaDoPainel(itens))));
+        grade.style.setProperty('--linhas', String(linhasDoEditor(itens)));
       } else {
         desenharGrade();
       }
@@ -351,38 +351,61 @@ export async function telaEditor(contexto, parametros = {}) {
   desenharAbas();
   desenharGrade();
 
-  tela.append(cartao([
-    abas,
+  /*
+   * O editor cabe na janela, como o painel — e pelo mesmo motivo.
+   *
+   * Empilhado, ele era três telas de altura num celular deitado: o cartão das
+   * abas, a grade e cinco botões largos. Quem abria para arrumar um mostrador
+   * via os botões, rolava, via metade da grade, e arrastava às cegas. Agora a
+   * grade fica com a janela inteira e os comandos vão para uma coluna estreita
+   * ao lado.
+   *
+   * **E é o que faz a prévia não mentir.** No painel as linhas dividem a altura
+   * disponível; com a grade do editor em células quadradas, o mesmo painel tinha
+   * duas formas diferentes, e a que se arrastava não era a que se via dirigindo.
+   */
+  document.body.classList.add('editor-fixo');
+  contexto.aoSair(() => document.body.classList.remove('editor-fixo'));
+
+  const lateral = el('div', { classe: 'editor-lateral' }, [
     el('p', {
       classe: 'campo-dica',
-      texto: 'Arraste para mover. Puxe o canto de baixo para redimensionar. Toque para escolher o que mostra e a escala.',
+      texto: 'Arraste para mover. Puxe o canto para redimensionar. Toque para escolher.',
     }),
-  ]));
-
-  tela.append(grade);
-  contexto.aoSair(manterCelulasQuadradas(grade, COLUNAS));
-
-  tela.append(cartao([
-    el('div', { classe: 'coluna-botoes' }, [
-      botao('Acrescentar mostrador', acrescentar, { tipo: 'secundario', classe: 'largo' }),
-      botao('Salvar painel', salvar, { tipo: 'principal', classe: 'largo' }),
-      botao('Renomear', renomear, { tipo: 'fantasma', classe: 'largo' }),
-      botao('Apagar este painel', apagarPainel, { tipo: 'perigo', classe: 'largo' }),
-      botao('Sair sem salvar', async () => {
-        if (sujo && !await confirmar({
-          titulo: 'Sair sem salvar?',
-          texto: 'As mudanças são perdidas.',
-          acao: 'Sair',
-          perigo: true,
-        })) return;
-        contexto.ir('painel');
-      }, { tipo: 'fantasma', classe: 'largo' }),
-    ]),
-  ]));
+    botao('Acrescentar', acrescentar, { tipo: 'secundario', classe: 'largo' }),
+    botao('Salvar', salvar, { tipo: 'principal', classe: 'largo' }),
+    botao('Renomear', renomear, { tipo: 'fantasma', classe: 'largo' }),
+    botao('Apagar painel', apagarPainel, { tipo: 'perigo', classe: 'largo' }),
+    botao('Sair sem salvar', async () => {
+      if (sujo && !await confirmar({
+        titulo: 'Sair sem salvar?',
+        texto: 'As mudanças são perdidas.',
+        acao: 'Sair',
+        perigo: true,
+      })) return;
+      contexto.ir('painel');
+    }, { tipo: 'fantasma', classe: 'largo' }),
+  ]);
 
   if (itens.length === 0) {
-    tela.append(cartao([vazio('Painel vazio', 'Toque em «Acrescentar mostrador» para começar.')]));
+    grade.append(el('p', {
+      classe: 'palco-vazio',
+      texto: 'Painel vazio. Toque em «Acrescentar».',
+    }));
   }
+
+  /*
+   * As abas dos painéis ficam numa faixa larga, e não na coluna estreita.
+   *
+   * São pastilhas com nome dentro — «Instrumentos», «Completo» —, e numa coluna
+   * de cento e setenta pixels elas quebram em três linhas e empurram «Apagar»
+   * para fora da tela. Deitadas, ocupam vinte e oito pixels de uma largura que
+   * sobra.
+   */
+  tela.append(el('div', { classe: 'palco' }, [
+    el('div', { classe: 'palco-grade' }, [abas, grade]),
+    lateral,
+  ]));
 
   /*
    * A prévia acompanha o carro, se houver carro.

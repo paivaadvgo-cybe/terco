@@ -39,6 +39,7 @@
   --sombra: 0 1px 2px rgba(16, 23, 32, .08), 0 4px 12px rgba(16, 23, 32, .06);
   --raio: 14px;
   --barra-altura: 64px;
+  --topo-altura: 48px;
 }
 
 /*
@@ -114,13 +115,26 @@ body.carregando .conteudo { opacity: 0; }
 
 /* ------------------------------------------------------------------- topo */
 
+/*
+ * A altura do topo é um número, e não a soma de paddings.
+ *
+ * As telas que se prendem à janela — painel e editor — precisam subtrair essa
+ * altura para saber quanto espaço sobra. Com a altura saindo de padding mais
+ * entrelinha, a conta do CSS e a realidade discordavam em alguns pixels, e uns
+ * poucos pixels são exatamente a diferença entre caber e aparecer uma barra de
+ * rolagem.
+ */
 .topo {
   position: sticky;
   top: 0;
   z-index: 5;
+  box-sizing: content-box;
+  height: var(--topo-altura);
+  display: flex;
+  align-items: center;
   background: var(--principal);
   color: var(--principal-texto);
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  padding: env(safe-area-inset-top) 16px 0;
 }
 
 .topo-titulo {
@@ -168,20 +182,329 @@ body.carregando .conteudo { opacity: 0; }
   color: var(--perigo);
 }
 
+/* ------------------------------------------- o painel preso na janela */
+
+/*
+ * O painel ocupa a janela inteira e não rola. Nem um pixel.
+ *
+ * É a diferença entre um aplicativo e um quadro de instrumentos: num carro, o
+ * número que exige rolar para aparecer é um número que não se lê. A altura
+ * disponível é o que sobra da barra de abas — o título some, porque a aba acesa
+ * já diz onde se está e quarenta e oito pixels de barra azul valem mais como
+ * velocímetro.
+ */
+body.painel-fixo { overflow: hidden; }
+body.painel-fixo .topo { display: none; }
+
+body.painel-fixo .conteudo {
+  padding: 0;
+  max-width: none;
+  height: calc(100dvh - var(--barra-altura) - env(safe-area-inset-bottom));
+}
+
+.tela-painel {
+  position: relative;
+  height: 100%;
+  gap: 0;
+}
+
+/*
+ * Câmera à esquerda, instrumentos à direita, controles na borda.
+ *
+ * Três colunas, e só a do meio é obrigatória. A da câmera aparece quando há
+ * imagem — reservar quarenta por cento da tela para um retângulo preto quando
+ * não se está gravando seria tirar espaço dos ponteiros em troca de nada.
+ */
+.palco {
+  height: 100%;
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  /*
+   * A linha é `minmax(0, 1fr)`, e não `auto`.
+   *
+   * Sem isto a linha implícita cresce até caber o conteúdo, e o `height: 100%`
+   * daqui vira só uma sugestão: o palco media 323 pixels e a coluna dos
+   * mostradores, 428. A tela não rolava — `overflow: hidden` no `body` —, e o
+   * resultado era pior que rolar: o mostrador de baixo ficava cortado ao meio,
+   * sem nenhum jeito de alcançá-lo.
+   */
+  grid-template-rows: minmax(0, 1fr);
+  gap: 6px;
+  padding: 6px;
+}
+
+.palco.com-camera { grid-template-columns: minmax(0, 38%) minmax(0, 1fr) auto; }
+
+.palco-camera {
+  position: relative;
+  min-width: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #000;
+}
+
+/* A imagem preenche a coluna: é para conferir o enquadramento, e enquadramento
+   com tarja preta em volta não se confere. */
+.palco-camera .previa-de-video {
+  width: 100%;
+  height: 100%;
+  max-height: none;
+  border-radius: 0;
+  object-fit: cover;
+}
+
+.camera-estado {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  margin: 0;
+  padding: 5px 8px;
+  font-size: 11.5px;
+  color: #f2f6fa;
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, .72));
+}
+
+.camera-estado-erro { color: #ffd9d6; }
+
+.palco-grade {
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.palco-grade .alertas:empty { display: none; }
+
+/*
+ * O alerta no painel é uma faixa, não um cartão.
+ *
+ * Ele precisa ser visto — a luz de anomalia é a única coisa desta tela que pede
+ * uma decisão —, mas cada pixel que ele toma sai da altura do velocímetro. Numa
+ * linha só, com o texto cortado se passar, ele avisa sem ocupar um sexto da
+ * tela como ocupava.
+ */
+.palco-grade .alerta {
+  margin: 0;
+  padding: 3px 8px;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.palco-vazio {
+  grid-column: 1 / -1;
+  align-self: center;
+  margin: 0;
+  text-align: center;
+  color: var(--suave);
+  font-size: 13.5px;
+}
+
+/*
+ * O trilho de controles.
+ *
+ * Sessenta pixels da largura — que numa tela deitada é o que sobra de graça — em
+ * troca de nenhuma altura, que é o que falta. Antes estes cinco comandos eram
+ * botões largos empilhados sob o painel, e empurravam os mostradores para fora
+ * da janela.
+ */
+.trilho {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 62px;
+}
+
+.trilho-botao {
+  flex: 1;
+  min-height: 0;
+  padding: 2px;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.trilho-icone { font-size: 19px; line-height: 1; }
+
+.trilho-nome {
+  font-size: 9.5px;
+  line-height: 1.1;
+  text-align: center;
+  color: var(--suave);
+  font-variant-numeric: tabular-nums;
+}
+
+.trilho-botao[aria-pressed="true"] {
+  background: var(--principal-fraco);
+  border-color: var(--principal);
+}
+
+.trilho-botao[aria-pressed="true"] .trilho-nome { color: var(--principal); }
+
+.trilho-botao.gravando {
+  background: var(--perigo);
+  border-color: var(--perigo);
+  color: #fff;
+}
+
+.trilho-botao.gravando .trilho-nome { color: #fff; }
+
+.trilho-botao:disabled { opacity: .45; cursor: default; }
+
+/*
+ * A gaveta: o que se lê parado.
+ *
+ * Situação da conexão, máximos e explicações. Estavam na tela e custavam três
+ * vezes a altura dela; aqui continuam a um toque e não custam nada. Ela desliza
+ * por cima do painel em vez de empurrá-lo, porque empurrar redesenharia todos
+ * os ponteiros a cada abertura.
+ */
+.gaveta {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 4;
+  width: min(400px, 78%);
+  box-sizing: border-box;
+  padding: 10px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  background: var(--fundo);
+  border-left: 1px solid var(--borda);
+  box-shadow: -10px 0 28px rgba(0, 0, 0, .28);
+}
+
+.gaveta-fundo {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  background: rgba(0, 0, 0, .35);
+}
+
+.gaveta-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gaveta-fechar { padding: 4px 12px; }
+
+/* ------------------------------------------ o editor preso na janela */
+
+/*
+ * Pelo mesmo motivo do painel, e com um a mais: aqui a forma da grade é a
+ * informação. Se a grade do editor tem células quadradas e a do painel tem
+ * linhas que dividem a altura, o mesmo painel tem duas formas — e a que se
+ * arrasta não é a que se vê dirigindo.
+ */
+body.editor-fixo { overflow: hidden; }
+
+body.editor-fixo .conteudo {
+  padding: 0;
+  max-width: none;
+  height: calc(100dvh - var(--topo-altura) - env(safe-area-inset-top)
+    - var(--barra-altura) - env(safe-area-inset-bottom));
+}
+
+.tela-editor {
+  height: 100%;
+  gap: 0;
+}
+
+.tela-editor .grade-do-painel.editando {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  gap: 6px;
+  grid-auto-rows: minmax(0, 1fr);
+  grid-template-rows: repeat(var(--linhas, 4), minmax(0, 1fr));
+}
+
+/* A coluna de comandos: estreita, porque a largura é o que sobra na tela
+   deitada, e rolável por dentro, porque a página inteira não rola mais. */
+.editor-lateral {
+  width: 168px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/*
+ * Tudo aqui é miúdo de propósito.
+ *
+ * São sete controles numa coluna de trezentos pixels de altura, e a coluna não
+ * pode rolar por dentro: a primeira versão tinha botão de tamanho normal, e as
+ * abas dos painéis saíam por cima enquanto «Apagar» ficava cortado embaixo —
+ * dois comandos invisíveis numa tela que existe para dar comandos. No editor
+ * isso se pode: é uma tela em que se opera parado, olhando.
+ */
+.editor-lateral .botao {
+  min-height: 38px;
+  padding: 6px 8px;
+  font-size: 12px;
+  border-radius: 10px;
+}
+
+.editor-lateral .campo-dica {
+  margin: 0;
+  font-size: 10.5px;
+  line-height: 1.25;
+}
+
+.tela-editor .abas-de-painel {
+  margin: 0;
+  gap: 5px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.tela-editor .aba-painel {
+  min-height: 30px;
+  padding: 4px 12px;
+  font-size: 12.5px;
+  flex: 0 0 auto;
+}
+
 /* --------------------------------------------------- a grade do painel */
 
 /*
  * A grade do painel personalizado.
  *
- * Quatro colunas de largura igual, e a altura da linha vem de `--celula`, que o
- * JavaScript mede e mantém igual à largura da coluna. O CSS sozinho não faz
- * essa conta: a largura da coluna só existe depois do desenho. Com uma altura
- * fixa em pixels, o mesmo painel sairia achatado num celular estreito e
- * esticado num tablet, e um item de 2×2 deixaria de ser quadrado.
+ * **Oito colunas**, o mesmo número que `dominio/painel.js` usa para colocar,
+ * mover e redimensionar. Estiveram quatro aqui por um tempo, e o estrago era
+ * silencioso: um mostrador em «x = 6» caía numa coluna implícita, de largura
+ * automática, e o painel inteiro saía torto — colunas de tamanhos diferentes,
+ * itens grudados e a impressão de que a disposição salva não era a desenhada.
+ * O número de colunas é do modelo; o CSS não pode ter opinião própria sobre
+ * ele.
+ *
+ * A altura da linha vem de `--celula`, que o JavaScript mede e mantém igual à
+ * largura da coluna. O CSS sozinho não faz essa conta: a largura da coluna só
+ * existe depois do desenho. Com uma altura fixa em pixels, o mesmo painel
+ * sairia achatado num celular estreito e esticado num tablet, e um item de 2×2
+ * deixaria de ser quadrado.
  */
 .grade-do-painel {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(var(--colunas, 8), 1fr);
   grid-auto-rows: var(--celula, 84px);
   gap: 8px;
 }
@@ -190,6 +513,22 @@ body.carregando .conteudo { opacity: 0; }
   position: relative;
   min-width: 0;
   min-height: 0;
+}
+
+/*
+ * No painel vivo as linhas dividem a altura, em vez de seguirem a largura.
+ *
+ * Fora daqui a célula é quadrada — o editor precisa disso para que o que se
+ * arrasta tenha a forma do que vai aparecer. Aqui a altura é a da janela e não
+ * sobra nada: com célula quadrada, o painel ou deixava faixa vazia embaixo ou
+ * vazava para fora da tela, que é como um mostrador acaba cortado ao meio.
+ */
+.tela-painel .grade-do-painel {
+  flex: 1;
+  min-height: 0;
+  gap: 6px;
+  grid-auto-rows: minmax(0, 1fr);
+  grid-template-rows: repeat(var(--linhas, 3), minmax(0, 1fr));
 }
 
 /* O visor preenche a célula que lhe deram, seja ela qual for. */
@@ -212,20 +551,30 @@ body.carregando .conteudo { opacity: 0; }
  * são quatro casos e porque a leitura no carro merece um tamanho escolhido em
  * cada um, e não interpolado.
  */
-.item-do-painel[data-largura="2"] .mostrador-numero,
-.item-do-painel[data-altura="2"] .mostrador-numero { font-size: 34px; }
+/*
+ * O tamanho da letra vem da célula, e não do número de células que o item ocupa.
+ *
+ * Eram degraus fixos por largura — 2 colunas, 34 pixels; 3 colunas, 52 — e a
+ * conta só fechava enquanto a coluna tivesse sempre a mesma largura. Deixou de
+ * ter: com a câmera ocupando a lateral, os mostradores dividem pouco mais da
+ * metade da tela, e «14,2 V» num item de uma coluna virava «14,» — um número
+ * cortado, que num painel de carro se lê como outro número.
+ *
+ * `cqw` e `cqh` são a largura e a altura da própria célula. O `min()` entre as
+ * duas é o que impede a letra de crescer pela altura numa célula estreita e
+ * vazar pelos lados. Os limites do `clamp()` existem para os extremos: nem
+ * ilegível numa célula minúscula, nem gigante numa tela de tablet.
+ */
+.item-do-painel { container-type: size; }
 
-.item-do-painel[data-largura="2"][data-altura="2"] .mostrador-numero { font-size: 44px; }
+.item-do-painel .mostrador { padding: 5px 6px; }
 
-.item-do-painel[data-largura="3"] .mostrador-numero,
-.item-do-painel[data-largura="4"] .mostrador-numero { font-size: 52px; }
+.item-do-painel .mostrador-numero { font-size: clamp(13px, min(32cqw, 38cqh), 56px); }
+.item-do-painel .mostrador-titulo { font-size: clamp(9px, min(10cqw, 15cqh), 15px); }
+.item-do-painel .mostrador-unidade { font-size: clamp(8px, min(9cqw, 13cqh), 14px); }
 
-.item-do-painel[data-largura="2"] .mostrador-titulo,
-.item-do-painel[data-largura="3"] .mostrador-titulo,
-.item-do-painel[data-largura="4"] .mostrador-titulo { font-size: 14px; }
-
-.item-do-painel[data-largura="3"] .barra-numero,
-.item-do-painel[data-largura="4"] .barra-numero { font-size: 26px; }
+.item-do-painel .barra-numero { font-size: clamp(13px, min(15cqw, 26cqh), 30px); }
+.item-do-painel .barra-titulo { font-size: clamp(9px, min(9cqw, 14cqh), 14px); }
 
 .item-do-painel[data-altura="2"] .barra-trilho,
 .item-do-painel[data-altura="3"] .barra-trilho { height: 18px; }
@@ -259,8 +608,17 @@ body.quadro-de-instrumentos {
   --principal-texto: #06101a;
   --principal-fraco: #17293c;
   --ok: #3fd39a;
+  --ok-fraco: #10281f;
   --atencao: #f0b24a;
+  --atencao-fraco: #2d2313;
   --perigo: #f47a72;
+  /*
+   * Os tons fracos entram junto, e não por capricho: o alerta da luz de
+   * anomalia pinta o fundo com `--perigo-fraco`, e sem redefini-lo aqui ele
+   * ficava rosa-claro atravessado no meio de um quadro preto — a única coisa
+   * berrante da tela, à noite, a meio palmo do rosto.
+   */
+  --perigo-fraco: #301917;
   --frio: #6fb4f0;
 
   padding-bottom: 0;
@@ -273,23 +631,27 @@ body.quadro-de-instrumentos .topo,
 body.quadro-de-instrumentos .barra,
 body.quadro-de-instrumentos .atualizacao,
 body.quadro-de-instrumentos .cartao,
+body.quadro-de-instrumentos .trilho,
+body.quadro-de-instrumentos .gaveta,
+body.quadro-de-instrumentos .gaveta-fundo,
 body.quadro-de-instrumentos .alertas:empty { display: none !important; }
 
-body.quadro-de-instrumentos .conteudo { padding: 0; max-width: none; }
-body.quadro-de-instrumentos .tela { gap: 0; }
-
-body.quadro-de-instrumentos .grade-do-painel {
+/*
+ * O modo cheio não remonta nada: o palco já é do tamanho da janela, e aqui ele
+ * só ganha de volta a altura da barra de abas e perde o trilho. Antes este
+ * bloco refazia a geometria da grade por conta própria, e as duas contas
+ * discordavam — o painel mudava de proporção ao entrar no modo cheio.
+ */
+body.quadro-de-instrumentos .conteudo {
+  padding: 0;
+  max-width: none;
   height: 100dvh;
-  padding: 8px;
-  gap: 6px;
-  /*
-   * As linhas dividem a altura da tela em partes iguais, em vez de seguirem a
-   * largura da coluna. Numa tela deitada isso é o que faz o velocímetro ocupar
-   * a altura toda em vez de sobrar faixa preta em cima e embaixo.
-   */
-  grid-auto-rows: minmax(0, 1fr);
-  grid-template-rows: repeat(var(--linhas, 3), minmax(0, 1fr));
 }
+
+body.quadro-de-instrumentos .tela { gap: 0; }
+body.quadro-de-instrumentos .palco { padding: 8px; }
+body.quadro-de-instrumentos .palco.com-camera { grid-template-columns: minmax(0, 40%) minmax(0, 1fr); }
+body.quadro-de-instrumentos .palco:not(.com-camera) { grid-template-columns: minmax(0, 1fr); }
 
 body.quadro-de-instrumentos .medidor,
 body.quadro-de-instrumentos .mostrador,
@@ -1160,6 +1522,24 @@ select.entrada { appearance: none; background-image: none; }
  * linhas de texto impossíveis de acompanhar, então a coluna só cresce até onde
  * ainda se lê, e os ponteiros ganham o espaço que sobra.
  */
+/*
+ * Tela baixa: celular deitado, que é como este aplicativo é usado.
+ *
+ * Sessenta e quatro pixels de barra de abas são um sexto da altura útil de um
+ * celular em paisagem — espaço que sai inteiro do velocímetro. Cinquenta ainda
+ * dão alvo de sobra para o dedo e devolvem quatorze pixels a quem precisa.
+ */
+@media (max-height: 540px) {
+  :root {
+    --barra-altura: 50px;
+    --topo-altura: 34px;
+  }
+
+  .topo-titulo { font-size: 16px; }
+  .barra-icone { font-size: 18px; }
+  .barra-item { font-size: 10px; }
+}
+
 @media (min-width: 720px) {
   .conteudo { max-width: 720px; margin: 0 auto; }
   .medidores { grid-template-columns: repeat(2, 1fr); }
