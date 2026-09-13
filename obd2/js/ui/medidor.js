@@ -134,10 +134,12 @@ function faixa(definicao, valor) {
  * parou de responder aquele PID, e o mostrador mostra travessão em vez de
  * congelar no último número — congelado, ninguém percebe que a leitura morreu.
  */
-export function criarMedidor(pid, { titulo = null, secundario = false } = {}) {
+export function criarMedidor(pid, { titulo = null, secundario = false, escala = null } = {}) {
   const definicao = definicaoDe(pid) ?? {};
-  const minimo = definicao.min ?? 0;
-  const maximo = definicao.max ?? 100;
+  // A escala pode vir do item do painel personalizado. Sem ela, vale a da
+  // tabela de PIDs — que é genérica de propósito.
+  const minimo = escala?.min ?? definicao.min ?? 0;
+  const maximo = escala?.max ?? definicao.max ?? 100;
   const divisor = definicao.escalaDividida ?? 1;
   const fracaoDe = (valor) => Math.min(1, Math.max(0, (valor - minimo) / (maximo - minimo)));
 
@@ -268,8 +270,10 @@ export function criarMedidor(pid, { titulo = null, secundario = false } = {}) {
  * Para o que não tem escala interessante — tensão, temperatura do ar, tempo de
  * motor ligado. Cabem seis numa tela de celular sem espremer nada.
  */
-export function criarMostrador(pid, { titulo = null } = {}) {
-  const definicao = definicaoDe(pid) ?? {};
+export function criarMostrador(pid, { titulo = null, escala = null } = {}) {
+  const definicao = escala
+    ? { ...(definicaoDe(pid) ?? {}), min: escala.min, max: escala.max }
+    : (definicaoDe(pid) ?? {});
   const numero = el('span', { classe: 'mostrador-numero', texto: '—' });
   const unidade = el('span', { classe: 'mostrador-unidade', texto: unidadeDePid(pid) });
   const no = el('div', { classe: 'mostrador', dados: { pid } }, [
@@ -315,4 +319,63 @@ export function criarCartaoDeValor(titulo, { unidade = '', dica = '' } = {}) {
       if (novaUnidade !== null) sufixo.textContent = novaUnidade;
     },
   };
+}
+
+/**
+ * Uma barra horizontal.
+ *
+ * O terceiro tipo de visor, e o que melhor serve ao que é «nível»: tanque,
+ * temperatura, carga. Numa barra, «pela metade» se lê sem número nenhum e sem
+ * decifrar escala — é a forma que o marcador de combustível tem há oitenta
+ * anos, e por um bom motivo.
+ *
+ * Ela cabe em uma linha da grade, o que permite empilhar quatro leituras no
+ * espaço de um ponteiro. Num painel personalizado isso é o que decide entre
+ * mostrar três coisas e mostrar oito.
+ */
+export function criarBarra(pid, { titulo = null, escala = null } = {}) {
+  const definicao = definicaoDe(pid) ?? {};
+  const minimo = escala?.min ?? definicao.min ?? 0;
+  const maximo = escala?.max ?? definicao.max ?? 100;
+
+  const numero = el('span', { classe: 'barra-numero', texto: '—' });
+  const preenchida = el('div', { classe: 'barra-cheia' });
+
+  const no = el('div', { classe: 'visor-barra', dados: { pid } }, [
+    el('div', { classe: 'barra-topo' }, [
+      el('span', { classe: 'barra-titulo', texto: titulo ?? definicao.curto ?? definicao.nome ?? pid }),
+      el('div', { classe: 'barra-valor' }, [numero, el('span', { classe: 'barra-unidade', texto: unidadeDePid(pid) })]),
+    ]),
+    el('div', { classe: 'barra-trilho' }, [preenchida]),
+  ]);
+
+  let ultimo;
+  return {
+    no,
+    atualizar(valor) {
+      if (valor === ultimo) return;
+      ultimo = valor;
+
+      numero.textContent = valorDePid(pid, valor);
+      const fracao = Number.isFinite(valor)
+        ? Math.min(1, Math.max(0, (valor - minimo) / (maximo - minimo)))
+        : 0;
+      preenchida.style.width = `${(fracao * 100).toFixed(1)}%`;
+      no.dataset.faixa = faixa({ ...definicao, min: minimo, max: maximo }, valor);
+    },
+  };
+}
+
+/**
+ * O visor de um item do painel, seja ele qual for.
+ *
+ * É a única porta de entrada usada pelo painel e pelo editor — e é isso que
+ * garante que os dois desenhem a mesma coisa. Um editor que mostra uma prévia
+ * diferente do resultado não é um editor: é uma adivinhação.
+ */
+export function criarVisor(item, { escala = null } = {}) {
+  const opcoes = { escala: escala ?? null };
+  if (item.tipo === 'ponteiro') return criarMedidor(item.chave, opcoes);
+  if (item.tipo === 'barra') return criarBarra(item.chave, opcoes);
+  return criarMostrador(item.chave, opcoes);
 }

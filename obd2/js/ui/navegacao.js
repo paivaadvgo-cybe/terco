@@ -23,6 +23,7 @@ export const ABAS = [
 /** Em qual aba uma rota acende. As telas de dentro acendem a aba de origem. */
 const ABA_DA_ROTA = {
   painel: 'painel',
+  editor: 'painel',
   conexao: 'conexao',
   falhas: 'falhas',
   viagens: 'viagens',

@@ -37,10 +37,15 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 
 ## O que ele faz
 
-- **Painel ao vivo** — dois mostradores analógicos (conta-giros e velocímetro),
-  com ponteiro, escala numerada e o valor exato embaixo, mais mostradores para o
-  que você escolher: temperatura do motor, acelerador, carga, tensão da bateria,
-  fluxo de ar, nível do tanque.
+- **Painel que você monta** — arraste para mover, puxe o canto para
+  redimensionar, toque para escolher o que cada mostrador mostra e em que escala.
+  Três formatos: ponteiro analógico (com escala numerada e o valor exato
+  embaixo), número e barra. Até **cinco disposições salvas** — uma para a
+  cidade, outra para a estrada, outra para a oficina.
+- **Escala por mostrador** — a tabela traz uma faixa genérica (rotação de 0 a
+  8.000), e quem personaliza quer a do seu carro: num diesel que corta em 4.500,
+  apertar a escala é a diferença entre um ponteiro que mexe e um que fica quase
+  parado.
 - **Velocidade do OBD, do GPS, ou as duas** — o velocímetro do carro marca para
   cima de fábrica: a norma permite indicar acima da velocidade real e proíbe
   indicar abaixo, e os fabricantes usam essa folga (5 a 10% é o comum). A
@@ -103,7 +108,9 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/sessao.js` | A conexão viva e o laço de leitura. |
 | `js/video.js` | A câmera: grava a estrada em trechos, com a hora de cada um. |
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
-| `tests/` | `npm test` — 131 testes, sem navegador e sem carro. |
+| `js/dominio/painel.js` | A disposição: grade, colisão, escala e as cinco configurações. |
+| `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
+| `tests/` | `npm test` — 158 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones e carimba a versão do cache. |
 
 ## Desenvolvimento
@@ -141,6 +148,13 @@ chega a quem já tem o aplicativo instalado.
   gravado.
 - Sem o PID da pressão atmosférica (33), o turbo é calculado contra 101,3 kPa.
   Em Goiânia, a 750 m de altitude, isso desloca a leitura em cerca de 0,08 bar.
+- A disposição é uma grade de quatro colunas, e não posição livre em pixels: um
+  mostrador em «x = 280 px» sumiria da tela de 360 px, e o painel montado no
+  aparelho de casa chegaria torto no do carro.
+- Arrastar um mostrador para cima de outro **do mesmo tamanho** troca os dois de
+  lugar. Para cima de um de tamanho diferente, o aplicativo recusa e sacode:
+  empurrar, encolher ou empilhar não têm resposta óbvia, e inventar uma seria
+  pior que deixar escolher outro lugar.
 - O GPS perde o sinal em túnel, garagem e sob mata fechada. Quando a última
   correção fica velha ou imprecisa, a tela diz «sem sinal» em vez de mostrar o
   último número — que seria afirmar uma velocidade de meio minuto atrás. Ele

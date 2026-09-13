@@ -16,7 +16,8 @@
 import { el, botao, cartao, campo, selecao, entrada, linhaDeValor } from '../elementos.js';
 import { avisar, confirmar } from '../avisos.js';
 import { COMBUSTIVEIS } from '../../dominio/leituras.js';
-import { PIDS, DERIVADOS, PADRAO_DO_PAINEL, definicaoDe } from '../../obd/pids.js';
+import { definicaoDe } from '../../obd/pids.js';
+import { LIMITE_DE_PAINEIS } from '../../dominio/painel.js';
 import { MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
 import { numero, valorDePid, unidadeDePid } from '../formatar.js';
 
@@ -73,43 +74,47 @@ export async function telaAjustes(contexto) {
 
   /* --------------------------------------------------------------- painel */
 
-  const escolhidos = new Set(configuracao.painel ?? PADRAO_DO_PAINEL);
-  const marcadores = el('div', { classe: 'escolhas' });
-
-  for (const [pid, definicao] of Object.entries({ ...DERIVADOS, ...PIDS })) {
-    const marcado = escolhidos.has(pid);
-    const caixa = el('button', {
-      type: 'button',
-      classe: `escolha ${marcado ? 'marcada' : ''}`.trim(),
-      dados: { pid },
-      aoTocar: async () => {
-        if (escolhidos.has(pid)) escolhidos.delete(pid);
-        else escolhidos.add(pid);
-        caixa.classList.toggle('marcada', escolhidos.has(pid));
-        await salvar({ painel: [...escolhidos] });
-      },
-    }, [
-      el('span', { classe: 'escolha-nome', texto: definicao.curto ?? definicao.nome }),
-      el('span', { classe: 'escolha-unidade', texto: definicao.unidade }),
-    ]);
-    marcadores.append(caixa);
-  }
+  /*
+   * Aqui só se escolhe qual painel usar e se entra no editor.
+   *
+   * A disposição não se monta numa lista de caixinhas: ela se monta arrastando,
+   * vendo o resultado. Duplicar a escolha em dois lugares criaria duas verdades
+   * sobre o mesmo painel, e um dia elas discordariam.
+   */
+  const listaDePaineis = el('div', { classe: 'escolhas' }, configuracao.paineis.map((painel) => el('button', {
+    type: 'button',
+    classe: `escolha ${painel.id === configuracao.painelAtivo ? 'marcada' : ''}`.trim(),
+    aoTocar: async () => {
+      await armazenamento.usarPainel(painel.id);
+      await sessao.recarregarConfiguracao();
+      avisar(`Usando «${painel.nome}»`);
+      contexto.recarregar();
+    },
+  }, [
+    el('span', { classe: 'escolha-nome', texto: painel.nome }),
+    el('span', { classe: 'escolha-unidade', texto: `${painel.itens.length} mostrador(es)` }),
+  ])));
 
   tela.append(cartao([
-    el('h2', { classe: 'secao-titulo', texto: 'O que aparece no painel' }),
+    el('h2', { classe: 'secao-titulo', texto: 'Painel' }),
     el('p', {
       classe: 'campo-dica',
-      texto: 'Rotação e velocidade têm sempre os ponteiros grandes. O que estiver marcado aqui vira mostrador, e o carro só é perguntado sobre o que está marcado — quanto menos, mais rápido o painel.',
+      texto: `Até ${LIMITE_DE_PAINEIS} disposições diferentes — uma para a cidade, outra para a estrada, outra para a oficina. Toque em uma para usá-la.`,
     }),
-    marcadores,
-    botao('Voltar ao padrão', async () => {
-      escolhidos.clear();
-      for (const pid of PADRAO_DO_PAINEL) escolhidos.add(pid);
-      for (const caixa of marcadores.querySelectorAll('.escolha')) {
-        caixa.classList.toggle('marcada', escolhidos.has(caixa.dataset.pid));
-      }
-      await salvar({ painel: [...escolhidos] });
-      avisar('Painel restaurado');
+    listaDePaineis,
+    botao('Personalizar painéis', () => contexto.ir('editor'), { tipo: 'principal', classe: 'largo' }),
+    botao('Voltar ao painel de fábrica', async () => {
+      const confirmado = await confirmar({
+        titulo: 'Voltar ao painel de fábrica?',
+        texto: 'Todas as disposições montadas são perdidas, e sobra só a padrão.',
+        acao: 'Voltar ao padrão',
+        perigo: true,
+      });
+      if (!confirmado) return;
+      await armazenamento.restaurarPaineis();
+      await sessao.recarregarConfiguracao();
+      avisar('Painéis restaurados');
+      contexto.recarregar();
     }, { tipo: 'fantasma', classe: 'largo' }),
   ]));
 

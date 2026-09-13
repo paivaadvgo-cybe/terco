@@ -26,6 +26,7 @@ import {
   RITMOS, definicaoDe, conhecidosEntre, DERIVADOS, calcularDerivados, derivadosPossiveis,
 } from './obd/pids.js';
 import { criarAmostra, instantaneo, criarMediaDeConsumo } from './dominio/viagem.js';
+import { chavesDoPainel } from './dominio/painel.js';
 import { alertas } from './dominio/leituras.js';
 import { criarGravadorDeVideo, suportado as temVideo, explicarFalha } from './video.js';
 import { criarVelocimetroGPS, suportado as temGPS } from './gps.js';
@@ -149,7 +150,8 @@ export function criarSessao({ armazenamento }) {
    * `01TURBO` ao carro, e o adaptador responderia `?` para sempre.
    */
   function planoDeLeitura() {
-    const doPainel = configuracao?.painel ?? [];
+    const painel = (configuracao?.paineis ?? []).find((p) => p.id === configuracao?.painelAtivo);
+    const doPainel = chavesDoPainel(painel);
     const necessarios = new Set(['0C', '0D', '10', '5E', '05', '42']);
 
     for (const escolhido of doPainel) {
@@ -278,6 +280,27 @@ export function criarSessao({ armazenamento }) {
       cilindrada: configuracao?.cilindrada,
     });
     estado.media = mediaDeConsumo.adicionar(estado.valores, Date.now());
+
+    /*
+     * Os calculados entram em `valores` como qualquer PID.
+     *
+     * É o que permite arrastá-los no editor, escolher a escala deles e vê-los
+     * gravados na viagem. Sem isso, consumo e média continuariam presos em
+     * cartões fixos, fora do painel que a pessoa monta.
+     *
+     * `delete` em vez de `null` quando não há valor: um `null` guardado na
+     * amostra viraria uma coluna de vazios na planilha, e o mostrador piscaria
+     * travessão a cada volta em que a conta não fechasse.
+     */
+    const kmPorLitro = estado.consumo.kmPorLitro;
+    if (Number.isFinite(kmPorLitro)) estado.valores.CONSUMO = kmPorLitro;
+    else delete estado.valores.CONSUMO;
+
+    if (Number.isFinite(estado.consumo.litrosPorHora)) estado.valores.LH = estado.consumo.litrosPorHora;
+    else delete estado.valores.LH;
+
+    if (Number.isFinite(estado.media.kmPorLitro)) estado.valores.MEDIA = estado.media.kmPorLitro;
+    else delete estado.valores.MEDIA;
     estado.alertas = alertas(estado.valores, { luzAcesa: estado.luz?.luzAcesa ?? false });
 
     const decorrido = (Date.now() - contagem.desde) / 1000;

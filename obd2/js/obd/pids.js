@@ -173,6 +173,35 @@ export const EXTERNOS = {
   },
 };
 
+/**
+ * Números que o aplicativo calcula e que o painel pode mostrar como qualquer
+ * outro.
+ *
+ * Eles já existiam — consumo instantâneo e média —, mas viviam presos em
+ * cartões fixos da tela. Declará-los aqui é o que permite arrastá-los,
+ * redimensioná-los e escolher a escala deles como se fossem PIDs: para o
+ * mostrador, um número é um número, venha do carro ou de uma conta.
+ *
+ * Consumo aparece em duas unidades de propósito. Quilômetro por litro é o que
+ * se compara com o tanque anterior, mas não existe parado — a conta daria
+ * infinito. Litro por hora existe sempre, e é o número que faz sentido com o
+ * motor girando e o carro sem andar.
+ */
+export const CALCULADOS = {
+  CONSUMO: {
+    nome: 'Consumo (km/L)', curto: 'Consumo', unidade: 'km/L',
+    casas: 1, min: 0, max: 30, calculado: true, ritmo: 'rapido',
+  },
+  LH: {
+    nome: 'Consumo (L/h)', curto: 'L/h', unidade: 'L/h',
+    casas: 1, min: 0, max: 40, calculado: true, ritmo: 'rapido',
+  },
+  MEDIA: {
+    nome: 'Consumo médio', curto: 'Média', unidade: 'km/L',
+    casas: 1, min: 0, max: 30, calculado: true, ritmo: 'rapido',
+  },
+};
+
 /** A leitura veio do barômetro do carro, ou da atmosfera presumida? */
 export function atmosfericaMedida(valores) {
   return Number.isFinite(valores?.['33']);
@@ -260,7 +289,12 @@ export function decodificar(pid, bytes) {
  */
 export function definicaoDe(pid) {
   const chave = String(pid).toUpperCase();
-  return PIDS[chave] ?? DERIVADOS[chave] ?? EXTERNOS[chave] ?? null;
+  return PIDS[chave] ?? DERIVADOS[chave] ?? EXTERNOS[chave] ?? CALCULADOS[chave] ?? null;
+}
+
+/** Tudo que o painel pode mostrar, na ordem em que se oferece para escolher. */
+export function tudoQueSeMostra() {
+  return { ...CALCULADOS, ...DERIVADOS, ...EXTERNOS, ...PIDS };
 }
 
 /** Os PIDs conhecidos que este carro tem, na ordem da tabela. */

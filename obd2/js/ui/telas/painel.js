@@ -2,9 +2,13 @@
  * O painel: o que o carro está fazendo agora.
  *
  * É a tela que fica aberta com o celular preso ao painel, e por isso quase tudo
- * aqui é decidido pela leitura de relance: dois ponteiros grandes no alto —
- * rotação e velocidade, os únicos que se olha andando —, o resto em mostradores
- * abaixo, e nada que mude de lugar enquanto se dirige.
+ * aqui é decidido pela leitura de relance: nada muda de lugar enquanto se
+ * dirige, e o toque não move nada — a disposição se edita no editor, parado.
+ *
+ * **O que aparece vem da disposição salva**, montada no editor: cada item diz o
+ * que mostra, de que jeito, onde e em que escala. Esta tela só desenha. É a
+ * mesma função de desenho que o editor usa, e é isso que garante que a prévia
+ * de lá corresponde ao que se vê aqui.
  *
  * **A tela é montada uma vez e atualizada por dentro.** A sessão avisa várias
  * vezes por segundo; redesenhar a tela a cada aviso destruiria e recriaria
@@ -14,12 +18,14 @@
  */
 
 import { el, botao, cartao, vazio, linhaDeValor } from '../elementos.js';
-import { criarMedidor, criarMostrador, criarCartaoDeValor } from '../medidor.js';
+import { criarVisor } from '../medidor.js';
+import { posicionarNaGrade, manterCelulasQuadradas } from '../grade.js';
+import { escalaDe, alturaDoPainel } from '../../dominio/painel.js';
 import { avisar } from '../avisos.js';
-import { numero, consumo as formatarConsumo, valorDePid, unidadeDePid } from '../formatar.js';
+import { numero, valorDePid, unidadeDePid } from '../formatar.js';
 import { duracao } from '../../dominio/datas.js';
 import { diagnostico } from '../../obd/transportes.js';
-import { definicaoDe, DERIVADOS, EXTERNOS } from '../../obd/pids.js';
+import { definicaoDe, DERIVADOS, EXTERNOS, CALCULADOS } from '../../obd/pids.js';
 import { ESTADOS, MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
 
 /**
@@ -43,6 +49,14 @@ function alimentavel(chave, estado) {
   // tela quando o condutor o ligou nos ajustes e o sinal apareceu.
   if (EXTERNOS[chave]) return Boolean(estado.gps?.ativo);
 
+  /*
+   * Consumo e média são contas do aplicativo, e existem quando existe fonte
+   * para elas: o PID de vazão, o fluxo de ar, ou a dedução pelo coletor com a
+   * cilindrada informada. Num carro sem nenhuma das três, o mostrador nunca
+   * teria número — e some, em vez de ficar em travessão para sempre.
+   */
+  if (CALCULADOS[chave]) return Boolean(estado.consumo?.origem);
+
   if (!estado.pids || estado.pids.length === 0) return true;
   const derivado = DERIVADOS[chave];
   if (derivado) return derivado.precisa.every((pid) => estado.pids.includes(pid));
@@ -64,53 +78,60 @@ export async function telaPainel(contexto) {
   const situacao = el('p', { classe: 'situacao', texto: '' });
   const listaDeAlertas = el('div', { classe: 'alertas' });
 
-  /* ------------------------------------------------------------ ponteiros */
+  /* -------------------------------------------------------- o painel montado */
 
   /*
-   * Quem manda no ponteiro da velocidade, e quem fica na linha de baixo.
+   * O painel é desenhado a partir da disposição salva, e não de uma estrutura
+   * fixa no código.
    *
-   * As duas fontes discordam de propósito: o velocímetro do carro — e o OBD com
-   * ele — marca para cima por norma, e o GPS fica mais perto do real. Quem liga
-   * as duas quer justamente ver a diferença, então a segunda nunca é escondida:
-   * ela fica menor, sob o número grande, com o nome da origem ao lado. Um
-   * número sem origem, embaixo de outro número, não informa nada.
+   * Cada item traz o que mostra, de que jeito, onde e em que escala. A mesma
+   * função desenha aqui e no editor — é o que garante que a prévia não mente.
    */
-  const escolha = configuracao.velocimetro ?? 'obd';
-  const principalEhGPS = escolha === 'gps' || (escolha === 'ambos' && configuracao.velocimetroPrincipal === 'gps');
+  const painel = configuracao.paineis.find((p) => p.id === configuracao.painelAtivo)
+    ?? configuracao.paineis[0];
+
+  const itensVisiveis = painel.itens.filter((item) => alimentavel(item.chave, sessao.estado));
+  const grade = el('div', { classe: 'grade-do-painel' });
+  const visores = new Map();
+
+  for (const item of itensVisiveis) {
+    const visor = criarVisor(item, { escala: escalaDe(item) });
+    visores.set(item.id, { visor, item });
+
+    const no = el('div', { classe: 'item-do-painel' }, [visor.no]);
+    posicionarNaGrade(no, item);
+    grade.append(no);
+  }
+  grade.style.setProperty('--linhas', String(Math.max(1, alturaDoPainel(itensVisiveis))));
+  tela.append(grade);
+  contexto.aoSair(manterCelulasQuadradas(grade));
+
+  /*
+   * A segunda fonte de velocidade acompanha o ponteiro que a mostra.
+   *
+   * Ela não é um item do painel: é um detalhe de um item — a comparação só faz
+   * sentido colada à velocidade principal. Achá-lo aqui, uma vez, evita
+   * procurá-lo a cada atualização.
+   */
+  const escolhaDeVelocimetro = configuracao.velocimetro ?? 'obd';
+  const principalEhGPS = escolhaDeVelocimetro === 'gps'
+    || (escolhaDeVelocimetro === 'ambos' && configuracao.velocimetroPrincipal === 'gps');
   const fontePrincipal = principalEhGPS ? 'GPS' : '0D';
-  const fonteSecundaria = escolha === 'ambos' ? (principalEhGPS ? '0D' : 'GPS') : null;
+  const fonteSecundaria = escolhaDeVelocimetro === 'ambos' ? (principalEhGPS ? '0D' : 'GPS') : null;
 
-  const medidorDeGiro = criarMedidor('0C');
-  const medidorDeVelocidade = criarMedidor(fontePrincipal, {
-    titulo: escolha === 'obd' ? 'Velocidade' : `Velocidade · ${principalEhGPS ? 'GPS' : 'OBD'}`,
-    secundario: Boolean(fonteSecundaria),
-  });
+  const visorDaVelocidade = [...visores.values()]
+    .find((v) => v.item.chave === fontePrincipal && v.item.tipo === 'ponteiro')?.visor ?? null;
 
-  tela.append(el('div', { classe: 'medidores' }, [medidorDeGiro.no, medidorDeVelocidade.no]));
+  if (itensVisiveis.length === 0) {
+    tela.append(cartao([
+      vazio('Painel vazio', 'Nenhum dos mostradores escolhidos está disponível neste carro.'),
+      botao('Personalizar painel', () => contexto.ir('editor'), { tipo: 'principal', classe: 'largo' }),
+    ]));
+  }
 
-  /* -------------------------------------------------------------- consumo */
+  /* --------------------------------------------------------- situação */
 
-  const cartaoConsumo = criarCartaoDeValor('Consumo', { unidade: '', dica: '' });
-  const cartaoMedia = criarCartaoDeValor('Média', { unidade: '', dica: '' });
-  const cartaoDistancia = criarCartaoDeValor('Gravação', { unidade: '' });
-
-  /* ---------------------------------------------------------- mostradores */
-
-  const escolhidos = (configuracao.painel ?? [])
-    .filter((pid) => !PRINCIPAIS.includes(pid))
-    .filter((pid) => alimentavel(pid, sessao.estado));
-  const mostradores = escolhidos.map((pid) => criarMostrador(pid));
-
-  tela.append(cartao([
-    situacao,
-    listaDeAlertas,
-    el('div', { classe: 'mostradores' }, [
-      cartaoConsumo.no,
-      cartaoMedia.no,
-      cartaoDistancia.no,
-      ...mostradores.map((m) => m.no),
-    ]),
-  ]));
+  tela.append(cartao([situacao, listaDeAlertas]));
 
   /* ------------------------------------------------------------- máximos */
 
@@ -177,6 +198,7 @@ export async function telaPainel(contexto) {
     interruptorDeVideo,
     previa,
     estadoDoVideo,
+    botao('Personalizar painel', () => contexto.ir('editor'), { tipo: 'fantasma', classe: 'largo' }),
     el('p', {
       classe: 'campo-dica',
       texto: sessao.videoDisponivel()
@@ -229,50 +251,18 @@ export async function telaPainel(contexto) {
   }
 
   function desenharEstado(estado) {
-    medidorDeGiro.atualizar(estado.valores['0C']);
-    medidorDeVelocidade.atualizar(estado.valores[fontePrincipal]);
-    medidorDeVelocidade.atualizarSecundario(textoDaSegundaFonte(estado));
-    for (const mostrador of mostradores) mostrador.atualizar(estado.valores[mostrador.no.dataset.pid]);
+    // O cronômetro da gravação vive no rótulo do botão: com o painel inteiro
+    // configurável, não há mais um cartão fixo onde pô-lo — e o botão é onde se
+    // olha para saber se está gravando.
+    if (estado.gravando) comecouEm ??= estado.viagem?.inicio ?? Date.now();
+    else comecouEm = null;
 
-    const { litrosPorHora, kmPorLitro, origem, parado } = estado.consumo ?? {};
-    const fonte = origem === 'medido' ? 'medido pelo carro' : `estimado pelo ${origem}`;
-    if (parado && Number.isFinite(litrosPorHora)) {
-      // Parado, km/L seria infinito. Litro por hora é o número que faz sentido
-      // com o motor girando e o carro sem andar.
-      cartaoConsumo.atualizar(numero(litrosPorHora, 1), 'parado, motor ligado', 'L/h');
-    } else if (Number.isFinite(kmPorLitro)) {
-      cartaoConsumo.atualizar(formatarConsumo(kmPorLitro).replace(' km/L', ''), fonte, 'km/L');
-    } else {
-      cartaoConsumo.atualizar('—', origem ? fonte : 'este carro não informa', '');
-    }
+    for (const { visor, item } of visores.values()) visor.atualizar(estado.valores[item.chave]);
+    visorDaVelocidade?.atualizarSecundario(textoDaSegundaFonte(estado));
 
-    /*
-     * A média só aparece depois de rodar um pouco.
-     *
-     * Nos primeiros metros a divisão de uma distância minúscula por um consumo
-     * minúsculo dá números que saltam de 3 para 300 entre duas leituras. Mostrar
-     * isso não é informação: é ruído com aparência de número.
-     */
-    const media = estado.media ?? {};
-    if (Number.isFinite(media.kmPorLitro) && media.distancia >= 0.3) {
-      cartaoMedia.atualizar(
-        numero(media.kmPorLitro, 1),
-        `em ${numero(media.distancia, 1)} km`,
-        'km/L',
-      );
-    } else {
-      cartaoMedia.atualizar('—', 'precisa rodar um pouco', '');
-    }
-
-    if (estado.gravando) {
-      comecouEm ??= estado.viagem?.inicio ?? Date.now();
-      cartaoDistancia.atualizar(duracao(Date.now() - comecouEm), 'gravando', '');
-    } else {
-      comecouEm = null;
-      cartaoDistancia.atualizar('—', 'não está gravando', '');
-    }
-
-    botaoGravar.textContent = estado.gravando ? 'Parar gravação' : 'Gravar viagem';
+    botaoGravar.textContent = estado.gravando
+      ? `Parar gravação · ${duracao(Date.now() - (comecouEm ?? Date.now()))}`
+      : 'Gravar viagem';
     botaoGravar.className = `botao botao-${estado.gravando ? 'perigo' : 'principal'} largo`;
     // Trocar a escolha da câmera no meio da gravação não teria efeito até a
     // próxima, e o interruptor mentiria sobre o que está acontecendo.

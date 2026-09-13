@@ -20,6 +20,9 @@ import { NOMES, AMOSTRAS_POR_BLOCO } from './esquema.js';
 import { criarViagem, resumir } from '../dominio/viagem.js';
 import { COMBUSTIVEL_PADRAO } from '../dominio/leituras.js';
 import { PADRAO_DO_PAINEL } from '../obd/pids.js';
+import {
+  LIMITE_DE_PAINEIS, normalizarTodos, painelPadrao, converterEscolhaAntiga,
+} from '../dominio/painel.js';
 import { dia as diaDe } from '../dominio/datas.js';
 
 export const CONFIGURACAO_PADRAO = {
@@ -28,7 +31,17 @@ export const CONFIGURACAO_PADRAO = {
   combustivel: COMBUSTIVEL_PADRAO,
   /** Cilindrada em litros, só usada para estimar consumo em carro sem MAF. */
   cilindrada: null,
+  /**
+   * A escolha antiga: uma lista de PIDs, sem posição nem tamanho.
+   *
+   * Continua aqui só para ser convertida uma vez em quem já tinha o aplicativo
+   * instalado. Depois da conversão quem manda é `paineis`.
+   */
   painel: [...PADRAO_DO_PAINEL],
+  /** Até cinco disposições salvas, com posição, tamanho e escala de cada item. */
+  paineis: null,
+  /** Qual delas está em uso. */
+  painelAtivo: null,
   /** Intervalo entre amostras gravadas, em milissegundos. */
   intervaloDeGravacao: 1000,
   /** Manter a tela acesa durante a gravação. */
@@ -83,9 +96,65 @@ export async function criarArmazenamento(driver) {
 
     /* ------------------------------------------------------------ ajustes */
 
+    /**
+     * A configuração, sempre em forma.
+     *
+     * Os painéis passam pela normalização a cada leitura, e não só ao gravar: o
+     * que está no banco pode ter sido escrito por uma versão anterior, ou por um
+     * editor interrompido no meio. Um item com largura zero não aparece, e um
+     * fora da grade empurra a linha inteira — conferir na leitura é o que
+     * garante que o painel abre, aconteça o que tiver acontecido.
+     */
     async configuracao() {
       const guardada = await driver.ler('configuracao', 'app');
-      return { ...CONFIGURACAO_PADRAO, ...(guardada ?? {}) };
+      const junta = { ...CONFIGURACAO_PADRAO, ...(guardada ?? {}) };
+
+      /*
+       * De onde sai o painel, em três casos distintos:
+       *
+       * · Já existe disposição salva: usa-a, conferida.
+       * · Existe configuração antiga, sem disposição: converte a escolha de
+       *   PIDs em layout, para não perder o que a pessoa já tinha montado.
+       * · Não existe configuração nenhuma — primeira abertura: o painel de
+       *   fábrica, que é mais completo que a lista antiga.
+       */
+      const paineis = Array.isArray(junta.paineis) && junta.paineis.length > 0
+        ? normalizarTodos(junta.paineis)
+        : [guardada ? converterEscolhaAntiga(junta.painel) : painelPadrao()];
+
+      const ativo = paineis.some((p) => p.id === junta.painelAtivo) ? junta.painelAtivo : paineis[0].id;
+      return { ...junta, paineis, painelAtivo: ativo };
+    },
+
+    /** O painel em uso agora. */
+    async painelAtivo() {
+      const { paineis, painelAtivo } = await armazenamento.configuracao();
+      return paineis.find((p) => p.id === painelAtivo) ?? paineis[0];
+    },
+
+    /**
+     * Grava as disposições.
+     *
+     * O corte em cinco acontece aqui, e não só na tela: a tela é uma barreira
+     * de conveniência, e o banco é onde a regra precisa valer mesmo que a tela
+     * mude ou que alguém importe uma configuração de outro lugar.
+     */
+    async salvarPaineis(paineis, ativo = null) {
+      const emForma = normalizarTodos(paineis).slice(0, LIMITE_DE_PAINEIS);
+      const escolhido = emForma.some((p) => p.id === ativo) ? ativo : emForma[0].id;
+      return armazenamento.ajustar({ paineis: emForma, painelAtivo: escolhido });
+    },
+
+    /** Troca o painel em uso, sem mexer na disposição de nenhum. */
+    async usarPainel(id) {
+      const { paineis } = await armazenamento.configuracao();
+      if (!paineis.some((p) => p.id === id)) return null;
+      return armazenamento.ajustar({ painelAtivo: id });
+    },
+
+    /** Devolve os painéis ao de fábrica — o botão de socorro do editor. */
+    async restaurarPaineis() {
+      return armazenamento.ajustar({ paineis: [painelPadrao()], painelAtivo: null });
     },
 
     async ajustar(mudancas) {

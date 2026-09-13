@@ -168,6 +168,233 @@ body.carregando .conteudo { opacity: 0; }
   color: var(--perigo);
 }
 
+/* --------------------------------------------------- a grade do painel */
+
+/*
+ * A grade do painel personalizado.
+ *
+ * Quatro colunas de largura igual, e a altura da linha vem de `--celula`, que o
+ * JavaScript mede e mantém igual à largura da coluna. O CSS sozinho não faz
+ * essa conta: a largura da coluna só existe depois do desenho. Com uma altura
+ * fixa em pixels, o mesmo painel sairia achatado num celular estreito e
+ * esticado num tablet, e um item de 2×2 deixaria de ser quadrado.
+ */
+.grade-do-painel {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  grid-auto-rows: var(--celula, 84px);
+  gap: 8px;
+}
+
+.item-do-painel {
+  position: relative;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* O visor preenche a célula que lhe deram, seja ela qual for. */
+.item-do-painel > .medidor,
+.item-do-painel > .mostrador,
+.item-do-painel > .visor-barra {
+  width: 100%;
+  height: 100%;
+}
+
+/*
+ * Um mostrador maior mostra um número maior.
+ *
+ * Sem isto, aumentar um mostrador só aumentava a caixa em volta — o número
+ * continuava do mesmo tamanho, boiando no meio do espaço novo, e o
+ * redimensionamento parecia não fazer nada. Quem arrasta a alça para agrandar a
+ * temperatura quer **ler** a temperatura de mais longe, não ganhar margem.
+ *
+ * Os degraus são explícitos, e não uma conta em unidades de contêiner, porque
+ * são quatro casos e porque a leitura no carro merece um tamanho escolhido em
+ * cada um, e não interpolado.
+ */
+.item-do-painel[data-largura="2"] .mostrador-numero,
+.item-do-painel[data-altura="2"] .mostrador-numero { font-size: 34px; }
+
+.item-do-painel[data-largura="2"][data-altura="2"] .mostrador-numero { font-size: 44px; }
+
+.item-do-painel[data-largura="3"] .mostrador-numero,
+.item-do-painel[data-largura="4"] .mostrador-numero { font-size: 52px; }
+
+.item-do-painel[data-largura="2"] .mostrador-titulo,
+.item-do-painel[data-largura="3"] .mostrador-titulo,
+.item-do-painel[data-largura="4"] .mostrador-titulo { font-size: 14px; }
+
+.item-do-painel[data-largura="3"] .barra-numero,
+.item-do-painel[data-largura="4"] .barra-numero { font-size: 26px; }
+
+.item-do-painel[data-altura="2"] .barra-trilho,
+.item-do-painel[data-altura="3"] .barra-trilho { height: 18px; }
+
+/* ------------------------------------------------------------- o editor */
+
+/*
+ * No editor a grade reserva linhas vazias.
+ *
+ * Fora dele, a grade só cria as linhas que os itens ocupam — o que é certo para
+ * o painel e errado para o editor: sem espaço vazio visível, não há para onde
+ * arrastar um mostrador que se quer mais para baixo.
+ */
+.grade-do-painel.editando {
+  grid-template-rows: repeat(var(--linhas, 4), var(--celula, 84px));
+  padding-bottom: 8px;
+}
+
+/*
+ * `touch-action: none` é o que faz o arrasto funcionar em celular.
+ *
+ * Sem ele o navegador entende o deslizar do dedo como rolagem da página, rola a
+ * tela e o item foge do dedo enquanto o fundo anda atrás. É a causa número um
+ * de arrasto que «não funciona no telefone» — e é invisível no computador, onde
+ * o mouse não rola nada.
+ */
+.grade-do-painel.editando .item-do-painel {
+  touch-action: none;
+  cursor: grab;
+  border-radius: var(--raio);
+  outline: 2px dashed var(--borda);
+  outline-offset: 2px;
+}
+
+.grade-do-painel.editando .item-do-painel.arrastando {
+  cursor: grabbing;
+  z-index: 3;
+  opacity: .9;
+  outline-color: var(--principal);
+  /* Sem transição durante o arrasto: o item tem de colar no dedo. */
+  transition: none;
+}
+
+/*
+ * A alça de tamanho fica quase toda para fora do mostrador.
+ *
+ * Ela precisa de um alvo de dedo — trinta pixels, não dez —, e num mostrador de
+ * uma célula esses trinta pixels cobriam a unidade: «11,4 km/L» virava «11,4»
+ * com um botão por cima do resto. Empurrada para o vão entre as células, o alvo
+ * continua inteiro e só o canto encosta no conteúdo.
+ */
+.alca-de-tamanho {
+  position: absolute;
+  right: -11px;
+  bottom: -11px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--principal);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, .35);
+  cursor: nwse-resize;
+  touch-action: none;
+  z-index: 4;
+}
+
+.alca-de-tamanho::after {
+  content: "⇲";
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: var(--principal-texto);
+  font-size: 14px;
+}
+
+/* Espaço para as alças não saírem cortadas na borda da tela. */
+.grade-do-painel.editando { padding: 0 12px 14px; }
+
+/*
+ * No editor o conteúdo sobe um pouco, para sair de baixo da alça.
+ *
+ * O mostrador centraliza o conteúdo na vertical, e o canto de baixo à direita é
+ * justamente onde a unidade termina: a alça cobria o «/L» de «11,4 km/L». Um
+ * respiro embaixo empurra o texto para cima e devolve o canto à alça — e só
+ * enquanto se edita, porque no painel de verdade não há alça nenhuma.
+ */
+.grade-do-painel.editando .mostrador { padding-bottom: 22px; }
+.grade-do-painel.editando .visor-barra { padding-bottom: 18px; }
+
+/* «Não cabe», dito sem texto. */
+@keyframes sacudir {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+.item-do-painel.sacudindo { animation: sacudir .3s; }
+
+.abas-de-painel {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.aba-painel {
+  flex: none;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--superficie-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: 14px;
+  padding: 10px 16px;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.aba-painel.ativa {
+  background: var(--principal);
+  border-color: var(--principal);
+  color: var(--principal-texto);
+  font-weight: 650;
+}
+
+.aba-painel.nova { font-size: 20px; padding: 8px 18px; }
+
+.dois-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* ---------------------------------------------------------------- barra */
+
+.visor-barra {
+  background: var(--superficie);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
+}
+
+.barra-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.barra-titulo { font-size: 12.5px; color: var(--suave); }
+.barra-valor { display: flex; align-items: baseline; gap: 3px; }
+.barra-numero { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.barra-unidade { font-size: 11.5px; color: var(--suave); }
+
+.barra-trilho {
+  height: 12px;
+  border-radius: 999px;
+  background: var(--superficie-2);
+  overflow: hidden;
+}
+
+.barra-cheia {
+  height: 100%;
+  width: 0;
+  border-radius: 999px;
+  background: var(--principal);
+  transition: width .12s linear, background .3s;
+}
+
+.visor-barra[data-faixa="atencao"] .barra-cheia { background: var(--atencao); }
+.visor-barra[data-faixa="perigo"] .barra-cheia { background: var(--perigo); }
+.visor-barra[data-faixa="frio"] .barra-cheia { background: var(--frio); }
+.visor-barra[data-faixa="atencao"] .barra-numero { color: var(--atencao); }
+.visor-barra[data-faixa="perigo"] .barra-numero { color: var(--perigo); }
+
 /* -------------------------------------------------------------- ponteiros */
 
 .medidores {
@@ -352,14 +579,23 @@ body.carregando .conteudo { opacity: 0; }
   color: var(--suave);
 }
 
+/*
+ * A unidade quebra para a linha de baixo quando não cabe.
+ *
+ * Numa célula de oitenta e cinco pixels, «10,8 km/L» não cabe em uma linha — e
+ * sem quebrar, o navegador corta: aparecia «10,8 km», que se lê como
+ * quilômetros. Um número com a unidade errada é pior que um número truncado,
+ * porque parece certo.
+ */
 .mostrador-linha {
   display: flex;
   align-items: baseline;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 0 4px;
 }
 
 .mostrador-numero {
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 650;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
