@@ -15,6 +15,7 @@ imagem. Depois de instalado, funciona sem internet.
 | `terco/`     | O aplicativo **Santo Terço**, que antes ocupava a raiz. Continua funcionando, agora em `/terco/`. |
 | `simulador/` | O **Simulador Financeiro GoiásFomento**, em `/simulador/`. |
 | `lava-rapido/` | O **Lava-Rápido Lite**, gestão de lava-rápido pelo celular, em `/lava-rapido/`. |
+| `obd2/` | O **Painel OBD-II**, que lê o motor por um adaptador ELM327 Bluetooth BLE, em `/obd2/`. |
 
 O aplicativo é um arquivo só, como pedido. O `sw.js` existe porque os
 navegadores exigem que um service worker seja um `.js` servido pelo mesmo
