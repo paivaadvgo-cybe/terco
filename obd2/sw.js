@@ -34,7 +34,7 @@
  * nome do cache, e o teste em `tests/pwa.test.js` acusa a diferença antes da
  * publicação sair.
  */
-const VERSAO = 'obd2-painel-30d18cf20bd7';
+const VERSAO = 'obd2-painel-ee155ac6d572';
 const BASE = new URL('./', self.location).pathname;
 
 /**
@@ -53,13 +53,16 @@ const CASCA = [
   './icones/icone-512.png',
   './icones/icone-mascara-512.png',
   './js/app.js',
+  './js/gps.js',
   './js/sessao.js',
+  './js/video.js',
   './js/armazenamento/esquema.js',
   './js/armazenamento/indexeddb.js',
   './js/armazenamento/memoria.js',
   './js/armazenamento/storage.js',
   './js/dominio/datas.js',
   './js/dominio/leituras.js',
+  './js/dominio/painel.js',
   './js/dominio/viagem.js',
   './js/obd/dtc.js',
   './js/obd/elm327.js',
@@ -73,11 +76,13 @@ const CASCA = [
   './js/ui/csv.js',
   './js/ui/elementos.js',
   './js/ui/formatar.js',
+  './js/ui/grade.js',
   './js/ui/grafico.js',
   './js/ui/medidor.js',
   './js/ui/navegacao.js',
   './js/ui/telas/ajustes.js',
   './js/ui/telas/conexao.js',
+  './js/ui/telas/editor.js',
   './js/ui/telas/falhas.js',
   './js/ui/telas/painel.js',
   './js/ui/telas/viagens.js',

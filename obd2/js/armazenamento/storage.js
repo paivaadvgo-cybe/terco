@@ -20,6 +20,9 @@ import { NOMES, AMOSTRAS_POR_BLOCO } from './esquema.js';
 import { criarViagem, resumir } from '../dominio/viagem.js';
 import { COMBUSTIVEL_PADRAO } from '../dominio/leituras.js';
 import { PADRAO_DO_PAINEL } from '../obd/pids.js';
+import {
+  LIMITE_DE_PAINEIS, normalizarTodos, painelPadrao, painelDeInstrumentos, converterEscolhaAntiga,
+} from '../dominio/painel.js';
 import { dia as diaDe } from '../dominio/datas.js';
 
 export const CONFIGURACAO_PADRAO = {
@@ -28,11 +31,52 @@ export const CONFIGURACAO_PADRAO = {
   combustivel: COMBUSTIVEL_PADRAO,
   /** Cilindrada em litros, só usada para estimar consumo em carro sem MAF. */
   cilindrada: null,
+  /**
+   * A escolha antiga: uma lista de PIDs, sem posição nem tamanho.
+   *
+   * Continua aqui só para ser convertida uma vez em quem já tinha o aplicativo
+   * instalado. Depois da conversão quem manda é `paineis`.
+   */
   painel: [...PADRAO_DO_PAINEL],
+  /** Até cinco disposições salvas, com posição, tamanho e escala de cada item. */
+  paineis: null,
+  /** Qual delas está em uso. */
+  painelAtivo: null,
   /** Intervalo entre amostras gravadas, em milissegundos. */
   intervaloDeGravacao: 1000,
   /** Manter a tela acesa durante a gravação. */
   manterTelaAcesa: true,
+
+  /* ------------------------------------------------------- velocímetro */
+
+  /**
+   * De onde vem a velocidade: `obd`, `gps` ou `ambos`.
+   *
+   * O padrão é `obd` porque é o que funciona sem pedir mais nenhuma permissão
+   * e sem gastar bateria de GPS. Quem quiser comparar liga `ambos`, e aí uma
+   * fonte fica no ponteiro grande e a outra na linha menor embaixo do número.
+   */
+  velocimetro: 'obd',
+  /** Qual das duas manda no ponteiro quando as duas estão ligadas. */
+  velocimetroPrincipal: 'obd',
+
+  /* ------------------------------------------------------------- vídeo */
+
+  /** Gravar vídeo junto com a viagem. Desligado por padrão. */
+  gravarVideo: false,
+  /** Altura do quadro: 480 ou 720. */
+  qualidadeDeVideo: 720,
+  /**
+   * Gravar o som junto.
+   *
+   * Desligado por padrão, e a decisão é deliberada: uma câmera apontada para a
+   * estrada grava a estrada, mas o microfone grava a conversa de quem está no
+   * carro — inclusive de quem não escolheu ser gravado. Ligar é um botão; ligar
+   * por omissão seria gravar gente sem querer.
+   */
+  audioNoVideo: false,
+  /** Teto de espaço para vídeo, em megabytes. */
+  limiteDeVideoMB: 1024,
 };
 
 export function novoId(prefixo = '') {
@@ -52,9 +96,72 @@ export async function criarArmazenamento(driver) {
 
     /* ------------------------------------------------------------ ajustes */
 
+    /**
+     * A configuração, sempre em forma.
+     *
+     * Os painéis passam pela normalização a cada leitura, e não só ao gravar: o
+     * que está no banco pode ter sido escrito por uma versão anterior, ou por um
+     * editor interrompido no meio. Um item com largura zero não aparece, e um
+     * fora da grade empurra a linha inteira — conferir na leitura é o que
+     * garante que o painel abre, aconteça o que tiver acontecido.
+     */
     async configuracao() {
       const guardada = await driver.ler('configuracao', 'app');
-      return { ...CONFIGURACAO_PADRAO, ...(guardada ?? {}) };
+      const junta = { ...CONFIGURACAO_PADRAO, ...(guardada ?? {}) };
+
+      /*
+       * De onde sai o painel, em três casos distintos:
+       *
+       * · Já existe disposição salva: usa-a, conferida.
+       * · Existe configuração antiga, sem disposição: converte a escolha de
+       *   PIDs em layout, para não perder o que a pessoa já tinha montado.
+       * · Não existe configuração nenhuma — primeira abertura: o painel de
+       *   fábrica, que é mais completo que a lista antiga.
+       */
+      const paineis = Array.isArray(junta.paineis) && junta.paineis.length > 0
+        ? normalizarTodos(junta.paineis)
+        // Instalação nova nasce com dois: o quadro de instrumentos, que é o que
+        // se usa dirigindo, e o completo, para quem quer tudo na tela.
+        : [guardada
+          ? converterEscolhaAntiga(junta.painel)
+          : painelDeInstrumentos(), ...(guardada ? [] : [painelPadrao('Completo')])];
+
+      const ativo = paineis.some((p) => p.id === junta.painelAtivo) ? junta.painelAtivo : paineis[0].id;
+      return { ...junta, paineis, painelAtivo: ativo };
+    },
+
+    /** O painel em uso agora. */
+    async painelAtivo() {
+      const { paineis, painelAtivo } = await armazenamento.configuracao();
+      return paineis.find((p) => p.id === painelAtivo) ?? paineis[0];
+    },
+
+    /**
+     * Grava as disposições.
+     *
+     * O corte em cinco acontece aqui, e não só na tela: a tela é uma barreira
+     * de conveniência, e o banco é onde a regra precisa valer mesmo que a tela
+     * mude ou que alguém importe uma configuração de outro lugar.
+     */
+    async salvarPaineis(paineis, ativo = null) {
+      const emForma = normalizarTodos(paineis).slice(0, LIMITE_DE_PAINEIS);
+      const escolhido = emForma.some((p) => p.id === ativo) ? ativo : emForma[0].id;
+      return armazenamento.ajustar({ paineis: emForma, painelAtivo: escolhido });
+    },
+
+    /** Troca o painel em uso, sem mexer na disposição de nenhum. */
+    async usarPainel(id) {
+      const { paineis } = await armazenamento.configuracao();
+      if (!paineis.some((p) => p.id === id)) return null;
+      return armazenamento.ajustar({ painelAtivo: id });
+    },
+
+    /** Devolve os painéis ao de fábrica — o botão de socorro do editor. */
+    async restaurarPaineis() {
+      return armazenamento.ajustar({
+        paineis: [painelDeInstrumentos(), painelPadrao('Completo')],
+        painelAtivo: null,
+      });
     },
 
     async ajustar(mudancas) {
@@ -88,6 +195,39 @@ export async function criarArmazenamento(driver) {
       };
       await driver.gravar('veiculos', registro);
       return registro;
+    },
+
+    /**
+     * Guarda os máximos de sempre de um carro, sem nunca abaixá-los.
+     *
+     * O merge é por comparação, e não por substituição: a sessão manda o que
+     * viu, e se o que está no banco for maior, o que está no banco fica. Sem
+     * isso, conectar e desconectar sem andar — o que acontece toda vez que se
+     * testa alguma coisa na garagem — sobrescreveria a máxima de 130 km/h pela
+     * de 0 km/h daquela sessão parada.
+     */
+    async registrarRecordes(veiculoId, recordes) {
+      const veiculo = (await driver.ler('veiculos', veiculoId)) ?? { id: veiculoId };
+      const anteriores = veiculo.recordes ?? {};
+      const juntos = { ...anteriores };
+
+      for (const [chave, valor] of Object.entries(recordes ?? {})) {
+        if (!Number.isFinite(valor)) continue;
+        if (!Number.isFinite(juntos[chave]) || valor > juntos[chave]) juntos[chave] = valor;
+      }
+
+      const atualizado = { ...veiculo, recordes: juntos, recordesEm: Date.now() };
+      await driver.gravar('veiculos', atualizado);
+      return atualizado;
+    },
+
+    /** Zera os recordes de um carro — o «apagar» que a tela de ajustes oferece. */
+    async zerarRecordes(veiculoId) {
+      const veiculo = await driver.ler('veiculos', veiculoId);
+      if (!veiculo) return null;
+      const zerado = { ...veiculo, recordes: {}, recordesEm: Date.now() };
+      await driver.gravar('veiculos', zerado);
+      return zerado;
     },
 
     veiculos: () => driver.listar('veiculos'),
@@ -178,8 +318,66 @@ export async function criarArmazenamento(driver) {
     async apagarViagem(viagemId) {
       const blocos = await driver.listarPor('amostras', 'viagem', viagemId);
       for (const bloco of blocos) await driver.apagar('amostras', bloco.id);
+      // O vídeo sai junto: um trecho órfão ocuparia dezenas de megabytes sem
+      // nenhuma tela que o mostrasse ou permitisse apagar.
+      for (const trecho of await driver.listarPor('videos', 'viagem', viagemId)) {
+        await driver.apagar('videos', trecho.id);
+      }
       await driver.apagar('viagens', viagemId);
       pendentes.delete(viagemId);
+    },
+
+    /* -------------------------------------------------------------- vídeo */
+
+    /**
+     * Guarda um trecho de vídeo com a hora em que ele começou.
+     *
+     * `de` e `ate` são o que sincroniza a imagem com os dados depois: o
+     * gráfico e o vídeo são duas séries no mesmo relógio, e sem o instante de
+     * início do trecho não há como dizer que aquele pico de rotação é este
+     * pedaço de estrada.
+     */
+    async guardarTrechoDeVideo(viagemId, { blob, de, ate, tipo }) {
+      const trecho = {
+        id: `${viagemId}:v${novoId()}`,
+        viagem: viagemId,
+        de,
+        ate,
+        tipo: tipo ?? blob.type ?? 'video/webm',
+        bytes: blob.size,
+        blob,
+      };
+      await driver.gravar('videos', trecho);
+      return trecho;
+    },
+
+    /** Os trechos de uma viagem, em ordem de tempo. */
+    async videosDa(viagemId) {
+      const trechos = await driver.listarPor('videos', 'viagem', viagemId);
+      return trechos.sort((a, b) => a.de - b.de);
+    },
+
+    /**
+     * Quanto espaço o vídeo ocupa, e quanto o navegador ainda concede.
+     *
+     * `navigator.storage.estimate()` é a única fonte honesta do limite — ele
+     * varia com o espaço livre do aparelho, e não é um número fixo. Onde não
+     * existe, devolve-se `null` em vez de um palpite: o aplicativo então avisa
+     * que não sabe, em vez de prometer um espaço que talvez não exista.
+     */
+    async ocupacaoDeVideo() {
+      const trechos = await driver.listar('videos');
+      const bytes = trechos.reduce((total, t) => total + (t.bytes ?? 0), 0);
+
+      let cota = null;
+      try {
+        const estimativa = await navigator.storage?.estimate?.();
+        if (estimativa) {
+          cota = { usado: estimativa.usage ?? null, limite: estimativa.quota ?? null };
+        }
+      } catch { /* sem estimativa: o aplicativo diz que não sabe */ }
+
+      return { trechos: trechos.length, bytes, cota };
     },
 
     /**

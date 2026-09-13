@@ -16,7 +16,17 @@
  */
 
 export const NOME = 'obd2-painel';
-export const VERSAO = 1;
+
+/**
+ * A versão do **banco**, não a do aplicativo.
+ *
+ * Só sobe quando o formato muda: coleção nova, índice novo. A 2 acrescentou
+ * `videos`. Subir à toa dispara a migração do IndexedDB em todo aparelho sem
+ * necessidade; não subir quando devia faz a coleção nova não nascer em quem já
+ * tem o aplicativo instalado — e o defeito aparece só lá, nunca no aparelho de
+ * quem programou.
+ */
+export const VERSAO = 2;
 
 export const COLECOES = {
   /** Um registro só, de identificador `app`: tema, combustível, PIDs do painel. */
@@ -25,8 +35,16 @@ export const COLECOES = {
   viagens: { chave: 'id', indices: ['dia'] },
   /** Um bloco de amostras por registro, referente a uma viagem. */
   amostras: { chave: 'id', indices: ['viagem'] },
-  /** O que se descobriu do carro: chassi, PIDs suportados, versão do adaptador. */
+  /** O que se descobriu do carro: chassi, PIDs, adaptador e os recordes. */
   veiculos: { chave: 'id', indices: [] },
+  /**
+   * Trechos de vídeo gravados junto com uma viagem.
+   *
+   * Um registro por trecho, com o `Blob` dentro. Guardar o vídeo inteiro num
+   * registro só impediria de gravar mais de alguns minutos: o navegador teria
+   * de manter tudo em memória até o fim para então escrever de uma vez.
+   */
+  videos: { chave: 'id', indices: ['viagem'] },
 };
 
 export const NOMES = Object.keys(COLECOES);
@@ -39,3 +57,16 @@ export const NOMES = Object.keys(COLECOES);
  * meio — e um minuto é o que dá para perder sem que faça diferença no resumo.
  */
 export const AMOSTRAS_POR_BLOCO = 60;
+
+/**
+ * Quanto tempo dura cada trecho de vídeo, em milissegundos.
+ *
+ * Trinta segundos. O `MediaRecorder` só produz um arquivo tocável sozinho
+ * quando é parado — os pedaços intermediários não têm cabeçalho e não abrem em
+ * lugar nenhum. Então o aplicativo para e recomeça a cada trecho, e o preço são
+ * alguns milissegundos perdidos na emenda.
+ *
+ * Trechos curtos demais multiplicam as emendas; longos demais perdem mais
+ * gravação se o aplicativo for fechado à força, e travam mais memória.
+ */
+export const DURACAO_DO_TRECHO = 30_000;

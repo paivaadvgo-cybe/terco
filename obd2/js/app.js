@@ -26,6 +26,7 @@ import { criarSessao } from './sessao.js';
 import { lerRota, montarBarra, acenderAba, marcarAba } from './ui/navegacao.js';
 import { avisar } from './ui/avisos.js';
 import { telaPainel } from './ui/telas/painel.js';
+import { telaEditor } from './ui/telas/editor.js';
 import { telaConexao, telaRegistro } from './ui/telas/conexao.js';
 import { telaFalhas } from './ui/telas/falhas.js';
 import { telaViagens, telaViagem } from './ui/telas/viagens.js';
@@ -33,6 +34,7 @@ import { telaAjustes } from './ui/telas/ajustes.js';
 
 const TELAS = {
   painel: telaPainel,
+  editor: telaEditor,
   conexao: telaConexao,
   registro: telaRegistro,
   falhas: telaFalhas,
@@ -43,6 +45,7 @@ const TELAS = {
 
 const TITULOS = {
   painel: 'Painel',
+  editor: 'Personalizar painel',
   conexao: 'Conexão',
   registro: 'Registro',
   falhas: 'Falhas',
