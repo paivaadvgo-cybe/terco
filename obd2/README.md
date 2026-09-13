@@ -108,7 +108,7 @@ Opere com o carro parado, e use suporte para o celular.
 
 | Caminho | O que é |
 |---|---|
-| `index.html`, `css/`, `manifest.json` | A casca e o estilo. |
+| `index.html`, `css/`, `manifest.json` | A casca, o estilo e o atualizador. |
 | `sw.js` | Service worker: guarda o aplicativo para uso sem internet. |
 | `js/obd/` | Protocolo ELM327, tabela de PIDs, códigos de falha e os transportes (BLE, serial, simulação). |
 | `js/dominio/` | Consumo, resumo de viagem, datas. Sem navegador, testável no Node. |
@@ -119,7 +119,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 161 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 165 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones e carimba a versão do cache. |
 
 ## Desenvolvimento
@@ -135,6 +135,23 @@ A versão do cache do service worker é o resumo do conteúdo da casca. Mudou
 arquivo, tem de rodar `npm run versao` — e o teste `tests/pwa.test.js`
 reprova se esquecer, porque esquecer significa que a versão publicada não
 chega a quem já tem o aplicativo instalado.
+
+### Como a atualização chega
+
+Quem aplica a atualização é um trecho **escrito dentro do `index.html`**, e não
+um módulo — e isso é a correção de um defeito real, não estilo. Os módulos são
+servidos cache primeiro: enquanto o worker antigo estiver no comando, o
+`js/app.js` que o aparelho executa é o do cache dele. Um erro no atualizador se
+trancaria junto com a versão que o contém, e a correção nunca chegaria, porque
+chegaria exatamente no arquivo que ninguém vai buscar. Já o documento é rede
+primeiro e revalidado: o que está no `index.html` alcança o aparelho no primeiro
+carregamento com internet.
+
+Com o aplicativo parado, a versão nova entra sozinha e a tela recarrega —
+esperar um toque num aviso é esperar um toque que ninguém dá. Com o carro
+conectado ou uma viagem sendo gravada, não: aí aparece o aviso, e quem está
+dirigindo decide quando. Quem responde essa pergunta é o `js/app.js`, na
+`window.painelOcupado`.
 
 ## Limites, ditos na cara
 

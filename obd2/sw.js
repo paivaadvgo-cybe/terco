@@ -34,7 +34,7 @@
  * nome do cache, e o teste em `tests/pwa.test.js` acusa a diferença antes da
  * publicação sair.
  */
-const VERSAO = 'obd2-painel-ee155ac6d572';
+const VERSAO = 'obd2-painel-567e3a090b7f';
 const BASE = new URL('./', self.location).pathname;
 
 /**
@@ -131,12 +131,26 @@ self.addEventListener('fetch', (evento) => {
   const url = new URL(requisicao.url);
   if (url.origin !== self.location.origin || !url.pathname.startsWith(BASE)) return;
 
-  // Navegação: rede primeiro, para que uma versão nova chegue assim que houver
-  // internet; o cache é a rede de segurança, e é ele que faz o aplicativo abrir
-  // na garagem sem sinal.
+  /*
+   * Navegação: rede primeiro, para que uma versão nova chegue assim que houver
+   * internet; o cache é a rede de segurança, e é ele que faz o aplicativo abrir
+   * na garagem sem sinal.
+   *
+   * `cache: 'no-cache'` revalida o documento em vez de aceitar o que o cache
+   * HTTP do navegador guardou. Vale o ida-e-volta porque o `index.html` deixou
+   * de ser só a casca: é dele que sai o código que aplica a atualização — os
+   * módulos vêm do cache do worker, e só trocam depois que a troca é aplicada.
+   * Servir um documento de dez minutos atrás é adiar toda publicação pelo mesmo
+   * tanto, e foi assim que um aparelho ficou parado numa versão antiga. Não é
+   * `'reload'`: com `304` o navegador devolve o corpo que já tem, e a
+   * revalidação custa quase nada.
+   *
+   * `requisicao.url` em vez de `requisicao`: um `Request` de modo `navigate`
+   * não pode ser reconstruído por script.
+   */
   if (requisicao.mode === 'navigate') {
     evento.respondWith(
-      fetch(requisicao)
+      fetch(requisicao.url, { cache: 'no-cache', credentials: 'same-origin' })
         .then((resposta) => {
           const copia = resposta.clone();
           caches.open(VERSAO).then((c) => c.put(BASE + 'index.html', copia)).catch(() => {});

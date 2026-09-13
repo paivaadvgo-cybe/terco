@@ -172,59 +172,20 @@ async function iniciar() {
   });
 
   document.body.classList.remove('carregando');
-  registrarServiceWorker();
-}
-
-/**
- * Registra o service worker, que é o que faz o aplicativo abrir sem internet e
- * poder ser instalado.
- *
- * A atualização não é assumida sozinha: o aplicativo tem dezenas de módulos que
- * se importam entre si, e trocá-los no meio de uma sessão serviria módulos
- * novos a uma página que já carregou os antigos. Pior aqui que em outros
- * lugares — recarregar sozinho no meio de uma gravação perderia a viagem. Em
- * vez disso, avisa, e quem está usando decide quando.
- */
-function registrarServiceWorker() {
-  if (!('serviceWorker' in navigator)) return;
 
   /*
-   * Havia controlador antes de registrar?
+   * Quando trocar de código custa alguma coisa.
    *
-   * Na primeiríssima visita não há: o worker instala, chama `clients.claim()` e
-   * o navegador dispara `controllerchange` — que não é atualização nenhuma.
-   * Recarregar ali faria a página piscar e recomeçar sozinha logo depois de
-   * abrir, sem nada ter mudado.
+   * Quem aplica a atualização é o trecho embutido no `index.html` — ele mora
+   * fora dos módulos justamente para não ser servido de um cache antigo. Daqui
+   * sai só a resposta que ele não teria como saber sozinho: com o carro
+   * conectado, recarregar derruba a conexão; com uma viagem sendo gravada,
+   * perde o trecho em curso. Fora isso não custa nada, e a versão nova entra
+   * sem pedir licença.
    */
-  const tinhaControlador = Boolean(navigator.serviceWorker.controller);
-
-  navigator.serviceWorker.register('sw.js').then((registro) => {
-    const vigiar = (trabalhador) => {
-      if (!trabalhador) return;
-      trabalhador.addEventListener('statechange', () => {
-        if (trabalhador.state === 'installed' && tinhaControlador) mostrarAtualizacao(trabalhador);
-      });
-    };
-    if (registro.waiting && tinhaControlador) mostrarAtualizacao(registro.waiting);
-    registro.addEventListener('updatefound', () => vigiar(registro.installing));
-  }).catch((erro) => console.warn('service worker não registrado:', erro));
-
-  let recarregando = false;
-  navigator.serviceWorker.addEventListener('controllerchange', () => {
-    if (!tinhaControlador || recarregando) return;
-    recarregando = true;
-    location.reload();
-  });
-}
-
-function mostrarAtualizacao(trabalhador) {
-  const aviso = document.getElementById('atualizacao');
-  if (!aviso) return;
-  aviso.hidden = false;
-  aviso.querySelector('button').addEventListener('click', () => {
-    trabalhador.postMessage('assumir-controle');
-    aviso.hidden = true;
-  }, { once: true });
+  window.painelOcupado = () => sessao.estado.situacao === 'conectado'
+    || sessao.estado.situacao === 'conectando'
+    || sessao.estado.gravando;
 }
 
 iniciar();
