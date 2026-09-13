@@ -179,6 +179,19 @@ export function alturaDoPainel(itens) {
 }
 
 /**
+ * Quantas linhas a grade do editor mostra.
+ *
+ * Uma a mais do que o painel usa: sem uma linha vazia visível não há para onde
+ * arrastar um mostrador que se quer mais para baixo. **Só uma**, porque as
+ * linhas dividem a altura da janela — cada linha a mais aperta todas as
+ * outras, e quatro linhas fixas encolhiam em um quarto um painel de três, o
+ * que faz a prévia mentir sobre o tamanho do que se está montando.
+ */
+export function linhasDoEditor(itens) {
+  return Math.min(LINHAS_MAXIMAS, Math.max(3, alturaDoPainel(itens) + 1));
+}
+
+/**
  * O painel de fábrica.
  *
  * Dois ponteiros lado a lado no alto — que é onde o olho bate —, e o resto em

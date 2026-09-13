@@ -19,7 +19,7 @@
 
 import { el, botao, cartao, vazio, linhaDeValor } from '../elementos.js';
 import { criarVisor } from '../medidor.js';
-import { posicionarNaGrade, manterCelulasQuadradas } from '../grade.js';
+import { posicionarNaGrade } from '../grade.js';
 import { escalaDe, alturaDoPainel } from '../../dominio/painel.js';
 import { avisar } from '../avisos.js';
 import { numero, valorDePid, unidadeDePid } from '../formatar.js';
@@ -27,15 +27,6 @@ import { duracao } from '../../dominio/datas.js';
 import { diagnostico } from '../../obd/transportes.js';
 import { definicaoDe, DERIVADOS, EXTERNOS, CALCULADOS } from '../../obd/pids.js';
 import { ESTADOS, MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
-
-/**
- * O que já aparece nos ponteiros grandes, e por isso não se repete embaixo.
- *
- * `GPS` entra na lista mesmo quando a fonte escolhida é o OBD: mostrá-lo como
- * mostrador miúdo ao lado do ponteiro de velocidade seria a mesma grandeza duas
- * vezes na mesma tela, com números diferentes e sem explicação.
- */
-const PRINCIPAIS = ['0C', '0D', 'GPS'];
 
 /**
  * Um valor escolhido no painel só vira mostrador se este carro puder alimentá-lo.
@@ -72,6 +63,25 @@ function alimentavel(chave, estado) {
   return estado.pids.includes(chave);
 }
 
+/**
+ * Um botão do trilho: ícone em cima, nome miúdo embaixo.
+ *
+ * Só ícone seria adivinhação — «⛶» não diz «quadro de instrumentos» para
+ * ninguém que não o conheça. Só texto não caberia em sessenta pixels. Os dois
+ * juntos cabem, e o nome deixa de ser necessário depois da segunda vez.
+ */
+function botaoDoTrilho(icone, rotulo, aoTocar) {
+  const nome = el('span', { classe: 'trilho-nome', texto: rotulo });
+  const marca = el('span', { classe: 'trilho-icone', texto: icone });
+  const no = el('button', {
+    classe: 'trilho-botao',
+    type: 'button',
+    aoTocar,
+    atributos: { 'aria-label': rotulo, title: rotulo },
+  }, [marca, nome]);
+  return { no, nome, marca };
+}
+
 export async function telaPainel(contexto) {
   const { sessao } = contexto;
   const configuracao = await contexto.armazenamento.configuracao();
@@ -80,14 +90,28 @@ export async function telaPainel(contexto) {
     return telaDesconectado(contexto);
   }
 
-  const tela = el('div', { classe: 'tela' });
+  const tela = el('div', { classe: 'tela tela-painel' });
 
-  /* ------------------------------------------------------------ situação */
+  /*
+   * **Esta tela não desliza.** É a regra que manda em tudo o que vem abaixo.
+   *
+   * Um painel de carro que rola é um painel que se lê errado: o número que se
+   * quer conferir de relance está meio centímetro fora da janela, e conferi-lo
+   * custa um gesto com a mão que deveria estar no volante. Antes, o painel
+   * dividia a tela com um cartão de máximos, um de gravação, um de situação e
+   * três parágrafos de dica — e num celular deitado isso é quatro vezes a
+   * altura disponível.
+   *
+   * Então a tela passou a ser exatamente do tamanho da janela, e o que não é
+   * instrumento saiu do caminho: os controles viraram um trilho estreito na
+   * borda, e o resto foi para uma gaveta que se abre quando se pede. A classe
+   * no `body` é o que apaga o título e prende a altura; ela sai junto com a
+   * tela, porque as outras telas continuam rolando normalmente.
+   */
+  document.body.classList.add('painel-fixo');
+  contexto.aoSair(() => document.body.classList.remove('painel-fixo'));
 
-  const situacao = el('p', { classe: 'situacao', texto: '' });
-  const listaDeAlertas = el('div', { classe: 'alertas' });
-
-  /* -------------------------------------------------------- o painel montado */
+  /* ---------------------------------------------------- o painel montado */
 
   /*
    * O painel é desenhado a partir da disposição salva, e não de uma estrutura
@@ -111,15 +135,152 @@ export async function telaPainel(contexto) {
     posicionarNaGrade(no, item);
     grade.append(no);
   }
+
+  /*
+   * As linhas dividem a altura disponível, e não seguem a largura da coluna.
+   *
+   * Fora daqui a célula é quadrada, porque um painel que rola tem altura de
+   * sobra. Aqui não há sobra nenhuma: a altura é a da janela, e o que se quer é
+   * o maior ponteiro que couber nela. Com célula quadrada, o painel ou sobrava
+   * faixa vazia embaixo ou vazava para fora da tela.
+   */
   grade.style.setProperty('--linhas', String(Math.max(1, alturaDoPainel(itensVisiveis))));
-  tela.append(grade);
-  contexto.aoSair(manterCelulasQuadradas(grade));
+
+  /* ------------------------------------------------------------- alertas */
+
+  // A luz de anomalia acesa não vai para a gaveta: é a única coisa da tela que
+  // pede uma decisão. Em faixa fina, acima dos mostradores, custa quinze pixels.
+  const listaDeAlertas = el('div', { classe: 'alertas' });
+
+  /* -------------------------------------------------------------- câmera */
+
+  /**
+   * A prévia da câmera ocupa a lateral esquerda, e os instrumentos a direita.
+   *
+   * Ela já foi um retângulo de 150 pixels no meio de uma pilha de cartões, o
+   * que num celular deitado é pequeno demais para conferir o enquadramento e
+   * atrapalhado demais para o resto. Em coluna, cada um fica com a metade que
+   * lhe cabe: a imagem tem altura inteira para mostrar a estrada, e os
+   * mostradores continuam inteiros ao lado, sem nada empurrando nada.
+   *
+   * A coluna só existe quando há imagem. Sem gravação de vídeo, reservar
+   * quarenta por cento da tela para um retângulo preto seria roubar espaço dos
+   * ponteiros em troca de nada.
+   */
+  const previa = el('video', {
+    classe: 'previa-de-video',
+    muted: true,
+    autoplay: true,
+    playsInline: true,
+  });
+  previa.setAttribute('muted', '');
+  previa.setAttribute('playsinline', '');
+
+  const estadoDoVideo = el('p', { classe: 'camera-estado', hidden: true });
+  const colunaDaCamera = el('div', { classe: 'palco-camera', hidden: true }, [previa, estadoDoVideo]);
+
+  /* --------------------------------------------------------- o trilho */
+
+  /**
+   * Gravar vídeo é uma escolha por viagem, não um ajuste escondido.
+   *
+   * Gasta espaço, bateria e esquenta o aparelho — é uma decisão que se toma de
+   * novo a cada viagem, e por isso o interruptor fica no trilho, ao lado do
+   * botão de gravar. O que vem dos ajustes é só o estado inicial dele.
+   */
+  let gravarVideo = Boolean(configuracao.gravarVideo) && sessao.videoDisponivel();
+
+  const gravar = botaoDoTrilho('⏺', 'Gravar', alternarGravacao);
+  const video = botaoDoTrilho('🎥', 'Vídeo', () => {
+    gravarVideo = !gravarVideo;
+    desenharVideoNoTrilho();
+  });
+  const detalhes = botaoDoTrilho('📋', 'Detalhes', () => abrirGaveta(true));
+  const cheio = botaoDoTrilho('⛶', 'Cheio', alternarTelaCheia);
+  const editar = botaoDoTrilho('✎', 'Editar', () => contexto.ir('editor'));
+
+  function desenharVideoNoTrilho() {
+    const podeVideo = sessao.videoDisponivel();
+    video.no.disabled = !podeVideo || sessao.estado.gravando;
+    video.no.setAttribute('aria-pressed', String(podeVideo && gravarVideo));
+    video.nome.textContent = podeVideo ? 'Vídeo' : 'Sem vídeo';
+  }
+  desenharVideoNoTrilho();
+
+  const trilho = el('div', { classe: 'trilho' }, [
+    gravar.no, video.no, detalhes.no, cheio.no, editar.no,
+  ]);
+
+  /* ---------------------------------------------------------- o palco */
+
+  const palco = el('div', { classe: 'palco' }, [
+    colunaDaCamera,
+    el('div', { classe: 'palco-grade' }, [listaDeAlertas, grade]),
+    trilho,
+  ]);
+  tela.append(palco);
+
+  if (itensVisiveis.length === 0) {
+    grade.append(el('p', {
+      classe: 'palco-vazio',
+      texto: 'Nenhum dos mostradores escolhidos está disponível neste carro. Toque em «Editar».',
+    }));
+  }
+
+  /* ---------------------------------------------------------- a gaveta */
+
+  /*
+   * O que não é instrumento mora aqui.
+   *
+   * Situação da conexão, máximos e as explicações são coisas que se leem uma
+   * vez — paradas, no acostamento ou antes de sair — e não de relance com o
+   * carro andando. Na tela, empurravam os ponteiros para fora da janela; numa
+   * gaveta, continuam a um toque de distância e não custam altura nenhuma.
+   */
+  const situacao = el('p', { classe: 'situacao', texto: '' });
+
+  const linhasDeMaximo = new Map();
+  const cartaoDeMaximos = cartao([
+    el('h2', { classe: 'secao-titulo', texto: 'Máximos' }),
+    el('div', { classe: 'detalhe-linhas', id: 'maximos' }),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'O maior valor que o aplicativo chegou a ler. Entre duas leituras o carro pode ter passado disso — é leitura, não medição homologada.',
+    }),
+  ]);
+  const areaDeMaximos = cartaoDeMaximos.querySelector('#maximos');
+
+  const gaveta = el('aside', { classe: 'gaveta', hidden: true }, [
+    el('div', { classe: 'gaveta-topo' }, [
+      el('h2', { classe: 'secao-titulo', texto: 'Detalhes' }),
+      botao('✕', () => abrirGaveta(false), { tipo: 'fantasma', classe: 'gaveta-fechar', atributos: { 'aria-label': 'Fechar' } }),
+    ]),
+    cartao([situacao]),
+    cartaoDeMaximos,
+    cartao([
+      el('p', {
+        classe: 'campo-dica',
+        texto: sessao.videoDisponivel()
+          ? 'A gravação guarda uma amostra por segundo no aparelho. Com vídeo, guarda também a imagem da câmera traseira, em trechos de 30 s — cerca de 20 MB por minuto.'
+          : 'A gravação guarda uma amostra por segundo no aparelho. Este navegador não grava vídeo.',
+      }),
+      botao('Personalizar painel', () => contexto.ir('editor'), { tipo: 'fantasma', classe: 'largo' }),
+    ]),
+  ]);
+  const fundoDaGaveta = el('div', { classe: 'gaveta-fundo', hidden: true, aoTocar: () => abrirGaveta(false) });
+  tela.append(fundoDaGaveta, gaveta);
+
+  function abrirGaveta(abrir) {
+    gaveta.hidden = !abrir;
+    fundoDaGaveta.hidden = !abrir;
+    detalhes.no.setAttribute('aria-pressed', String(abrir));
+  }
 
   /*
    * O modo quadro de instrumentos.
    *
-   * Esconde o título, a barra de abas e o resto da tela: sobra o painel, de
-   * ponta a ponta, sobre fundo escuro. É o que transforma um aplicativo num
+   * Esconde a barra de abas e o trilho: sobram a câmera e os instrumentos, de
+   * ponta a ponta, sobre fundo preto. É o que transforma um aplicativo num
    * quadro de instrumentos — e num celular deitado, preso ao painel do carro, a
    * barra de abas ocupa um sexto da altura útil só para ficar ali sem ser
    * tocada.
@@ -134,6 +295,7 @@ export async function telaPainel(contexto) {
     document.body.classList.toggle('quadro-de-instrumentos', entrando);
 
     if (entrando) {
+      abrirGaveta(false);
       document.documentElement.requestFullscreen?.().catch(() => {});
       avisar('Toque no painel para sair', 'ok', 2600);
     } else if (document.fullscreenElement) {
@@ -174,92 +336,6 @@ export async function telaPainel(contexto) {
   const visorDaVelocidade = [...visores.values()]
     .find((v) => v.item.chave === fontePrincipal && v.item.tipo === 'ponteiro')?.visor ?? null;
 
-  if (itensVisiveis.length === 0) {
-    tela.append(cartao([
-      vazio('Painel vazio', 'Nenhum dos mostradores escolhidos está disponível neste carro.'),
-      botao('Personalizar painel', () => contexto.ir('editor'), { tipo: 'principal', classe: 'largo' }),
-    ]));
-  }
-
-  /* --------------------------------------------------------- situação */
-
-  tela.append(cartao([situacao, listaDeAlertas]));
-
-  /* ------------------------------------------------------------- máximos */
-
-  /*
-   * Os máximos ficam numa seção própria, e não como mais um mostrador.
-   *
-   * São de outra natureza: o painel mostra o agora, e isto mostra o que já
-   * aconteceu. Misturar os dois faria alguém ler «132 km/h» achando que é a
-   * velocidade atual — o que, num painel de carro, é exatamente o erro que não
-   * se pode cometer.
-   */
-  const linhasDeMaximo = new Map();
-  const cartaoDeMaximos = cartao([
-    el('h2', { classe: 'secao-titulo', texto: 'Máximos' }),
-    el('div', { classe: 'detalhe-linhas', id: 'maximos' }),
-    el('p', {
-      classe: 'campo-dica',
-      texto: 'O maior valor que o aplicativo chegou a ler. Entre duas leituras o carro pode ter passado disso — é leitura, não medição homologada.',
-    }),
-  ]);
-  const areaDeMaximos = cartaoDeMaximos.querySelector('#maximos');
-  tela.append(cartaoDeMaximos);
-
-  /* ------------------------------------------------------------- gravação */
-
-  const botaoGravar = botao('Gravar viagem', alternarGravacao, { tipo: 'principal', classe: 'largo' });
-
-  /**
-   * A câmera é uma escolha por gravação, não um ajuste escondido.
-   *
-   * Gravar vídeo gasta espaço, bateria e esquenta o aparelho — é uma decisão
-   * que se toma de novo a cada viagem, e por isso o interruptor fica ao lado do
-   * botão, e não a três toques de distância nos ajustes. O que vem dos ajustes
-   * é só o estado inicial dele.
-   */
-  const comVideo = el('input', {
-    type: 'checkbox',
-    classe: 'interruptor-caixa',
-    id: 'com-video',
-    checked: Boolean(configuracao.gravarVideo) && sessao.videoDisponivel(),
-    disabled: !sessao.videoDisponivel(),
-  });
-
-  const interruptorDeVideo = el('label', { classe: 'interruptor', htmlFor: 'com-video' }, [
-    comVideo,
-    el('span', { classe: 'interruptor-nome', texto: '🎥 Gravar vídeo da estrada junto' }),
-  ]);
-
-  /** A prévia da câmera. Fica escondida enquanto não há gravação de vídeo. */
-  const previa = el('video', {
-    classe: 'previa-de-video',
-    muted: true,
-    autoplay: true,
-    playsInline: true,
-    hidden: true,
-  });
-  previa.setAttribute('muted', '');
-  previa.setAttribute('playsinline', '');
-
-  const estadoDoVideo = el('p', { classe: 'campo-dica', hidden: true });
-
-  tela.append(cartao([
-    botaoGravar,
-    interruptorDeVideo,
-    previa,
-    estadoDoVideo,
-    botao('Modo quadro de instrumentos', alternarTelaCheia, { tipo: 'secundario', classe: 'largo' }),
-    botao('Personalizar painel', () => contexto.ir('editor'), { tipo: 'fantasma', classe: 'largo' }),
-    el('p', {
-      classe: 'campo-dica',
-      texto: sessao.videoDisponivel()
-        ? 'A gravação guarda uma amostra por segundo no aparelho. Com vídeo, guarda também a imagem da câmera traseira, em trechos de 30 s — cerca de 20 MB por minuto.'
-        : 'A gravação guarda uma amostra por segundo no aparelho. Este navegador não grava vídeo.',
-    }),
-  ]));
-
   async function alternarGravacao() {
     try {
       if (sessao.estado.gravando) {
@@ -268,7 +344,7 @@ export async function telaPainel(contexto) {
           ? `Viagem gravada: ${numero(encerrada.resumo.distancia, 1)} km`
           : 'Gravação encerrada');
       } else {
-        await sessao.comecarGravacao({ comVideo: comVideo.checked });
+        await sessao.comecarGravacao({ comVideo: gravarVideo });
         // O erro da câmera não impede a viagem, então ele é avisado à parte: a
         // gravação dos dados começou de qualquer jeito, e dizer só «falhou»
         // faria desligar tudo achando que nada foi gravado.
@@ -313,13 +389,14 @@ export async function telaPainel(contexto) {
     for (const { visor, item } of visores.values()) visor.atualizar(estado.valores[item.chave]);
     visorDaVelocidade?.atualizarSecundario(textoDaSegundaFonte(estado));
 
-    botaoGravar.textContent = estado.gravando
-      ? `Parar gravação · ${duracao(Date.now() - (comecouEm ?? Date.now()))}`
-      : 'Gravar viagem';
-    botaoGravar.className = `botao botao-${estado.gravando ? 'perigo' : 'principal'} largo`;
+    gravar.marca.textContent = estado.gravando ? '⏹' : '⏺';
+    gravar.nome.textContent = estado.gravando
+      ? duracao(Date.now() - (comecouEm ?? Date.now()))
+      : 'Gravar';
+    gravar.no.classList.toggle('gravando', Boolean(estado.gravando));
     // Trocar a escolha da câmera no meio da gravação não teria efeito até a
     // próxima, e o interruptor mentiria sobre o que está acontecendo.
-    comVideo.disabled = estado.gravando || !sessao.videoDisponivel();
+    desenharVideoNoTrilho();
 
     desenharVideo(estado);
     desenharMaximos(estado);
@@ -349,20 +426,21 @@ export async function telaPainel(contexto) {
     if (fluxo !== fluxoNaTela) {
       fluxoNaTela = fluxo;
       previa.srcObject = fluxo;
-      previa.hidden = !fluxo;
+      colunaDaCamera.hidden = !fluxo;
+      palco.classList.toggle('com-camera', Boolean(fluxo));
       if (fluxo) previa.play().catch(() => {});
     }
 
-    const video = estado.video ?? {};
-    if (video.gravando) {
-      const megabytes = video.bytes / 1_048_576;
+    const gravacao = estado.video ?? {};
+    if (gravacao.gravando) {
+      const megabytes = gravacao.bytes / 1_048_576;
       estadoDoVideo.hidden = false;
-      estadoDoVideo.className = 'campo-dica';
-      estadoDoVideo.textContent = `Vídeo: ${video.trechos} trecho(s), ${numero(megabytes, 0)} MB`;
-    } else if (video.erro && estado.gravando) {
+      estadoDoVideo.className = 'camera-estado';
+      estadoDoVideo.textContent = `● ${gravacao.trechos} trecho(s) · ${numero(megabytes, 0)} MB`;
+    } else if (gravacao.erro && estado.gravando) {
       estadoDoVideo.hidden = false;
-      estadoDoVideo.className = 'alerta alerta-atencao';
-      estadoDoVideo.textContent = `Sem vídeo: ${video.erro}`;
+      estadoDoVideo.className = 'camera-estado camera-estado-erro';
+      estadoDoVideo.textContent = `Sem vídeo: ${gravacao.erro}`;
     } else {
       estadoDoVideo.hidden = true;
     }
