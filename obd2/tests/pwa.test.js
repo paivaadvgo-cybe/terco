@@ -91,6 +91,46 @@ test('o service worker não assume o controle sozinho', () => {
   assert.ok(sw.includes("evento.data === 'assumir-controle'"), 'falta o pedido vindo da página');
 });
 
+test('o atualizador mora na página, e não num módulo', () => {
+  /*
+   * O defeito que este teste existe para impedir já aconteceu, e foi assim:
+   * os módulos são servidos cache primeiro, então `js/app.js` vem do cache do
+   * worker antigo. Com o atualizador morando lá, um erro nele se tranca junto
+   * com a versão que o contém — a correção existe, está publicada, e não
+   * alcança quem já abriu o aplicativo, porque chega num arquivo que ninguém
+   * vai buscar. A navegação é rede primeiro; o que está no `index.html` chega
+   * sempre. Por isso o atualizador fica lá, e não aqui.
+   */
+  const html = ler('index.html');
+  assert.match(html, /serviceWorker\.register\('sw\.js'\)/,
+    'o registro do service worker precisa estar embutido no index.html');
+  assert.ok(!ler('js/app.js').includes('serviceWorker.register'),
+    'o módulo não pode registrar o worker: ele mesmo é servido do cache antigo');
+});
+
+test('a página não perde o worker que já estava instalando', () => {
+  // `register()` já dispara a verificação: com rede rápida o worker novo entra
+  // em `installing` antes de haver quem escute o `updatefound`, e a versão nova
+  // fica parada para sempre, sem aviso nenhum.
+  const html = ler('index.html');
+  const codigo = html.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  assert.match(codigo, /registro\.installing/, 'falta tratar o worker já instalando');
+  assert.match(codigo, /registro\.waiting/, 'falta tratar o worker que ficou esperando');
+  assert.match(codigo, /registro\.update\(\)/, 'falta perguntar por atualização');
+  assert.match(codigo, /visibilitychange/,
+    'um aplicativo instalado volta do segundo plano sem navegar: sem isto, nunca verifica');
+});
+
+test('a atualização entra sozinha com o aplicativo ocioso, e só avisa quando ocupado', () => {
+  // Esperar um toque no aviso é esperar um toque que ninguém dá. Parado,
+  // recarregar não custa nada; conectado ou gravando, custa a viagem.
+  const html = ler('index.html');
+  assert.match(html, /painelOcupado/, 'falta a pergunta sobre estar ocupado');
+  assert.match(html, /assumir-controle/, 'falta pedir o controle ao worker novo');
+  assert.match(ler('js/app.js'), /window\.painelOcupado\s*=/,
+    'o aplicativo precisa dizer quando trocar de código custa alguma coisa');
+});
+
 test('o service worker só limpa os caches deste aplicativo', () => {
   // O mesmo domínio hospeda outros aplicativos, com caches próprios. Apagar
   // tudo derrubaria o modo offline deles.
@@ -113,7 +153,18 @@ test('a navegação é rede primeiro, com o cache como reserva', () => {
   // internet, e sem internet o aplicativo abre do mesmo jeito.
   const sw = ler('sw.js');
   const navegacao = sw.slice(sw.indexOf("requisicao.mode === 'navigate'"));
-  assert.match(navegacao, /fetch\(requisicao\)[\s\S]*?catch\(\(\) => caches\.match/);
+  assert.match(navegacao, /fetch\(requisicao\.url[\s\S]*?catch\(\(\) => caches\.match/);
+});
+
+test('o documento é revalidado, e não servido do cache HTTP do navegador', () => {
+  // O `index.html` carrega o código que aplica a atualização. Aceitar a cópia
+  // de dez minutos atrás que o navegador guardou adia toda publicação pelo
+  // mesmo tanto — e a espera se soma a cada aparelho que só abre o aplicativo
+  // de vez em quando.
+  const sw = ler('sw.js');
+  const navegacao = sw.slice(sw.indexOf("requisicao.mode === 'navigate'"));
+  const codigo = navegacao.replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/[^\n]*/g, '');
+  assert.match(codigo, /cache:\s*'no-cache'/, 'a navegação precisa revalidar o documento');
 });
 
 test('o manifesto tem o que os navegadores exigem para instalar', () => {

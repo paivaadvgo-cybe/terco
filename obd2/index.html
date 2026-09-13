@@ -38,6 +38,135 @@
   </p>
 </noscript>
 
+<script>
+/*
+ * O atualizador mora aqui, dentro da página, e não num módulo. A razão é
+ * amarga e foi aprendida na prática.
+ *
+ * Os módulos são servidos **cache primeiro**: enquanto o worker antigo estiver
+ * no comando, `js/app.js` vem do cache dele, velho. Se o código que aplica a
+ * atualização morar lá, um defeito nesse código se tranca junto com a versão
+ * que o contém — e nenhuma publicação futura alcança quem já abriu o
+ * aplicativo, porque a correção está exatamente no arquivo que não chega. Foi o
+ * que aconteceu: faltava tratar o worker que já estava instalando, e aparelhos
+ * ficaram parados numa versão antiga sem nada indicar que havia outra.
+ *
+ * A navegação, ao contrário, é **rede primeiro**. O que está escrito neste
+ * arquivo chega no primeiro carregamento com internet, sempre, por cima de
+ * qualquer cache. É o único lugar de onde o aplicativo consegue se
+ * desentalar sozinho — e por isso o atualizador fica aqui, sem importação,
+ * sem depender de nada que possa estar velho.
+ */
+(function () {
+  if (!('serviceWorker' in navigator)) return;
+
+  /*
+   * «Ocupado» não é «tem alguém olhando»: é «trocar o código agora custa
+   * alguma coisa». Com o carro conectado, recarregar derruba a conexão; com uma
+   * viagem sendo gravada, perde o trecho em curso. O aplicativo substitui esta
+   * função quando abre; até lá — e se o módulo falhar — a resposta é «não
+   * custa», que é a verdade de quem acabou de abrir a página.
+   */
+  if (typeof window.painelOcupado !== 'function') window.painelOcupado = function () { return false; };
+
+  /*
+   * Esta página já está sendo servida por um worker?
+   *
+   * Na primeiríssima visita não está: o worker instala, chama `clients.claim()`
+   * e o navegador dispara `controllerchange` — que não é atualização nenhuma.
+   * Recarregar ali faria a página piscar e recomeçar sozinha logo depois de
+   * abrir, sem nada ter mudado; e não há versão nova a aplicar, porque o que
+   * acabou de instalar é o que a página já carregou.
+   *
+   * É uma variável, e não uma constante lida uma vez: quem deixa o aplicativo
+   * aberto desde a instalação passa a ser controlado no meio da sessão, e a
+   * partir daí uma publicação é uma publicação como outra qualquer. Com uma
+   * constante, essa aba ficaria surda para sempre — sem aviso e sem troca.
+   */
+  var controlado = Boolean(navigator.serviceWorker.controller);
+
+  function avisar(trabalhador) {
+    var aviso = document.getElementById('atualizacao');
+    if (!aviso) return;
+    aviso.hidden = false;
+    aviso.querySelector('button').addEventListener('click', function () {
+      trabalhador.postMessage('assumir-controle');
+      aviso.hidden = true;
+    }, { once: true });
+  }
+
+  /**
+   * Um worker novo terminou de instalar: aplica na hora, ou avisa.
+   *
+   * Aplicar sozinho com o aplicativo ocioso é a diferença entre a versão
+   * publicada chegar e ficar esperando um toque que ninguém dá. Parado, sem
+   * carro conectado e sem gravação, recarregar não custa nada: a tela volta
+   * igual, com o código novo. Ocupado, não — aí vale o aviso, e quem está
+   * dirigindo decide quando.
+   */
+  function aplicarOuAvisar(trabalhador) {
+    if (!trabalhador || !controlado) return;
+    var ocupado = false;
+    try { ocupado = Boolean(window.painelOcupado()); } catch (erro) { ocupado = false; }
+    if (ocupado) avisar(trabalhador);
+    else trabalhador.postMessage('assumir-controle');
+  }
+
+  navigator.serviceWorker.register('sw.js').then(function (registro) {
+    function vigiar(trabalhador) {
+      if (!trabalhador) return;
+      trabalhador.addEventListener('statechange', function () {
+        if (trabalhador.state === 'installed') aplicarOuAvisar(trabalhador);
+      });
+    }
+
+    // Um worker já esperando, de uma visita anterior em que ninguém tocou no
+    // aviso.
+    if (registro.waiting) aplicarOuAvisar(registro.waiting);
+
+    /*
+     * Um worker **já instalando** quando este retorno rodou — e esta é a linha
+     * que faltava. `register()` dispara a verificação de atualização, e com
+     * rede rápida o worker novo já está em `installing` antes de o `.then()`
+     * executar: o `updatefound` disparou antes de haver quem o escutasse.
+     * Resultado: nenhum aviso, `waiting` ainda vazio, e a versão nova parada
+     * para sempre a um passo de entrar.
+     */
+    if (registro.installing) vigiar(registro.installing);
+    registro.addEventListener('updatefound', function () { vigiar(registro.installing); });
+
+    /*
+     * Perguntar por atualização, em vez de esperar que o navegador pergunte.
+     *
+     * O navegador verifica sozinho na navegação — mas um aplicativo instalado
+     * que volta do segundo plano muitas vezes não navega: ele acorda. Sem pedir
+     * explicitamente, a versão nova só chegaria no dia em que alguém fechasse e
+     * abrisse de verdade.
+     */
+    var procurar = function () { registro.update().catch(function () {}); };
+    procurar();
+    document.addEventListener('visibilitychange', function () {
+      if (document.visibilityState === 'visible') procurar();
+    });
+  }).catch(function (erro) { console.warn('service worker não registrado:', erro); });
+
+  var recarregando = false;
+  navigator.serviceWorker.addEventListener('controllerchange', function () {
+    // A primeira troca depois de uma instalação nova é o `clients.claim()`, e
+    // não há o que recarregar. Da segunda em diante é código novo servido a uma
+    // página que já carregou o antigo — e aí recarregar é obrigatório, senão a
+    // tela continua a velha com o cache novo por baixo.
+    if (!controlado) {
+      controlado = true;
+      return;
+    }
+    if (recarregando) return;
+    recarregando = true;
+    location.reload();
+  });
+})();
+</script>
+
 <script type="module" src="js/app.js"></script>
 </body>
 </html>
