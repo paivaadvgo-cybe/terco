@@ -33,6 +33,24 @@ export const CONFIGURACAO_PADRAO = {
   intervaloDeGravacao: 1000,
   /** Manter a tela acesa durante a gravação. */
   manterTelaAcesa: true,
+
+  /* ------------------------------------------------------------- vídeo */
+
+  /** Gravar vídeo junto com a viagem. Desligado por padrão. */
+  gravarVideo: false,
+  /** Altura do quadro: 480 ou 720. */
+  qualidadeDeVideo: 720,
+  /**
+   * Gravar o som junto.
+   *
+   * Desligado por padrão, e a decisão é deliberada: uma câmera apontada para a
+   * estrada grava a estrada, mas o microfone grava a conversa de quem está no
+   * carro — inclusive de quem não escolheu ser gravado. Ligar é um botão; ligar
+   * por omissão seria gravar gente sem querer.
+   */
+  audioNoVideo: false,
+  /** Teto de espaço para vídeo, em megabytes. */
+  limiteDeVideoMB: 1024,
 };
 
 export function novoId(prefixo = '') {
@@ -88,6 +106,39 @@ export async function criarArmazenamento(driver) {
       };
       await driver.gravar('veiculos', registro);
       return registro;
+    },
+
+    /**
+     * Guarda os máximos de sempre de um carro, sem nunca abaixá-los.
+     *
+     * O merge é por comparação, e não por substituição: a sessão manda o que
+     * viu, e se o que está no banco for maior, o que está no banco fica. Sem
+     * isso, conectar e desconectar sem andar — o que acontece toda vez que se
+     * testa alguma coisa na garagem — sobrescreveria a máxima de 130 km/h pela
+     * de 0 km/h daquela sessão parada.
+     */
+    async registrarRecordes(veiculoId, recordes) {
+      const veiculo = (await driver.ler('veiculos', veiculoId)) ?? { id: veiculoId };
+      const anteriores = veiculo.recordes ?? {};
+      const juntos = { ...anteriores };
+
+      for (const [chave, valor] of Object.entries(recordes ?? {})) {
+        if (!Number.isFinite(valor)) continue;
+        if (!Number.isFinite(juntos[chave]) || valor > juntos[chave]) juntos[chave] = valor;
+      }
+
+      const atualizado = { ...veiculo, recordes: juntos, recordesEm: Date.now() };
+      await driver.gravar('veiculos', atualizado);
+      return atualizado;
+    },
+
+    /** Zera os recordes de um carro — o «apagar» que a tela de ajustes oferece. */
+    async zerarRecordes(veiculoId) {
+      const veiculo = await driver.ler('veiculos', veiculoId);
+      if (!veiculo) return null;
+      const zerado = { ...veiculo, recordes: {}, recordesEm: Date.now() };
+      await driver.gravar('veiculos', zerado);
+      return zerado;
     },
 
     veiculos: () => driver.listar('veiculos'),
@@ -178,8 +229,66 @@ export async function criarArmazenamento(driver) {
     async apagarViagem(viagemId) {
       const blocos = await driver.listarPor('amostras', 'viagem', viagemId);
       for (const bloco of blocos) await driver.apagar('amostras', bloco.id);
+      // O vídeo sai junto: um trecho órfão ocuparia dezenas de megabytes sem
+      // nenhuma tela que o mostrasse ou permitisse apagar.
+      for (const trecho of await driver.listarPor('videos', 'viagem', viagemId)) {
+        await driver.apagar('videos', trecho.id);
+      }
       await driver.apagar('viagens', viagemId);
       pendentes.delete(viagemId);
+    },
+
+    /* -------------------------------------------------------------- vídeo */
+
+    /**
+     * Guarda um trecho de vídeo com a hora em que ele começou.
+     *
+     * `de` e `ate` são o que sincroniza a imagem com os dados depois: o
+     * gráfico e o vídeo são duas séries no mesmo relógio, e sem o instante de
+     * início do trecho não há como dizer que aquele pico de rotação é este
+     * pedaço de estrada.
+     */
+    async guardarTrechoDeVideo(viagemId, { blob, de, ate, tipo }) {
+      const trecho = {
+        id: `${viagemId}:v${novoId()}`,
+        viagem: viagemId,
+        de,
+        ate,
+        tipo: tipo ?? blob.type ?? 'video/webm',
+        bytes: blob.size,
+        blob,
+      };
+      await driver.gravar('videos', trecho);
+      return trecho;
+    },
+
+    /** Os trechos de uma viagem, em ordem de tempo. */
+    async videosDa(viagemId) {
+      const trechos = await driver.listarPor('videos', 'viagem', viagemId);
+      return trechos.sort((a, b) => a.de - b.de);
+    },
+
+    /**
+     * Quanto espaço o vídeo ocupa, e quanto o navegador ainda concede.
+     *
+     * `navigator.storage.estimate()` é a única fonte honesta do limite — ele
+     * varia com o espaço livre do aparelho, e não é um número fixo. Onde não
+     * existe, devolve-se `null` em vez de um palpite: o aplicativo então avisa
+     * que não sabe, em vez de prometer um espaço que talvez não exista.
+     */
+    async ocupacaoDeVideo() {
+      const trechos = await driver.listar('videos');
+      const bytes = trechos.reduce((total, t) => total + (t.bytes ?? 0), 0);
+
+      let cota = null;
+      try {
+        const estimativa = await navigator.storage?.estimate?.();
+        if (estimativa) {
+          cota = { usado: estimativa.usage ?? null, limite: estimativa.quota ?? null };
+        }
+      } catch { /* sem estimativa: o aplicativo diz que não sabe */ }
+
+      return { trechos: trechos.length, bytes, cota };
     },
 
     /**

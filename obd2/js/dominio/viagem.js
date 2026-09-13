@@ -133,10 +133,21 @@ export function instantaneo(valores, opcoes = {}) {
   };
 }
 
-/** Uma viagem nova, ainda sem amostra. */
+/**
+ * Uma viagem nova, ainda sem amostra.
+ *
+ * O identificador tem um sufixo sorteado além do instante, e não é enfeite:
+ * `Date.now()` tem resolução de milissegundo, e duas viagens criadas no mesmo
+ * milissegundo nasciam com o mesmo identificador. Como as amostras e os trechos
+ * de vídeo são ligados à viagem por esse identificador, a segunda viagem
+ * herdava o vídeo e os pontos da primeira — sem erro nenhum, só dados no lugar
+ * errado. Apareceu num teste; num aparelho apareceria como «o vídeo da viagem
+ * de ontem está na viagem de hoje».
+ */
 export function criarViagem(instante = Date.now(), { veiculo = null } = {}) {
+  const sufixo = Math.random().toString(36).slice(2, 6);
   return {
-    id: `v${instante.toString(36)}`,
+    id: `v${instante.toString(36)}${sufixo}`,
     inicio: instante,
     fim: null,
     veiculo,

@@ -429,6 +429,113 @@ select.entrada { appearance: none; background-image: none; }
 .escolha-unidade { font-size: 11.5px; color: var(--suave); }
 .escolha.marcada .escolha-unidade { color: inherit; opacity: .8; }
 
+/* ----------------------------------------------------------------- vídeo */
+
+/*
+ * O interruptor da câmera.
+ *
+ * Um `label` envolvendo a caixa de seleção, e não um botão estilizado: assim o
+ * toque em qualquer lugar da linha alterna — e num carro o alvo precisa ser a
+ * linha inteira, não um quadradinho de vinte pixels.
+ */
+.interruptor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 8px 4px;
+  cursor: pointer;
+}
+
+.interruptor-caixa {
+  width: 26px;
+  height: 26px;
+  flex: none;
+  accent-color: var(--principal);
+}
+
+.interruptor-nome { font-size: 15px; }
+
+.interruptor:has(.interruptor-caixa:disabled) { opacity: .5; cursor: default; }
+
+/*
+ * A prévia da câmera fica pequena, e é proposital.
+ *
+ * Ela existe para confirmar que a lente está apontada para a estrada e
+ * desimpedida — não para se assistir dirigindo. Grande, viraria uma televisão
+ * no painel, que é exatamente o que não se quer num carro em movimento.
+ */
+.previa-de-video {
+  width: 100%;
+  max-height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #000;
+  transform: scaleX(1);
+}
+
+.tocador {
+  width: 100%;
+  max-height: 60vh;
+  border-radius: 10px;
+  background: #000;
+  display: block;
+}
+
+/* A leitura do instante que está tocando: números grandes, rótulo pequeno. */
+.leitura-do-video {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 10px 12px;
+  background: var(--superficie-2);
+  border-radius: 10px;
+  min-height: 54px;
+  align-items: center;
+}
+
+.leitura-item { display: flex; flex-direction: column; line-height: 1.15; }
+.leitura-item strong { font-size: 18px; font-variant-numeric: tabular-nums; }
+.leitura-item small { font-size: 11.5px; color: var(--suave); }
+.leitura-vazia { font-size: 13.5px; color: var(--suave); }
+
+.trechos {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.trecho {
+  flex: none;
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  background: var(--superficie-2);
+  color: var(--texto);
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 12px;
+  min-height: 52px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  cursor: pointer;
+}
+
+.trecho.tocando {
+  background: var(--principal-fraco);
+  border-color: var(--principal);
+  color: var(--principal);
+  font-weight: 600;
+}
+
+.trecho-hora { font-variant-numeric: tabular-nums; }
+.trecho-tamanho { font-size: 11px; color: var(--suave); }
+.trecho.tocando .trecho-tamanho { color: inherit; opacity: .8; }
+
 /* ---------------------------------------------------------------- listas */
 
 .lista { display: flex; flex-direction: column; gap: 8px; }

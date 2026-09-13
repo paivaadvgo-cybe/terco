@@ -16,8 +16,9 @@
 import { el, botao, cartao, campo, selecao, entrada, linhaDeValor } from '../elementos.js';
 import { avisar, confirmar } from '../avisos.js';
 import { COMBUSTIVEIS } from '../../dominio/leituras.js';
-import { PIDS, PADRAO_DO_PAINEL } from '../../obd/pids.js';
-import { numero } from '../formatar.js';
+import { PIDS, DERIVADOS, PADRAO_DO_PAINEL, definicaoDe } from '../../obd/pids.js';
+import { MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
+import { numero, valorDePid, unidadeDePid } from '../formatar.js';
 
 const INTERVALOS = [
   { valor: '500', nome: '2 por segundo — detalhe fino' },
@@ -75,7 +76,7 @@ export async function telaAjustes(contexto) {
   const escolhidos = new Set(configuracao.painel ?? PADRAO_DO_PAINEL);
   const marcadores = el('div', { classe: 'escolhas' });
 
-  for (const [pid, definicao] of Object.entries(PIDS)) {
+  for (const [pid, definicao] of Object.entries({ ...DERIVADOS, ...PIDS })) {
     const marcado = escolhidos.has(pid);
     const caixa = el('button', {
       type: 'button',
@@ -134,6 +135,108 @@ export async function telaAjustes(contexto) {
     campo('Durante a gravação', telaAcesa,
       'Com a tela apagada o navegador congela a página: o painel para e a gravação fica com buracos.'),
   ]));
+
+  /* ---------------------------------------------------------------- vídeo */
+
+  const qualidade = selecao(
+    [{ valor: '720', nome: '720p — cerca de 20 MB por minuto' }, { valor: '480', nome: '480p — cerca de 9 MB por minuto' }],
+    String(configuracao.qualidadeDeVideo),
+  );
+  qualidade.addEventListener('change', async () => {
+    await salvar({ qualidadeDeVideo: Number(qualidade.value) });
+    avisar('Qualidade atualizada');
+  });
+
+  const audio = selecao(
+    [{ valor: 'nao', nome: 'Sem som' }, { valor: 'sim', nome: 'Com som do microfone' }],
+    configuracao.audioNoVideo ? 'sim' : 'nao',
+  );
+  audio.addEventListener('change', async () => {
+    await salvar({ audioNoVideo: audio.value === 'sim' });
+  });
+
+  const limite = selecao(
+    [
+      { valor: '512', nome: '512 MB' },
+      { valor: '1024', nome: '1 GB' },
+      { valor: '2048', nome: '2 GB' },
+      { valor: '4096', nome: '4 GB' },
+    ],
+    String(configuracao.limiteDeVideoMB),
+  );
+  limite.addEventListener('change', async () => {
+    await salvar({ limiteDeVideoMB: Number(limite.value) });
+  });
+
+  const padraoDeVideo = selecao(
+    [{ valor: 'nao', nome: 'Desligado' }, { valor: 'sim', nome: 'Ligado' }],
+    configuracao.gravarVideo ? 'sim' : 'nao',
+  );
+  padraoDeVideo.addEventListener('change', async () => {
+    await salvar({ gravarVideo: padraoDeVideo.value === 'sim' });
+  });
+
+  const videoOcupado = await armazenamento.ocupacaoDeVideo();
+  tela.append(cartao([
+    el('h2', { classe: 'secao-titulo', texto: 'Vídeo da estrada' }),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'Grava a câmera traseira junto com a viagem, em trechos de 30 segundos, para ver depois qual trecho de estrada corresponde a cada número.',
+    }),
+    campo('Ao começar uma gravação', padraoDeVideo, 'Só o estado inicial do interruptor: a escolha final é feita no painel, a cada viagem.'),
+    campo('Qualidade', qualidade, 'Em 480p cabe mais que o dobro de viagem no mesmo espaço.'),
+    campo('Som', audio,
+      'Desligado por padrão: a câmera grava a estrada, mas o microfone grava a conversa de quem está no carro — inclusive de quem não escolheu ser gravado.'),
+    campo('Parar ao chegar em', limite, 'A gravação para com aviso ao bater no teto, em vez de ser cortada pelo navegador quando a cota estourar.'),
+    el('div', { classe: 'detalhe-linhas' }, [
+      linhaDeValor('Trechos guardados', String(videoOcupado.trechos)),
+      linhaDeValor('Espaço em vídeo', `${numero(videoOcupado.bytes / 1_048_576, 1)} MB`),
+      linhaDeValor(
+        'Espaço concedido pelo navegador',
+        // Sem `storage.estimate` não há como saber, e um palpite aqui viraria
+        // uma promessa de espaço que talvez não exista.
+        videoOcupado.cota?.limite
+          ? `${numero(videoOcupado.cota.limite / 1_073_741_824, 1)} GB`
+          : 'este navegador não informa',
+      ),
+    ]),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'O vídeo de uma viagem é apagado junto com ela, na tela da viagem.',
+    }),
+  ]));
+
+  /* -------------------------------------------------------------- recordes */
+
+  const veiculos = await armazenamento.veiculos();
+  const comRecordes = veiculos.filter((v) => Object.keys(v.recordes ?? {}).length > 0);
+
+  if (comRecordes.length > 0) {
+    tela.append(cartao([
+      el('h2', { classe: 'secao-titulo', texto: 'Máximos registrados' }),
+      ...comRecordes.map((veiculo) => el('div', { classe: 'detalhe-linhas' }, [
+        el('p', { classe: 'campo-dica', texto: veiculo.vin ? `Chassi ${veiculo.vin}` : 'Carro sem chassi informado' }),
+        ...MAXIMOS_ACOMPANHADOS
+          .filter((chave) => Number.isFinite(veiculo.recordes[chave]))
+          .map((chave) => linhaDeValor(
+            definicaoDe(chave)?.nome ?? chave,
+            `${valorDePid(chave, veiculo.recordes[chave])} ${unidadeDePid(chave)}`,
+          )),
+      ])),
+      botao('Zerar os máximos', async () => {
+        const confirmado = await confirmar({
+          titulo: 'Zerar os máximos?',
+          texto: 'A velocidade e a rotação máximas registradas voltam a zero, e recomeçam a contar na próxima conexão.',
+          acao: 'Zerar',
+          perigo: true,
+        });
+        if (!confirmado) return;
+        for (const veiculo of comRecordes) await armazenamento.zerarRecordes(veiculo.id);
+        avisar('Máximos zerados');
+        contexto.recarregar();
+      }, { tipo: 'perigo', classe: 'largo' }),
+    ]));
+  }
 
   /* ----------------------------------------------------------------- tema */
 

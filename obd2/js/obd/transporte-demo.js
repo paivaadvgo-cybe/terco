@@ -64,7 +64,17 @@ function estadoDoCarro(segundos, { falhas }) {
     temperatura,
     carga: parado ? 22 : 20 + acelerador * 1.2,
     fluxoDeAr: parado ? 2.4 : 2 + (rotacao / 1000) * (1 + acelerador / 30) * 2.2,
-    coletor: parado ? 32 : 30 + acelerador * 1.3,
+
+    /*
+     * O carro simulado é turbo, e a pressão do coletor mostra isso.
+     *
+     * Em marcha lenta e em desaceleração ele faz vácuo — abaixo dos 94 kPa do
+     * ambiente —, e acelerando o compressor empurra acima disso, chegando perto
+     * de 1 bar de sopro. Um coletor que nunca passasse da atmosfera faria o
+     * medidor de turbo marcar negativo a viagem inteira, e a simulação não
+     * provaria nada sobre ele.
+     */
+    coletor: parado ? 32 : (acelerando ? 94 + acelerador * 2.2 : 60 + acelerador * 1.2),
     avanco: parado ? 8 : 14 + (freando ? -6 : 0),
     arAdmitido: 31 + Math.min(12, segundos * 0.02),
     ambiente: 28,

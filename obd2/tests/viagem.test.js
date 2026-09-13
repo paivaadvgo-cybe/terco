@@ -12,7 +12,7 @@ import assert from 'node:assert/strict';
 import {
   litrosPorHoraDoFluxo, fluxoDeArEstimado, consumoInstantaneo, kmPorLitro, alertas,
 } from '../js/dominio/leituras.js';
-import { resumir, criarAmostra, serieDe, INTERVALO_MAXIMO } from '../js/dominio/viagem.js';
+import { resumir, criarAmostra, criarViagem, serieDe, INTERVALO_MAXIMO } from '../js/dominio/viagem.js';
 
 /* ------------------------------------------------------------------ consumo */
 
@@ -136,6 +136,15 @@ test('viagem sem amostra devolve a mesma forma, com zeros', () => {
   assert.equal(resumo.amostras, 0);
   assert.equal(resumo.distancia, 0);
   assert.equal(resumo.consumoMedio, null);
+});
+
+test('duas viagens criadas no mesmo instante têm identificadores diferentes', () => {
+  // Com o identificador vindo só do relógio, duas viagens do mesmo
+  // milissegundo colidiam — e a segunda passava a enxergar as amostras e o
+  // vídeo da primeira, sem erro nenhum aparecer.
+  const mesmoInstante = 1_700_000_000_000;
+  const ids = new Set(Array.from({ length: 200 }, () => criarViagem(mesmoInstante).id));
+  assert.equal(ids.size, 200, 'os identificadores precisam ser únicos mesmo no mesmo milissegundo');
 });
 
 test('a série de um PID pula as amostras em que ele faltou', () => {

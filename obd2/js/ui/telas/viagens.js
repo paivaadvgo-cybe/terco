@@ -16,7 +16,7 @@ import { el, botao, cartao, vazio, selecao, linhaDeValor } from '../elementos.js
 import { avisar, confirmar } from '../avisos.js';
 import { criarGrafico } from '../grafico.js';
 import { viagemEmCSV, baixar } from '../csv.js';
-import { distancia, consumo, litros, inteiro, numero, desdeQuando } from '../formatar.js';
+import { distancia, consumo, litros, inteiro, numero, desdeQuando, valorDePid, unidadeDePid } from '../formatar.js';
 import { exibirDia, hora, duracao } from '../../dominio/datas.js';
 import { serieDe } from '../../dominio/viagem.js';
 import { definicaoDe } from '../../obd/pids.js';
@@ -68,6 +68,126 @@ export async function telaViagens(contexto) {
   ]));
 
   return tela;
+}
+
+/**
+ * O vídeo da viagem, com os dados do instante que está na tela.
+ *
+ * É aqui que a gravação deixa de ser planilha. Ver «4.300 rpm às 14h32» não
+ * explica nada; ver a ultrapassagem acontecendo enquanto o número sobe, sim. O
+ * vídeo e os dados são duas séries no mesmo relógio, e o que sincroniza as duas
+ * é a hora em que cada trecho começou.
+ *
+ * **A busca da amostra é por aproximação, e tem de ser.** As amostras vêm a
+ * cada segundo e o vídeo corre a trinta quadros por segundo; exigir coincidência
+ * exata não acharia nada. Pega-se a amostra mais próxima, e se a mais próxima
+ * estiver a mais de três segundos — um buraco na gravação — mostra-se travessão
+ * em vez do dado de outro momento.
+ */
+function cartaoDeVideo(trechos, amostras, contexto) {
+  const tocador = el('video', { classe: 'tocador', controls: true, playsInline: true });
+  tocador.setAttribute('playsinline', '');
+
+  const leitura = el('div', { classe: 'leitura-do-video' });
+  const lista = el('div', { classe: 'trechos' });
+
+  let atual = null;
+  let endereco = null;
+
+  /** Troca o trecho em cartaz, soltando o endereço temporário do anterior. */
+  function tocar(trecho) {
+    if (endereco) URL.revokeObjectURL(endereco);
+    endereco = URL.createObjectURL(trecho.blob);
+    atual = trecho;
+    tocador.src = endereco;
+    tocador.play().catch(() => { /* o navegador pode exigir um toque; os controles estão ali */ });
+
+    for (const botaoDoTrecho of lista.querySelectorAll('.trecho')) {
+      botaoDoTrecho.classList.toggle('tocando', botaoDoTrecho.dataset.id === trecho.id);
+    }
+    mostrarLeitura(trecho.de);
+  }
+
+  function mostrarLeitura(instante) {
+    // `distancia` aqui seria a função de formatar quilômetros, importada no
+    // topo. O nome é outro de propósito.
+    let maisPerto = null;
+    let menorDiferenca = Infinity;
+    for (const amostra of amostras) {
+      const diferenca = Math.abs(amostra.t - instante);
+      if (diferenca < menorDiferenca) {
+        menorDiferenca = diferenca;
+        maisPerto = amostra;
+      }
+    }
+
+    if (!maisPerto || menorDiferenca > 3000) {
+      leitura.replaceChildren(el('span', { classe: 'leitura-vazia', texto: 'sem dados neste instante' }));
+      return;
+    }
+
+    const mostrar = ['0D', '0C', 'TURBO', '05']
+      .filter((pid) => Number.isFinite(maisPerto.v[pid]))
+      .map((pid) => el('span', { classe: 'leitura-item' }, [
+        el('strong', { texto: `${valorDePid(pid, maisPerto.v[pid])} ${unidadeDePid(pid)}` }),
+        el('small', { texto: definicaoDe(pid)?.curto ?? pid }),
+      ]));
+
+    leitura.replaceChildren(...(mostrar.length ? mostrar : [
+      el('span', { classe: 'leitura-vazia', texto: 'sem dados neste instante' }),
+    ]));
+  }
+
+  tocador.addEventListener('timeupdate', () => {
+    if (atual) mostrarLeitura(atual.de + tocador.currentTime * 1000);
+  });
+
+  // Ao terminar um trecho, emenda no seguinte: a viagem foi contínua, e obrigar
+  // um toque a cada trinta segundos transformaria a revisão numa maratona.
+  tocador.addEventListener('ended', () => {
+    const indice = trechos.findIndex((t) => t.id === atual?.id);
+    if (indice >= 0 && indice + 1 < trechos.length) tocar(trechos[indice + 1]);
+  });
+
+  for (const trecho of trechos) {
+    lista.append(el('button', {
+      type: 'button',
+      classe: 'trecho',
+      dados: { id: trecho.id },
+      aoTocar: () => tocar(trecho),
+    }, [
+      el('span', { classe: 'trecho-hora', texto: hora(trecho.de) }),
+      el('span', { classe: 'trecho-tamanho', texto: `${numero(trecho.bytes / 1_048_576, 1)} MB` }),
+    ]));
+  }
+
+  const total = trechos.reduce((soma, t) => soma + (t.bytes ?? 0), 0);
+
+  contexto.aoSair(() => {
+    tocador.pause();
+    tocador.removeAttribute('src');
+    if (endereco) URL.revokeObjectURL(endereco);
+  });
+
+  tocar(trechos[0]);
+
+  return cartao([
+    el('h2', { classe: 'secao-titulo', texto: 'Vídeo da viagem' }),
+    tocador,
+    leitura,
+    lista,
+    el('div', { classe: 'coluna-botoes' }, [
+      botao('Baixar o trecho em cartaz', () => {
+        if (!atual) return;
+        baixar(`viagem-${hora(atual.de).replace(':', 'h')}.${atual.tipo?.includes('mp4') ? 'mp4' : 'webm'}`, atual.blob, atual.tipo);
+        avisar('Trecho salvo');
+      }, { tipo: 'fantasma', classe: 'largo' }),
+    ]),
+    el('p', {
+      classe: 'campo-dica',
+      texto: `${trechos.length} trecho(s), ${numero(total / 1_048_576, 1)} MB no aparelho. Apagar a viagem apaga o vídeo junto.`,
+    }),
+  ]);
 }
 
 export async function telaViagem(contexto, parametros = {}) {
@@ -138,6 +258,11 @@ export async function telaViagem(contexto, parametros = {}) {
       area,
     ]));
   }
+
+  /* --------------------------------------------------------------- vídeo */
+
+  const trechos = await armazenamento.videosDa(viagem.id);
+  if (trechos.length > 0) tela.append(cartaoDeVideo(trechos, amostras, contexto));
 
   /* --------------------------------------------------------------- ações */
 

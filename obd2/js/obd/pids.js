@@ -101,8 +101,80 @@ export const PIDS = {
   },
 };
 
+/**
+ * A pressão atmosférica presumida, em kPa, quando o carro não a informa.
+ *
+ * 101,3 kPa é o nível do mar. Em Goiânia, a 750 m, a real fica perto de 93 —
+ * usar o padrão ali superestima o vácuo em 0,08 bar. É pouco para um ponteiro e
+ * muito para uma conta, e por isso o valor presumido é marcado como presumido:
+ * a tela diz quando o número não veio do barômetro do carro.
+ */
+export const ATMOSFERICA_PADRAO = 101.3;
+
+/**
+ * Valores que o carro não informa e que se calculam a partir dos que informa.
+ *
+ * **A pressão do turbo é o caso clássico.** Não existe PID de «pressão de
+ * turbo» na norma: o que o carro mede é a pressão *absoluta* do coletor (PID
+ * 0B) — que já inclui a atmosfera empurrando. O que o manômetro de turbo mostra
+ * é a diferença: quanto o compressor somou acima do ar que já estava lá. Sem
+ * subtrair a atmosférica, um motor em marcha lenta marcaria «0,3 bar de turbo»
+ * parado na garagem.
+ *
+ * Daí sair negativo em carro aspirado, e em turbo fora de carga: o pistão
+ * aspirando contra a borboleta fechada faz vácuo, e isso é o que está
+ * acontecendo de verdade. Mostrar zero ali seria mentira confortável.
+ *
+ * Eles entram em `estado.valores` junto dos PIDs reais, com a mesma cara — e
+ * por isso ponteiro, gráfico, exportação e escolha do painel funcionam sem
+ * saber que a origem é outra.
+ */
+export const DERIVADOS = {
+  TURBO: {
+    nome: 'Pressão do turbo', curto: 'Turbo', unidade: 'bar', ritmo: 'rapido',
+    casas: 2, min: -1, max: 2, derivado: true,
+    /** Sem a pressão do coletor não há o que calcular. A atmosférica é opcional. */
+    precisa: ['0B'],
+    derivar: (valores) => {
+      const coletor = valores['0B'];
+      if (!Number.isFinite(coletor)) return null;
+      const atmosferica = Number.isFinite(valores['33']) ? valores['33'] : ATMOSFERICA_PADRAO;
+      return (coletor - atmosferica) / 100;
+    },
+  },
+};
+
+/** A leitura veio do barômetro do carro, ou da atmosfera presumida? */
+export function atmosfericaMedida(valores) {
+  return Number.isFinite(valores?.['33']);
+}
+
+/**
+ * Calcula os derivados que dão para calcular, a partir dos valores do momento.
+ *
+ * Devolve só o que tem origem: um derivado sem os PIDs de que precisa fica de
+ * fora do objeto, e não entra como `null` — assim o mostrador continua com o
+ * último valor bom em vez de piscar travessão a cada volta em que o PID de base
+ * não foi perguntado.
+ */
+export function calcularDerivados(valores) {
+  const saida = {};
+  for (const [chave, definicao] of Object.entries(DERIVADOS)) {
+    if (!definicao.precisa.every((pid) => Number.isFinite(valores[pid]))) continue;
+    const valor = definicao.derivar(valores);
+    if (Number.isFinite(valor)) saida[chave] = valor;
+  }
+  return saida;
+}
+
+/** Os derivados que este carro consegue alimentar, dados os PIDs que ele tem. */
+export function derivadosPossiveis(suportados) {
+  const tem = new Set(suportados.map((p) => String(p).toUpperCase()));
+  return Object.keys(DERIVADOS).filter((chave) => DERIVADOS[chave].precisa.every((pid) => tem.has(pid)));
+}
+
 /** Os PIDs que o painel mostra quando ninguém escolheu nada. */
-export const PADRAO_DO_PAINEL = ['0C', '0D', '05', '11', '04', '42'];
+export const PADRAO_DO_PAINEL = ['0C', '0D', 'TURBO', '05', '11', '42'];
 
 /**
  * Os PIDs que perguntam quais PIDs existem.
@@ -150,8 +222,16 @@ export function decodificar(pid, bytes) {
   return Number.isFinite(valor) ? valor : null;
 }
 
+/**
+ * A definição de um PID ou de um derivado.
+ *
+ * Os dois juntos de propósito: quem formata um número, desenha um ponteiro ou
+ * monta uma coluna de planilha não tem por que saber se o valor veio do carro
+ * ou de uma subtração.
+ */
 export function definicaoDe(pid) {
-  return PIDS[String(pid).toUpperCase()] ?? null;
+  const chave = String(pid).toUpperCase();
+  return PIDS[chave] ?? DERIVADOS[chave] ?? null;
 }
 
 /** Os PIDs conhecidos que este carro tem, na ordem da tabela. */

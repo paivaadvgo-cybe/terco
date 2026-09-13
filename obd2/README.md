@@ -40,6 +40,15 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 - **Painel ao vivo** — dois ponteiros grandes (rotação e velocidade) e
   mostradores para o que você escolher: temperatura do motor, acelerador,
   carga, tensão da bateria, fluxo de ar, nível do tanque.
+- **Pressão do turbo** — em bar, calculada como a pressão do coletor menos a
+  atmosférica. É assim que um manômetro de turbo funciona: o PID do carro dá a
+  pressão *absoluta*, que já inclui a atmosfera, e mostrá-lo cru faria um motor
+  desligado marcar 1 bar de sopro. Em marcha lenta e em desaceleração marca
+  negativo, porque ali é vácuo mesmo.
+- **Máximos registrados** — velocidade, rotação, turbo e temperatura: o maior
+  valor da conexão atual e o recorde de sempre daquele carro, guardado entre
+  sessões. É o maior valor **lido**; entre duas leituras o carro pode ter
+  passado disso.
 - **Consumo** — pelo PID 5E quando o carro o informa; senão calculado pelo
   fluxo de ar; senão deduzido da pressão do coletor, se você informar a
   cilindrada. A tela sempre diz de onde veio o número, porque uma medição e
@@ -50,9 +59,13 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 - **Viagens** — grava uma amostra por segundo, calcula distância, tempo
   parado, máximos e consumo médio, desenha o gráfico de qualquer leitura e
   exporta em CSV que o Excel brasileiro abre certo.
-- **Simulação** — um ELM327 de mentira com um carro de mentira dentro, para
-  conhecer o aplicativo sem adaptador (e para testar a pilha inteira no
-  `node --test`, sem carro).
+- **Vídeo da estrada** — grava a câmera traseira junto com a viagem, em trechos
+  de 30 segundos, e na tela da viagem o vídeo aparece com os dados do instante
+  que está tocando. É o que transforma «4.300 rpm às 14h32» em ver a
+  ultrapassagem acontecendo. Opcional, desligado por padrão.
+- **Simulação** — um ELM327 de mentira com um carro de mentira dentro (turbo,
+  para exercitar o medidor), para conhecer o aplicativo sem adaptador e para
+  testar a pilha inteira no `node --test`, sem carro.
 
 ## Como usar
 
@@ -78,7 +91,8 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/armazenamento/` | IndexedDB, driver em memória e a fachada de dados. |
 | `js/ui/` | Elementos, ponteiros, gráfico, CSV e as cinco telas. |
 | `js/sessao.js` | A conexão viva e o laço de leitura. |
-| `tests/` | `npm test` — 94 testes, sem navegador e sem carro. |
+| `js/video.js` | A câmera: grava a estrada em trechos, com a hora de cada um. |
+| `tests/` | `npm test` — 115 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones e carimba a versão do cache. |
 
 ## Desenvolvimento
@@ -106,7 +120,16 @@ chega a quem já tem o aplicativo instalado.
   valores. O aplicativo prioriza rotação e velocidade e espaça o resto.
 - Com a tela apagada o navegador congela a página. Durante a gravação o
   aplicativo pede para manter a tela acesa; se o sistema recusar, a gravação
-  fica com buracos — que o resumo declara, em vez de inventar distância.
+  fica com buracos — que o resumo declara, em vez de inventar distância. Vale
+  igual para o vídeo: em segundo plano a câmera para.
+- Vídeo ocupa espaço de verdade — perto de 20 MB por minuto em 720p. Há um teto
+  configurável, e ao batê-lo a gravação de vídeo para com aviso, em vez de ser
+  cortada pelo navegador quando a cota estourar. Os dados da viagem continuam.
+- O som vem desligado por padrão: a câmera grava a estrada, mas o microfone
+  grava a conversa de quem está no carro — inclusive de quem não escolheu ser
+  gravado.
+- Sem o PID da pressão atmosférica (33), o turbo é calculado contra 101,3 kPa.
+  Em Goiânia, a 750 m de altitude, isso desloca a leitura em cerca de 0,08 bar.
 - O aplicativo **lê**. Não regrava módulo, não altera parâmetro do motor e
   não faz remapeamento. As únicas escritas são o pedido de apagar falhas
   (serviço 04) e os ajustes do próprio adaptador.

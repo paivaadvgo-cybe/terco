@@ -22,12 +22,28 @@
  */
 
 import { criarELM327, ErroDoAdaptador } from './obd/elm327.js';
-import { RITMOS, definicaoDe, conhecidosEntre } from './obd/pids.js';
+import {
+  RITMOS, definicaoDe, conhecidosEntre, DERIVADOS, calcularDerivados, derivadosPossiveis,
+} from './obd/pids.js';
 import { criarAmostra, instantaneo } from './dominio/viagem.js';
 import { alertas } from './dominio/leituras.js';
+import { criarGravadorDeVideo, suportado as temVideo, explicarFalha } from './video.js';
 
 /** Quantas falhas seguidas de comunicação derrubam a conexão. */
 const LIMITE_DE_FALHAS = 6;
+
+/**
+ * O que se guarda como máximo da sessão e do veículo.
+ *
+ * Velocidade e rotação porque é o que se quer saber depois — «até quanto ele
+ * foi» —, turbo porque é o número que interessa em quem tem turbo, e
+ * temperatura porque um pico de 112 °C que aconteceu numa subida não aparece em
+ * mais lugar nenhum: quando se olha o painel, já baixou.
+ */
+export const MAXIMOS_ACOMPANHADOS = ['0D', '0C', 'TURBO', '05'];
+
+/** De quanto em quanto tempo os recordes vão para o banco. */
+const INTERVALO_DE_GRAVACAO_DE_RECORDE = 10_000;
 
 export const ESTADOS = {
   desligado: 'Desconectado',
@@ -50,6 +66,8 @@ export function criarSessao({ armazenamento }) {
     /** Quando cada PID foi lido pela última vez. */
     lidoEm: {},
     pids: [],
+    /** Os derivados que este carro alimenta — turbo, hoje. */
+    derivados: [],
     luz: null,
     consumo: { litrosPorHora: null, kmPorLitro: null, origem: null, parado: true },
     alertas: [],
@@ -58,6 +76,12 @@ export function criarSessao({ armazenamento }) {
     ultimoErro: null,
     voltas: 0,
     leiturasPorSegundo: 0,
+    /** Os máximos desde que se conectou. */
+    maximos: {},
+    /** Os máximos de sempre deste carro, lidos do banco. */
+    recordes: {},
+    /** O estado da câmera, quando a viagem está sendo gravada com vídeo. */
+    video: { gravando: false, trechos: 0, bytes: 0, erro: null },
   };
 
   let elm = null;
@@ -66,6 +90,8 @@ export function criarSessao({ armazenamento }) {
   let travaDeTela = null;
   let configuracao = null;
   let ultimaGravacao = 0;
+  let ultimaGravacaoDeRecorde = 0;
+  let gravadorDeVideo = null;
   let falhasSeguidas = 0;
   let contagem = { desde: Date.now(), leituras: 0 };
 
@@ -107,11 +133,53 @@ export function criarSessao({ armazenamento }) {
     });
   }
 
-  /** Os PIDs que valem perguntar: os que este carro tem e este aplicativo entende. */
+  /**
+   * Os PIDs que valem perguntar: os que este carro tem e este aplicativo entende.
+   *
+   * Um derivado escolhido no painel não é perguntado — não existe comando para
+   * «pressão de turbo». O que entra no plano são os PIDs de que ele precisa;
+   * sem essa tradução, marcar Turbo no painel faria o aplicativo perguntar
+   * `01TURBO` ao carro, e o adaptador responderia `?` para sempre.
+   */
   function planoDeLeitura() {
     const doPainel = configuracao?.painel ?? [];
-    const necessarios = new Set([...doPainel, '0C', '0D', '10', '5E', '05', '42']);
-    return estado.pids.filter((pid) => necessarios.has(pid) || doPainel.includes(pid));
+    const necessarios = new Set(['0C', '0D', '10', '5E', '05', '42']);
+
+    for (const escolhido of doPainel) {
+      const derivado = DERIVADOS[escolhido];
+      if (derivado) for (const pid of derivado.precisa) necessarios.add(pid);
+      else necessarios.add(escolhido);
+    }
+    // O turbo é acompanhado como máximo mesmo sem estar no painel, e para isso
+    // precisa da pressão do coletor.
+    if (estado.derivados.includes('TURBO')) for (const pid of DERIVADOS.TURBO.precisa) necessarios.add(pid);
+
+    return estado.pids.filter((pid) => necessarios.has(pid));
+  }
+
+  /**
+   * Atualiza os máximos, e diz se algum subiu.
+   *
+   * O máximo é o maior valor **observado**, não o maior que o carro atingiu: um
+   * clone entrega de 4 a 10 leituras por segundo, e o pico de uma arrancada pode
+   * cair entre duas delas. A diferença é de alguns km/h, e a tela diz que é
+   * leitura, não medição homologada.
+   */
+  function anotarMaximos() {
+    let mudou = false;
+    for (const chave of MAXIMOS_ACOMPANHADOS) {
+      const valor = estado.valores[chave];
+      if (!Number.isFinite(valor)) continue;
+      if (!Number.isFinite(estado.maximos[chave]) || valor > estado.maximos[chave]) {
+        estado.maximos[chave] = valor;
+        mudou = true;
+      }
+      if (!Number.isFinite(estado.recordes[chave]) || valor > estado.recordes[chave]) {
+        estado.recordes[chave] = valor;
+        mudou = true;
+      }
+    }
+    return mudou;
   }
 
   /** Este PID já «venceu» nesta volta? */
@@ -146,8 +214,10 @@ export function criarSessao({ armazenamento }) {
     }
   }
 
-  /** Deriva o que não vem do carro: consumo, alertas, taxa de leitura. */
+  /** Deriva o que não vem do carro: turbo, consumo, alertas, taxa de leitura. */
   function recalcular() {
+    Object.assign(estado.valores, calcularDerivados(estado.valores));
+
     estado.consumo = instantaneo(estado.valores, {
       combustivel: configuracao?.combustivel,
       cilindrada: configuracao?.cilindrada,
@@ -169,6 +239,77 @@ export function criarSessao({ armazenamento }) {
     await armazenamento.guardarAmostra(estado.viagem.id, criarAmostra(ultimaGravacao, estado.valores));
   }
 
+  /**
+   * Leva os recordes para o banco, de tempos em tempos.
+   *
+   * Numa arrancada a velocidade máxima sobe a cada leitura — gravar a cada
+   * subida abriria dez transações por segundo justamente quando o aplicativo
+   * está mais ocupado. De dez em dez segundos basta, e o `desconectar` grava o
+   * que faltou: o pior caso é perder o recorde dos últimos dez segundos de uma
+   * sessão encerrada à força.
+   */
+  async function gravarRecordesSePreciso({ agora = false } = {}) {
+    if (!estado.veiculo) return;
+    if (!agora && Date.now() - ultimaGravacaoDeRecorde < INTERVALO_DE_GRAVACAO_DE_RECORDE) return;
+    ultimaGravacaoDeRecorde = Date.now();
+    estado.veiculo = await armazenamento.registrarRecordes(estado.veiculo.id, estado.recordes);
+  }
+
+  /**
+   * Abre a câmera e passa a guardar os trechos na viagem.
+   *
+   * O teto de espaço é conferido a cada trecho fechado, e não uma vez no
+   * começo: 720p gasta perto de 20 MB por minuto, e uma viagem de uma hora
+   * passaria de um gigabyte. Parar com aviso é melhor que ser cortado pelo
+   * navegador quando a cota estourar — ali o último trecho se perde e a falha
+   * aparece como um erro sem nome.
+   */
+  async function comecarVideo(viagemId) {
+    if (!temVideo()) {
+      estado.video.erro = 'este navegador não grava vídeo';
+      return;
+    }
+
+    const limiteEmBytes = (configuracao?.limiteDeVideoMB ?? 1024) * 1024 * 1024;
+
+    gravadorDeVideo = criarGravadorDeVideo({
+      aoTrecho: async ({ blob, de, ate, tipo }) => {
+        const trecho = await armazenamento.guardarTrechoDeVideo(viagemId, { blob, de, ate, tipo });
+        estado.video.trechos += 1;
+        estado.video.bytes += trecho.bytes;
+        avisar();
+        // `false` diz ao gravador para encerrar: o trecho recém-guardado fica.
+        return estado.video.bytes < limiteEmBytes;
+      },
+      aoParar: (motivo) => {
+        estado.video.gravando = false;
+        estado.video.erro = motivo;
+        avisar();
+      },
+    });
+
+    try {
+      await gravadorDeVideo.comecar({
+        altura: configuracao?.qualidadeDeVideo ?? 720,
+        audio: Boolean(configuracao?.audioNoVideo),
+      });
+      estado.video.gravando = true;
+    } catch (erro) {
+      gravadorDeVideo = null;
+      estado.video.gravando = false;
+      estado.video.erro = explicarFalha(erro);
+    }
+  }
+
+  async function pararVideo() {
+    if (!gravadorDeVideo) return;
+    try {
+      await gravadorDeVideo.parar();
+    } catch { /* câmera já perdida: não há o que fechar */ }
+    gravadorDeVideo = null;
+    estado.video.gravando = false;
+  }
+
   async function lacoPrincipal() {
     while (rodando) {
       try {
@@ -178,6 +319,7 @@ export function criarSessao({ armazenamento }) {
         await umaVolta(planoDeLeitura());
         estado.voltas += 1;
         recalcular();
+        if (anotarMaximos()) await gravarRecordesSePreciso();
         await gravarSePreciso();
         avisar();
       } catch (erro) {
@@ -250,6 +392,7 @@ export function criarSessao({ armazenamento }) {
         avisar();
         const suportados = await elm.inventario();
         estado.pids = conhecidosEntre(suportados);
+        estado.derivados = derivadosPossiveis(suportados);
         estado.luz = await elm.statusDaLuz();
         const vin = await elm.vin();
 
@@ -259,6 +402,17 @@ export function criarSessao({ armazenamento }) {
           adaptador: `ELM327 v${identificacao.versao}`,
           protocolo: identificacao.protocolo.nome,
         });
+
+        /*
+         * Os recordes começam onde o carro parou da última vez.
+         *
+         * Sem isto, «velocidade máxima» seria a máxima desta conexão — e uma
+         * queda de Bluetooth num quebra-molas zeraria o número que a pessoa
+         * queria justamente guardar. Os máximos da sessão continuam separados,
+         * e esses sim recomeçam a cada conexão.
+         */
+        estado.recordes = { ...(estado.veiculo.recordes ?? {}) };
+        estado.maximos = {};
 
         estado.situacao = 'conectado';
         estado.detalhe = '';
@@ -284,6 +438,9 @@ export function criarSessao({ armazenamento }) {
       await laco?.catch(() => {});
       laco = null;
 
+      // O que ainda não foi para o banco vai agora: é a última chance antes de
+      // a sessão acabar.
+      await gravarRecordesSePreciso({ agora: true }).catch(() => {});
       if (estado.gravando) await sessao.pararGravacao();
       await elm?.fechar();
       elm = null;
@@ -294,6 +451,7 @@ export function criarSessao({ armazenamento }) {
         estado.valores = {};
         estado.lidoEm = {};
         estado.pids = [];
+        estado.derivados = [];
         estado.luz = null;
       }
       estado.adaptador = null;
@@ -317,12 +475,24 @@ export function criarSessao({ armazenamento }) {
       avisar();
     },
 
-    async comecarGravacao() {
+    /**
+     * Começa a gravar a viagem, com ou sem vídeo.
+     *
+     * **A câmera nunca impede a gravação dos dados.** Se a permissão for negada,
+     * se a câmera estiver ocupada por outro aplicativo, se o navegador não
+     * gravar vídeo — a viagem é gravada do mesmo jeito, e o motivo fica em
+     * `estado.video.erro` para a tela mostrar. Perder a viagem inteira porque a
+     * câmera falhou seria trocar o principal pelo acessório.
+     */
+    async comecarGravacao({ comVideo = false } = {}) {
       if (estado.gravando) return estado.viagem;
       estado.viagem = await armazenamento.comecarViagem({ veiculo: estado.veiculo?.id ?? null });
       estado.gravando = true;
       ultimaGravacao = 0;
+      estado.video = { gravando: false, trechos: 0, bytes: 0, erro: null };
       await pedirTravaDeTela();
+
+      if (comVideo) await comecarVideo(estado.viagem.id);
       avisar();
       return estado.viagem;
     },
@@ -331,7 +501,12 @@ export function criarSessao({ armazenamento }) {
       if (!estado.gravando || !estado.viagem) return null;
       const id = estado.viagem.id;
       estado.gravando = false;
+
+      // O vídeo para antes de a viagem ser encerrada: o trecho em curso ainda
+      // pertence a ela, e fechá-lo depois o deixaria órfão.
+      await pararVideo();
       await soltarTravaDeTela();
+
       const encerrada = await armazenamento.encerrarViagem(id, {
         combustivel: configuracao?.combustivel,
         cilindrada: configuracao?.cilindrada,
@@ -340,6 +515,11 @@ export function criarSessao({ armazenamento }) {
       avisar();
       return encerrada;
     },
+
+    /** O fluxo da câmera, para a tela mostrar a prévia. Nulo sem gravação. */
+    fluxoDeVideo: () => gravadorDeVideo?.fluxo ?? null,
+
+    videoDisponivel: () => temVideo(),
   };
 
   return sessao;
