@@ -21,7 +21,7 @@ import { criarViagem, resumir } from '../dominio/viagem.js';
 import { COMBUSTIVEL_PADRAO } from '../dominio/leituras.js';
 import { PADRAO_DO_PAINEL } from '../obd/pids.js';
 import {
-  LIMITE_DE_PAINEIS, normalizarTodos, painelPadrao, converterEscolhaAntiga,
+  LIMITE_DE_PAINEIS, normalizarTodos, painelPadrao, painelDeInstrumentos, converterEscolhaAntiga,
 } from '../dominio/painel.js';
 import { dia as diaDe } from '../dominio/datas.js';
 
@@ -120,7 +120,11 @@ export async function criarArmazenamento(driver) {
        */
       const paineis = Array.isArray(junta.paineis) && junta.paineis.length > 0
         ? normalizarTodos(junta.paineis)
-        : [guardada ? converterEscolhaAntiga(junta.painel) : painelPadrao()];
+        // Instalação nova nasce com dois: o quadro de instrumentos, que é o que
+        // se usa dirigindo, e o completo, para quem quer tudo na tela.
+        : [guardada
+          ? converterEscolhaAntiga(junta.painel)
+          : painelDeInstrumentos(), ...(guardada ? [] : [painelPadrao('Completo')])];
 
       const ativo = paineis.some((p) => p.id === junta.painelAtivo) ? junta.painelAtivo : paineis[0].id;
       return { ...junta, paineis, painelAtivo: ativo };
@@ -154,7 +158,10 @@ export async function criarArmazenamento(driver) {
 
     /** Devolve os painéis ao de fábrica — o botão de socorro do editor. */
     async restaurarPaineis() {
-      return armazenamento.ajustar({ paineis: [painelPadrao()], painelAtivo: null });
+      return armazenamento.ajustar({
+        paineis: [painelDeInstrumentos(), painelPadrao('Completo')],
+        painelAtivo: null,
+      });
     },
 
     async ajustar(mudancas) {

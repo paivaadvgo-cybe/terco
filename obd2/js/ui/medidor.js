@@ -54,7 +54,7 @@ const ABERTURA = 240;
  * de um lado e o «8» do outro, e foi exatamente o que aconteceu na primeira
  * tentativa.
  */
-const ALTURA = 190;
+const ALTURA = 200;
 
 const rad = (graus) => (graus * Math.PI) / 180;
 const ponto = (graus, raio) => ({
@@ -216,23 +216,36 @@ export function criarMedidor(pid, { titulo = null, secundario = false, escala = 
 
   /* ------------------------------------------------------------- o digital */
 
-  const numero = el('span', { classe: 'medidor-numero', texto: '—' });
   /*
-   * A unidade do número digital é a de verdade, sem o divisor.
+   * O número mora **dentro** do SVG, e não numa camada de HTML por cima.
    *
-   * O divisor encolhe só os rótulos da escala — «8» no lugar de «8000». O
-   * número grande continua inteiro, e escrever «×1000» ao lado dele diria que
-   * 2.224 são 2.224.000 rpm.
+   * Por cima, ele tinha de ser alinhado ao desenho por CSS — e bastava a célula
+   * mudar de proporção para os dois se separarem: numa célula baixa o mostrador
+   * encolhia e o número ficava boiando embaixo, ou estourava para fora. Dentro
+   * do desenho, ele é parte da mesma imagem: escala junto, fica no mesmo lugar
+   * em qualquer tamanho de célula, e nunca sobra nem falta.
+   *
+   * A unidade é a de verdade, sem o divisor da escala: este encolhe só os
+   * rótulos («8» no lugar de «8000»), e escrever «×1000» ao lado do número
+   * inteiro diria que 2.224 são dois milhões de rotações.
    */
-  const unidade = el('span', { classe: 'medidor-unidade', texto: unidadeDePid(pid) });
-  const segunda = el('span', { classe: 'medidor-secundario', hidden: !secundario });
-  const rotulo = el('span', { classe: 'medidor-titulo', texto: titulo ?? definicao.curto ?? definicao.nome ?? pid });
+  const texto = (classe, y, conteudo = '') => {
+    const no = svg('text', {
+      x: 100, y, class: classe, 'text-anchor': 'middle', 'dominant-baseline': 'middle',
+    });
+    no.textContent = conteudo;
+    return no;
+  };
 
-  const no = el('div', { classe: 'medidor', dados: { pid } }, [
-    desenho,
-    el('div', { classe: 'medidor-centro' }, [numero, unidade, segunda]),
-    rotulo,
-  ]);
+  const numero = texto('medidor-numero', 152, '—');
+  const unidade = texto('medidor-unidade', 173, unidadeDePid(pid));
+  const segunda = texto('medidor-secundario', 191);
+  if (!secundario) segunda.setAttribute('visibility', 'hidden');
+
+  desenho.append(numero, unidade, segunda);
+
+  const rotulo = el('span', { classe: 'medidor-titulo', texto: titulo ?? definicao.curto ?? definicao.nome ?? pid });
+  const no = el('div', { classe: 'medidor', dados: { pid } }, [desenho, rotulo]);
 
   let ultimo;
   return {
@@ -257,9 +270,9 @@ export function criarMedidor(pid, { titulo = null, secundario = false, escala = 
      * número (OBD ou GPS) e se dá para confiar nele, e isso precisa aparecer
      * junto. Um «82» sem origem, embaixo de outro «78», não informa nada.
      */
-    atualizarSecundario(texto) {
-      segunda.hidden = !texto;
-      segunda.textContent = texto ?? '';
+    atualizarSecundario(conteudo) {
+      segunda.setAttribute('visibility', conteudo ? 'visible' : 'hidden');
+      segunda.textContent = conteudo ?? '';
     },
   };
 }

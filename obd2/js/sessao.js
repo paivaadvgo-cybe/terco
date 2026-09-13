@@ -176,6 +176,18 @@ export function criarSessao({ armazenamento }) {
    */
   function anotarMaximos() {
     let mudou = false;
+
+    /*
+     * A máxima entra em `valores` para poder virar mostrador do painel.
+     *
+     * Sem isto ela viveria só na lista de máximos, e o «170 km/h MAX» que um
+     * quadro de instrumentos põe no canto não teria como ser montado.
+     */
+    const velocidadeAgora = estado.valores.GPS ?? estado.valores['0D'];
+    if (Number.isFinite(velocidadeAgora)) {
+      estado.valores.MAXIMA = Math.max(estado.valores.MAXIMA ?? 0, velocidadeAgora);
+    }
+
     for (const chave of MAXIMOS_ACOMPANHADOS) {
       const valor = estado.valores[chave];
       if (!Number.isFinite(valor)) continue;
@@ -301,6 +313,8 @@ export function criarSessao({ armazenamento }) {
 
     if (Number.isFinite(estado.media.kmPorLitro)) estado.valores.MEDIA = estado.media.kmPorLitro;
     else delete estado.valores.MEDIA;
+
+    if (Number.isFinite(estado.media.distancia)) estado.valores.DISTANCIA = estado.media.distancia;
     estado.alertas = alertas(estado.valores, { luzAcesa: estado.luz?.luzAcesa ?? false });
 
     const decorrido = (Date.now() - contagem.desde) / 1000;

@@ -200,6 +200,23 @@ export const CALCULADOS = {
     nome: 'Consumo médio', curto: 'Média', unidade: 'km/L',
     casas: 1, min: 0, max: 30, calculado: true, ritmo: 'rapido',
   },
+  /**
+   * A maior velocidade lida desde que se conectou.
+   *
+   * É o «MAX» do canto de um quadro de instrumentos. Fica junto dos outros
+   * valores, e não só na lista de máximos, porque num painel de instrumentos ele
+   * é um mostrador como qualquer outro — e porque quem o quer no canto da tela
+   * precisa poder pô-lo lá.
+   */
+  MAXIMA: {
+    nome: 'Velocidade máxima', curto: 'Máxima', unidade: 'km/h',
+    casas: 0, min: 0, max: 240, calculado: true, ritmo: 'rapido',
+  },
+  /** Quilômetros rodados desde a conexão — a «distância total» do painel. */
+  DISTANCIA: {
+    nome: 'Distância percorrida', curto: 'Distância', unidade: 'km',
+    casas: 1, min: 0, max: 500, calculado: true, ritmo: 'rapido',
+  },
 };
 
 /** A leitura veio do barômetro do carro, ou da atmosfera presumida? */

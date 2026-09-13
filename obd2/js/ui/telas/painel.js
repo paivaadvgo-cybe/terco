@@ -50,11 +50,20 @@ function alimentavel(chave, estado) {
   if (EXTERNOS[chave]) return Boolean(estado.gps?.ativo);
 
   /*
-   * Consumo e média são contas do aplicativo, e existem quando existe fonte
-   * para elas: o PID de vazão, o fluxo de ar, ou a dedução pelo coletor com a
-   * cilindrada informada. Num carro sem nenhuma das três, o mostrador nunca
-   * teria número — e some, em vez de ficar em travessão para sempre.
+   * As contas do aplicativo dependem do que as alimenta, e não todas do mesmo.
+   *
+   * Consumo e média precisam de uma fonte de combustível — o PID de vazão, o
+   * fluxo de ar, ou a dedução pelo coletor com a cilindrada informada. Num carro
+   * sem nenhuma das três elas nunca teriam número, e somem em vez de ficar em
+   * travessão para sempre.
+   *
+   * Máxima e distância precisam só de velocidade, que todo carro com OBD tem.
+   * Tratá-las como consumo as esconderia num carro sem sensor de fluxo de ar —
+   * e não há motivo nenhum para isso.
    */
+  if (chave === 'MAXIMA' || chave === 'DISTANCIA') {
+    return estado.pids.length === 0 || estado.pids.includes('0D') || Boolean(estado.gps?.ativo);
+  }
   if (CALCULADOS[chave]) return Boolean(estado.consumo?.origem);
 
   if (!estado.pids || estado.pids.length === 0) return true;
@@ -105,6 +114,49 @@ export async function telaPainel(contexto) {
   grade.style.setProperty('--linhas', String(Math.max(1, alturaDoPainel(itensVisiveis))));
   tela.append(grade);
   contexto.aoSair(manterCelulasQuadradas(grade));
+
+  /*
+   * O modo quadro de instrumentos.
+   *
+   * Esconde o título, a barra de abas e o resto da tela: sobra o painel, de
+   * ponta a ponta, sobre fundo escuro. É o que transforma um aplicativo num
+   * quadro de instrumentos — e num celular deitado, preso ao painel do carro, a
+   * barra de abas ocupa um sexto da altura útil só para ficar ali sem ser
+   * tocada.
+   *
+   * O `requestFullscreen` é um bônus, não o mecanismo: ele é recusado em
+   * situações comuns (sem gesto recente, navegador em modo restrito), e o modo
+   * precisa funcionar mesmo assim. Por isso quem esconde a interface é a classe
+   * no `body`, e a tela cheia do sistema entra por cima quando aceita.
+   */
+  function alternarTelaCheia() {
+    const entrando = !document.body.classList.contains('quadro-de-instrumentos');
+    document.body.classList.toggle('quadro-de-instrumentos', entrando);
+
+    if (entrando) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+      avisar('Toque no painel para sair', 'ok', 2600);
+    } else if (document.fullscreenElement) {
+      document.exitFullscreen?.().catch(() => {});
+    }
+  }
+
+  // Sair é tocar em qualquer lugar do painel: procurar um botãozinho de saída
+  // com o carro andando é o oposto do que este modo existe para fazer.
+  grade.addEventListener('click', () => {
+    if (document.body.classList.contains('quadro-de-instrumentos')) alternarTelaCheia();
+  });
+
+  // A tela cheia pode cair por fora (botão «voltar», gesto do sistema): sem
+  // ouvir isso, a interface ficaria escondida com a tela cheia já encerrada.
+  const aoSairDaTelaCheia = () => {
+    if (!document.fullscreenElement) document.body.classList.remove('quadro-de-instrumentos');
+  };
+  document.addEventListener('fullscreenchange', aoSairDaTelaCheia);
+  contexto.aoSair(() => {
+    document.removeEventListener('fullscreenchange', aoSairDaTelaCheia);
+    document.body.classList.remove('quadro-de-instrumentos');
+  });
 
   /*
    * A segunda fonte de velocidade acompanha o ponteiro que a mostra.
@@ -198,6 +250,7 @@ export async function telaPainel(contexto) {
     interruptorDeVideo,
     previa,
     estadoDoVideo,
+    botao('Modo quadro de instrumentos', alternarTelaCheia, { tipo: 'secundario', classe: 'largo' }),
     botao('Personalizar painel', () => contexto.ir('editor'), { tipo: 'fantasma', classe: 'largo' }),
     el('p', {
       classe: 'campo-dica',

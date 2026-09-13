@@ -41,7 +41,12 @@ carro simulado funciona, e serve para conhecer o aplicativo.
   redimensionar, toque para escolher o que cada mostrador mostra e em que escala.
   Três formatos: ponteiro analógico (com escala numerada e o valor exato
   embaixo), número e barra. Até **cinco disposições salvas** — uma para a
-  cidade, outra para a estrada, outra para a oficina.
+  cidade, outra para a estrada, outra para a oficina. Começa de um modelo:
+  **Instrumentos** (velocímetro grande no centro, conta-giros ao lado),
+  **Completo** ou **Vazio**.
+- **Modo quadro de instrumentos** — esconde título, abas e o resto, e deixa só o
+  painel, de ponta a ponta, sobre fundo preto. Toque em qualquer lugar para
+  sair. É o modo para o celular preso ao painel do carro.
 - **Escala por mostrador** — a tabela traz uma faixa genérica (rotação de 0 a
   8.000), e quem personaliza quer a do seu carro: num diesel que corta em 4.500,
   apertar a escala é a diferença entre um ponteiro que mexe e um que fica quase
@@ -84,6 +89,10 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 
 ## Como usar
 
+O aplicativo é feito para a **tela deitada**: o manifesto pede paisagem, a grade
+tem oito colunas e os modelos são desenhados para as três linhas que a altura de
+um celular em paisagem comporta.
+
 1. Abra o aplicativo em **https** (GitHub Pages serve), e instale na tela
    inicial se quiser.
 2. Ligue o adaptador no conector OBD-II — sob o painel, do lado do
@@ -108,9 +117,9 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/sessao.js` | A conexão viva e o laço de leitura. |
 | `js/video.js` | A câmera: grava a estrada em trechos, com a hora de cada um. |
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
-| `js/dominio/painel.js` | A disposição: grade, colisão, escala e as cinco configurações. |
+| `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 158 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 161 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones e carimba a versão do cache. |
 
 ## Desenvolvimento
@@ -148,13 +157,20 @@ chega a quem já tem o aplicativo instalado.
   gravado.
 - Sem o PID da pressão atmosférica (33), o turbo é calculado contra 101,3 kPa.
   Em Goiânia, a 750 m de altitude, isso desloca a leitura em cerca de 0,08 bar.
-- A disposição é uma grade de quatro colunas, e não posição livre em pixels: um
+- A disposição é uma grade de oito colunas, e não posição livre em pixels: um
   mostrador em «x = 280 px» sumiria da tela de 360 px, e o painel montado no
   aparelho de casa chegaria torto no do carro.
 - Arrastar um mostrador para cima de outro **do mesmo tamanho** troca os dois de
   lugar. Para cima de um de tamanho diferente, o aplicativo recusa e sacode:
   empurrar, encolher ou empilhar não têm resposta óbvia, e inventar uma seria
   pior que deixar escolher outro lugar.
+- Do quadro de instrumentos que serviu de modelo, ficaram de fora quatro coisas,
+  e cada uma por um motivo: a **bússola** precisa de magnetômetro, que o
+  navegador expõe de forma irregular e com permissão à parte; o **limite de
+  velocidade** exige dados de mapa, que este aplicativo não tem e não inventa; a
+  **marcha engatada** não tem PID padronizado na maioria dos carros; e o
+  **relógio** não é um número com unidade, que é a única coisa que os
+  mostradores sabem desenhar hoje.
 - O GPS perde o sinal em túnel, garagem e sob mata fechada. Quando a última
   correção fica velha ou imprecisa, a tela diz «sem sinal» em vez de mostrar o
   último número — que seria afirmar uma velocidade de meio minuto atrás. Ele

@@ -22,8 +22,8 @@ import { criarVisor } from '../medidor.js';
 import { ligarGrade, posicionarNaGrade, manterCelulasQuadradas } from '../grade.js';
 import { tudoQueSeMostra, definicaoDe } from '../../obd/pids.js';
 import {
-  COLUNAS, LIMITE_DE_PAINEIS, TIPOS, criarItem, escalaDe,
-  mover, redimensionar, primeiroLugarVago, painelPadrao, alturaDoPainel,
+  COLUNAS, LIMITE_DE_PAINEIS, TIPOS, MODELOS, criarItem, escalaDe,
+  mover, redimensionar, primeiroLugarVago, alturaDoPainel,
 } from '../../dominio/painel.js';
 
 /**
@@ -90,15 +90,31 @@ export async function telaEditor(contexto, parametros = {}) {
     desenharGrade();
   }
 
+  /**
+   * Um painel novo começa de um modelo.
+   *
+   * Montar quatorze mostradores do zero, um a um, com o dedo, é trabalho de
+   * meia hora; partir de um arranjo pronto e mexer leva um minuto. «Vazio»
+   * existe para quem quer mesmo começar do nada.
+   */
   function novoPainel() {
     if (paineis.length >= LIMITE_DE_PAINEIS) return;
-    paineis.push(painelPadrao(`Painel ${paineis.length + 1}`));
-    indice = paineis.length - 1;
-    itens = paineis[indice].itens;
-    sujo = true;
-    desenharAbas();
-    desenharGrade();
-    avisar('Painel novo, a partir do padrão');
+
+    const folha = abrirFolha('Novo painel', el('div', { classe: 'tela' }, [
+      el('p', { classe: 'campo-dica', texto: 'Escolha por onde começar. Tudo pode ser mudado depois.' }),
+      ...MODELOS.map((modelo) => botao(modelo.nome, () => {
+        paineis.push(modelo.montar(`Painel ${paineis.length + 1}`));
+        indice = paineis.length - 1;
+        itens = paineis[indice].itens;
+        sujo = true;
+        desenharAbas();
+        desenharGrade();
+        folha.fechar();
+      }, { tipo: modelo.chave === 'instrumentos' ? 'principal' : 'fantasma', classe: 'largo' })),
+      el('div', { classe: 'detalhe-linhas' }, MODELOS.map((modelo) => (
+        el('p', { classe: 'campo-dica', texto: `${modelo.nome}: ${modelo.descricao}` })
+      ))),
+    ]));
   }
 
   /* ------------------------------------------------------------- a prévia */

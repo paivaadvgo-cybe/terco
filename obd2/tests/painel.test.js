@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 import {
   COLUNAS, LIMITE_DE_PAINEIS, criarItem, escalaDe, colide, cabe,
   primeiroLugarVago, mover, redimensionar, alturaDoPainel,
-  painelPadrao, normalizar, normalizarTodos, converterEscolhaAntiga, chavesDoPainel,
+  painelPadrao, painelDeInstrumentos, MODELOS, normalizar, normalizarTodos, converterEscolhaAntiga, chavesDoPainel,
 } from '../js/dominio/painel.js';
 import { criarDriverEmMemoria } from '../js/armazenamento/memoria.js';
 import { criarArmazenamento } from '../js/armazenamento/storage.js';
@@ -237,11 +237,45 @@ test('uma configuração corrompida não derruba o painel', async () => {
   assert.ok(configuracao.paineis[0].itens[0].largura >= 1);
 });
 
-test('restaurar devolve o painel de fábrica', async () => {
+test('restaurar devolve os painéis de fábrica', async () => {
   const armazenamento = await abrir();
-  await armazenamento.salvarPaineis([painelPadrao('Meu'), painelPadrao('Outro')]);
+  await armazenamento.salvarPaineis([painelPadrao('Meu'), painelPadrao('Outro'), painelPadrao('Mais')]);
   await armazenamento.restaurarPaineis();
 
   const configuracao = await armazenamento.configuracao();
-  assert.equal(configuracao.paineis.length, 1);
+  // De fábrica são dois: o quadro de instrumentos, que é o que se usa
+  // dirigindo, e o completo, para quem quer tudo na tela.
+  assert.deepEqual(configuracao.paineis.map((p) => p.nome), ['Instrumentos', 'Completo']);
+  assert.equal(configuracao.painelAtivo, configuracao.paineis[0].id);
+});
+
+test('o quadro de instrumentos cabe na tela deitada', async () => {
+  // Três linhas é o que a altura de um celular em paisagem comporta; um item na
+  // quarta linha ficaria fora da tela no modo em que este painel é usado.
+  const painel = painelDeInstrumentos();
+  assert.equal(alturaDoPainel(painel.itens), 3);
+  for (const item of painel.itens) {
+    assert.ok(cabe(item, {}, painel.itens), `${item.chave} não cabe onde está`);
+    assert.ok(item.x + item.largura <= COLUNAS);
+  }
+});
+
+test('o velocímetro do quadro de instrumentos é o maior mostrador', () => {
+  // É o único que se olha a cada poucos segundos; no exemplo que motivou este
+  // modelo ele ocupa o centro e o resto orbita em volta.
+  const painel = painelDeInstrumentos();
+  const velocidade = painel.itens.find((i) => i.chave === '0D');
+  const maiorArea = Math.max(...painel.itens.map((i) => i.largura * i.altura));
+  assert.equal(velocidade.tipo, 'ponteiro');
+  assert.equal(velocidade.largura * velocidade.altura, maiorArea);
+});
+
+test('todos os modelos produzem painéis válidos', () => {
+  for (const modelo of MODELOS) {
+    const painel = modelo.montar('Teste');
+    assert.ok(painel.id, `${modelo.chave} sem identificador`);
+    for (const item of painel.itens) {
+      assert.ok(cabe(item, {}, painel.itens), `${modelo.chave}: ${item.chave} não cabe`);
+    }
+  }
 });

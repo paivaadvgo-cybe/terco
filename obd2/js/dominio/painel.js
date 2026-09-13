@@ -24,11 +24,25 @@ import { definicaoDe } from '../obd/pids.js';
 /** Quantas configurações diferentes cabem. */
 export const LIMITE_DE_PAINEIS = 5;
 
-/** Colunas da grade. Quatro cabem num celular em pé sem virar régua. */
-export const COLUNAS = 4;
+/**
+ * Colunas da grade. Oito, porque o painel é sempre usado deitado.
+ *
+ * Um celular em paisagem tem perto de 840 por 390 pixels úteis: oito colunas dão
+ * células de uns 95 px, e três linhas dessas é tudo que cabe em altura. Não é
+ * uma escolha estética — é a forma do espaço disponível. Com quatro colunas, um
+ * painel deitado ficaria com metade da tela vazia dos lados; com dezesseis, cada
+ * célula teria 45 px e nenhum ponteiro caberia.
+ */
+export const COLUNAS = 8;
 
-/** O maior painel que se pode montar, em linhas. */
-export const LINHAS_MAXIMAS = 12;
+/**
+ * O maior painel que se pode montar, em linhas.
+ *
+ * Bem mais que as três que cabem na tela: quem quiser montar um painel que rola
+ * pode. O que não se quer é permitir um item na linha oitenta, que sumiria
+ * abaixo de qualquer rolagem razoável.
+ */
+export const LINHAS_MAXIMAS = 8;
 
 export const TIPOS = {
   ponteiro: { nome: 'Ponteiro', minimo: { largura: 2, altura: 2 } },
@@ -179,17 +193,74 @@ export function painelPadrao(nome = 'Padrão') {
     itens: [
       criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 2, altura: 2 }),
       criarItem('0D', 'ponteiro', { x: 2, y: 0, largura: 2, altura: 2 }),
-      criarItem('CONSUMO', 'mostrador', { x: 0, y: 2, largura: 1, altura: 1 }),
-      criarItem('MEDIA', 'mostrador', { x: 1, y: 2, largura: 1, altura: 1 }),
-      criarItem('TURBO', 'mostrador', { x: 2, y: 2, largura: 1, altura: 1 }),
-      criarItem('05', 'mostrador', { x: 3, y: 2, largura: 1, altura: 1 }),
-      criarItem('11', 'mostrador', { x: 0, y: 3, largura: 1, altura: 1 }),
-      criarItem('04', 'mostrador', { x: 1, y: 3, largura: 1, altura: 1 }),
-      criarItem('42', 'mostrador', { x: 2, y: 3, largura: 1, altura: 1 }),
-      criarItem('2F', 'mostrador', { x: 3, y: 3, largura: 1, altura: 1 }),
+      criarItem('CONSUMO', 'mostrador', { x: 4, y: 0, largura: 1, altura: 1 }),
+      criarItem('MEDIA', 'mostrador', { x: 5, y: 0, largura: 1, altura: 1 }),
+      criarItem('TURBO', 'mostrador', { x: 6, y: 0, largura: 1, altura: 1 }),
+      criarItem('05', 'mostrador', { x: 7, y: 0, largura: 1, altura: 1 }),
+      criarItem('11', 'mostrador', { x: 4, y: 1, largura: 1, altura: 1 }),
+      criarItem('04', 'mostrador', { x: 5, y: 1, largura: 1, altura: 1 }),
+      criarItem('42', 'mostrador', { x: 6, y: 1, largura: 1, altura: 1 }),
+      criarItem('2F', 'barra', { x: 4, y: 2, largura: 2, altura: 1 }),
+      criarItem('46', 'mostrador', { x: 6, y: 2, largura: 1, altura: 1 }),
+      criarItem('1F', 'mostrador', { x: 7, y: 2, largura: 1, altura: 1 }),
+      criarItem('DISTANCIA', 'mostrador', { x: 0, y: 2, largura: 2, altura: 1 }),
+      criarItem('MAXIMA', 'mostrador', { x: 2, y: 2, largura: 2, altura: 1 }),
     ],
   };
 }
+
+/**
+ * O painel de instrumentos: um velocímetro grande no meio, o resto em volta.
+ *
+ * É a disposição de um quadro de instrumentos de carro, e ela não é enfeite: o
+ * velocímetro ocupa o centro porque é o único mostrador que se olha a cada
+ * poucos segundos, e o conta-giros fica ao lado porque se olha junto com ele.
+ * O que se consulta de vez em quando — distância, tanque, temperatura — vai para
+ * as bordas, onde o olho só vai quando procura.
+ *
+ * Feito para a tela deitada, de ponta a ponta.
+ */
+export function painelDeInstrumentos(nome = 'Instrumentos') {
+  return {
+    id: novoId('p'),
+    nome,
+    itens: [
+      /*
+       * O velocímetro ocupa quatro colunas por três linhas, no centro.
+       *
+       * Quatro e não três porque o mostrador é desenhado no maior círculo que
+       * couber na célula: com três colunas ele fica limitado pela largura e
+       * sobra faixa preta em cima e embaixo. Com quatro, quem limita passa a ser
+       * a altura da tela — e o ponteiro fica do tamanho que a tela permite, que
+       * é o ponto de um quadro de instrumentos.
+       */
+      criarItem('0D', 'ponteiro', { x: 2, y: 0, largura: 4, altura: 3 }),
+
+      // À esquerda, o que se consulta parado.
+      criarItem('1F', 'mostrador', { x: 0, y: 0, largura: 2, altura: 1 }),
+      criarItem('42', 'mostrador', { x: 0, y: 1, largura: 1, altura: 1 }),
+      criarItem('05', 'mostrador', { x: 1, y: 1, largura: 1, altura: 1 }),
+      criarItem('MAXIMA', 'mostrador', { x: 0, y: 2, largura: 2, altura: 1 }),
+
+      // À direita, a distância e o conta-giros — que se olha junto com a
+      // velocidade, e por isso fica do lado dela.
+      criarItem('DISTANCIA', 'mostrador', { x: 6, y: 0, largura: 2, altura: 1 }),
+      criarItem('0C', 'ponteiro', { x: 6, y: 1, largura: 2, altura: 2 }),
+    ],
+  };
+}
+
+/**
+ * Os modelos oferecidos ao criar um painel.
+ *
+ * Começar de um modelo e mexer é muito mais rápido que montar quatorze
+ * mostradores do zero — e «vazio» existe para quem quer exatamente isso.
+ */
+export const MODELOS = [
+  { chave: 'instrumentos', nome: 'Instrumentos', descricao: 'Velocímetro grande no centro, conta-giros ao lado', montar: painelDeInstrumentos },
+  { chave: 'padrao', nome: 'Completo', descricao: 'Dois ponteiros e todos os números', montar: painelPadrao },
+  { chave: 'vazio', nome: 'Vazio', descricao: 'Começar do zero', montar: (nome) => ({ id: novoId('p'), nome, itens: [] }) },
+];
 
 /**
  * Põe um painel em forma, venha de onde vier.

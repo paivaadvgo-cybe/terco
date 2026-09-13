@@ -230,6 +230,96 @@ body.carregando .conteudo { opacity: 0; }
 .item-do-painel[data-altura="2"] .barra-trilho,
 .item-do-painel[data-altura="3"] .barra-trilho { height: 18px; }
 
+/*
+ * O modo quadro de instrumentos.
+ *
+ * Some tudo que não é o painel, e o fundo vai a preto — que num carro à noite é
+ * o que não ofusca, e de dia é o que dá contraste ao número. A grade se estica
+ * para a tela inteira e as células deixam de ser quadradas: aqui manda a altura
+ * disponível, porque o que se quer é o maior ponteiro que couber.
+ */
+body.quadro-de-instrumentos {
+  /*
+   * O modo cheio troca a paleta inteira, e não só o fundo.
+   *
+   * Forçar `background: #000` sem trocar os tokens deixava o texto escuro do
+   * tema claro em cima do preto: «14,2 V» sumia, legível só contra a luz. Um
+   * quadro de instrumentos é escuro por natureza — à noite, tela clara a meio
+   * palmo do rosto ofusca —, então aqui o escuro não é uma opção do tema: é o
+   * modo.
+   */
+  color-scheme: dark;
+  --fundo: #000;
+  --superficie: #0a0d11;
+  --superficie-2: #141a21;
+  --texto: #f2f6fa;
+  --suave: #8fa1b3;
+  --borda: #1b222b;
+  --principal: #4ea0f5;
+  --principal-texto: #06101a;
+  --principal-fraco: #17293c;
+  --ok: #3fd39a;
+  --atencao: #f0b24a;
+  --perigo: #f47a72;
+  --frio: #6fb4f0;
+
+  padding-bottom: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  overflow: hidden;
+}
+
+body.quadro-de-instrumentos .topo,
+body.quadro-de-instrumentos .barra,
+body.quadro-de-instrumentos .atualizacao,
+body.quadro-de-instrumentos .cartao,
+body.quadro-de-instrumentos .alertas:empty { display: none !important; }
+
+body.quadro-de-instrumentos .conteudo { padding: 0; max-width: none; }
+body.quadro-de-instrumentos .tela { gap: 0; }
+
+body.quadro-de-instrumentos .grade-do-painel {
+  height: 100dvh;
+  padding: 8px;
+  gap: 6px;
+  /*
+   * As linhas dividem a altura da tela em partes iguais, em vez de seguirem a
+   * largura da coluna. Numa tela deitada isso é o que faz o velocímetro ocupar
+   * a altura toda em vez de sobrar faixa preta em cima e embaixo.
+   */
+  grid-auto-rows: minmax(0, 1fr);
+  grid-template-rows: repeat(var(--linhas, 3), minmax(0, 1fr));
+}
+
+body.quadro-de-instrumentos .medidor,
+body.quadro-de-instrumentos .mostrador,
+body.quadro-de-instrumentos .visor-barra {
+  background: var(--superficie);
+  box-shadow: none;
+  border: 1px solid var(--borda);
+}
+
+/*
+ * O aviso não pode atravessar o quadro.
+ *
+ * Fora daqui ele mora acima da barra de abas; sem a barra, ele caía bem no meio
+ * da tela, por cima do velocímetro. Encolhido e encostado no canto, ele informa
+ * sem tapar o que se está olhando.
+ */
+body.quadro-de-instrumentos .avisos {
+  left: auto;
+  right: 10px;
+  bottom: 10px;
+  width: min(48%, 320px);
+}
+
+body.quadro-de-instrumentos .aviso {
+  background: var(--superficie-2);
+  color: var(--texto);
+  font-size: 13px;
+  padding: 8px 12px;
+}
+
 /* ------------------------------------------------------------- o editor */
 
 /*
@@ -412,9 +502,16 @@ body.carregando .conteudo { opacity: 0; }
  * dois nunca se encontram, porque a linha de baixo é reservada mesmo que o
  * número cresça.
  */
+/*
+ * O desenho ocupa o espaço que houver, e o rótulo fica embaixo.
+ *
+ * `minmax(0, 1fr)` na primeira linha é o que permite ao SVG encolher numa
+ * célula baixa: sem o mínimo zero, o conteúdo impõe a altura e o mostrador
+ * estoura para fora da célula, cortando o rótulo.
+ */
 .medidor {
   display: grid;
-  grid-template-rows: auto auto;
+  grid-template-rows: minmax(0, 1fr) auto;
   background: var(--superficie);
   border-radius: var(--raio);
   box-shadow: var(--sombra);
@@ -422,10 +519,19 @@ body.carregando .conteudo { opacity: 0; }
   text-align: center;
 }
 
+/*
+ * O desenho cabe na célula, seja ela qual for.
+ *
+ * Com largura e altura em cem por cento, o SVG se ajusta à caixa e o
+ * `preserveAspectRatio` padrão mantém a proporção, centrando o que sobrar. É o
+ * que faz o mesmo mostrador funcionar numa célula quadrada de oitenta pixels e
+ * no velocímetro que ocupa a altura de uma tela deitada.
+ */
 .medidor-desenho {
-  grid-area: 1 / 1;
+  grid-row: 1;
   width: 100%;
-  height: auto;
+  height: 100%;
+  min-height: 0;
   display: block;
 }
 
@@ -498,50 +604,36 @@ body.carregando .conteudo { opacity: 0; }
 .medidor[data-faixa="perigo"] .medidor-eixo { stroke: var(--perigo); }
 
 /*
- * O número digital, no vão de baixo do mostrador.
+ * O número digital, desenhado dentro do SVG.
  *
- * Ocupa a mesma célula da grade que o desenho e encosta na base: com a abertura
- * de 240° sobra um vão entre as duas pontas da escala, que é onde um painel de
- * carro põe o hodômetro. O rótulo tem a linha 2 só dele, e por isso o número
- * pode crescer de «58» para «140» sem empurrar nada.
+ * São elementos de texto do próprio desenho, e por isso a cor vai em `fill` e
+ * não em `color`, e o tamanho em unidades do `viewBox` — que escalam junto com
+ * o mostrador. É o que faz o número ficar sempre no mesmo lugar do desenho, do
+ * ponteiro pequeno de uma célula ao velocímetro que ocupa a tela inteira.
  */
-.medidor-centro {
-  grid-area: 1 / 1;
-  align-self: end;
-  justify-self: center;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  line-height: 1.1;
-  pointer-events: none;
-}
-
 .medidor-numero {
-  font-size: 28px;
+  fill: var(--texto);
+  font-size: 32px;
   font-weight: 700;
-  line-height: 1.05;
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.5px;
 }
 
 .medidor-unidade {
-  font-size: 12px;
-  color: var(--suave);
+  fill: var(--suave);
+  font-size: 13px;
 }
 
 /* A segunda fonte de velocidade: menor, e sempre com a origem ao lado. */
 .medidor-secundario {
-  display: block;
-  margin-top: 2px;
-  font-size: 13px;
+  fill: var(--suave);
+  font-size: 14px;
   font-weight: 600;
-  color: var(--suave);
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .medidor-titulo {
-  grid-area: 2 / 1;
+  grid-row: 2;
   margin-top: 2px;
   font-size: 13px;
   color: var(--suave);
