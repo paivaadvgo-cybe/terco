@@ -19,11 +19,17 @@ import { avisar } from '../avisos.js';
 import { numero, consumo as formatarConsumo, valorDePid, unidadeDePid } from '../formatar.js';
 import { duracao } from '../../dominio/datas.js';
 import { diagnostico } from '../../obd/transportes.js';
-import { definicaoDe, DERIVADOS } from '../../obd/pids.js';
+import { definicaoDe, DERIVADOS, EXTERNOS } from '../../obd/pids.js';
 import { ESTADOS, MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
 
-/** Os dois que ganham ponteiro grande. O resto vira mostrador. */
-const PRINCIPAIS = ['0C', '0D'];
+/**
+ * O que já aparece nos ponteiros grandes, e por isso não se repete embaixo.
+ *
+ * `GPS` entra na lista mesmo quando a fonte escolhida é o OBD: mostrá-lo como
+ * mostrador miúdo ao lado do ponteiro de velocidade seria a mesma grandeza duas
+ * vezes na mesma tela, com números diferentes e sem explicação.
+ */
+const PRINCIPAIS = ['0C', '0D', 'GPS'];
 
 /**
  * Um valor escolhido no painel só vira mostrador se este carro puder alimentá-lo.
@@ -33,6 +39,10 @@ const PRINCIPAIS = ['0C', '0D'];
  * naquele instante ainda não se sabe, e esconder seria adivinhar.
  */
 function alimentavel(chave, estado) {
+  // O GPS não vem do carro: quem o alimenta é o celular, e ele só existe na
+  // tela quando o condutor o ligou nos ajustes e o sinal apareceu.
+  if (EXTERNOS[chave]) return Boolean(estado.gps?.ativo);
+
   if (!estado.pids || estado.pids.length === 0) return true;
   const derivado = DERIVADOS[chave];
   if (derivado) return derivado.precisa.every((pid) => estado.pids.includes(pid));
@@ -56,12 +66,32 @@ export async function telaPainel(contexto) {
 
   /* ------------------------------------------------------------ ponteiros */
 
-  const medidores = PRINCIPAIS.map((pid) => criarMedidor(pid));
-  tela.append(el('div', { classe: 'medidores' }, medidores.map((m) => m.no)));
+  /*
+   * Quem manda no ponteiro da velocidade, e quem fica na linha de baixo.
+   *
+   * As duas fontes discordam de propósito: o velocímetro do carro — e o OBD com
+   * ele — marca para cima por norma, e o GPS fica mais perto do real. Quem liga
+   * as duas quer justamente ver a diferença, então a segunda nunca é escondida:
+   * ela fica menor, sob o número grande, com o nome da origem ao lado. Um
+   * número sem origem, embaixo de outro número, não informa nada.
+   */
+  const escolha = configuracao.velocimetro ?? 'obd';
+  const principalEhGPS = escolha === 'gps' || (escolha === 'ambos' && configuracao.velocimetroPrincipal === 'gps');
+  const fontePrincipal = principalEhGPS ? 'GPS' : '0D';
+  const fonteSecundaria = escolha === 'ambos' ? (principalEhGPS ? '0D' : 'GPS') : null;
+
+  const medidorDeGiro = criarMedidor('0C');
+  const medidorDeVelocidade = criarMedidor(fontePrincipal, {
+    titulo: escolha === 'obd' ? 'Velocidade' : `Velocidade · ${principalEhGPS ? 'GPS' : 'OBD'}`,
+    secundario: Boolean(fonteSecundaria),
+  });
+
+  tela.append(el('div', { classe: 'medidores' }, [medidorDeGiro.no, medidorDeVelocidade.no]));
 
   /* -------------------------------------------------------------- consumo */
 
   const cartaoConsumo = criarCartaoDeValor('Consumo', { unidade: '', dica: '' });
+  const cartaoMedia = criarCartaoDeValor('Média', { unidade: '', dica: '' });
   const cartaoDistancia = criarCartaoDeValor('Gravação', { unidade: '' });
 
   /* ---------------------------------------------------------- mostradores */
@@ -76,6 +106,7 @@ export async function telaPainel(contexto) {
     listaDeAlertas,
     el('div', { classe: 'mostradores' }, [
       cartaoConsumo.no,
+      cartaoMedia.no,
       cartaoDistancia.no,
       ...mostradores.map((m) => m.no),
     ]),
@@ -178,8 +209,29 @@ export async function telaPainel(contexto) {
   /* ---------------------------------------------------------- atualização */
 
   let comecouEm = null;
+  /**
+   * O texto da segunda velocidade.
+   *
+   * Quando é o GPS, ele carrega o estado do sinal junto: sem correção recente,
+   * mostrar o último número seria afirmar uma velocidade de meio minuto atrás —
+   * e é exatamente em túnel e viaduto, onde o sinal cai, que alguém olharia.
+   */
+  function textoDaSegundaFonte(estado) {
+    if (!fonteSecundaria) return null;
+    const valor = estado.valores[fonteSecundaria];
+
+    if (fonteSecundaria === 'GPS') {
+      if (estado.gps?.erro) return `GPS indisponível`;
+      if (!estado.gps?.confiavel) return 'GPS sem sinal';
+      return `GPS ${valorDePid('GPS', valor)} km/h`;
+    }
+    return Number.isFinite(valor) ? `OBD ${valorDePid('0D', valor)} km/h` : 'OBD —';
+  }
+
   function desenharEstado(estado) {
-    for (const medidor of medidores) medidor.atualizar(estado.valores[medidor.no.dataset.pid]);
+    medidorDeGiro.atualizar(estado.valores['0C']);
+    medidorDeVelocidade.atualizar(estado.valores[fontePrincipal]);
+    medidorDeVelocidade.atualizarSecundario(textoDaSegundaFonte(estado));
     for (const mostrador of mostradores) mostrador.atualizar(estado.valores[mostrador.no.dataset.pid]);
 
     const { litrosPorHora, kmPorLitro, origem, parado } = estado.consumo ?? {};
@@ -192,6 +244,24 @@ export async function telaPainel(contexto) {
       cartaoConsumo.atualizar(formatarConsumo(kmPorLitro).replace(' km/L', ''), fonte, 'km/L');
     } else {
       cartaoConsumo.atualizar('—', origem ? fonte : 'este carro não informa', '');
+    }
+
+    /*
+     * A média só aparece depois de rodar um pouco.
+     *
+     * Nos primeiros metros a divisão de uma distância minúscula por um consumo
+     * minúsculo dá números que saltam de 3 para 300 entre duas leituras. Mostrar
+     * isso não é informação: é ruído com aparência de número.
+     */
+    const media = estado.media ?? {};
+    if (Number.isFinite(media.kmPorLitro) && media.distancia >= 0.3) {
+      cartaoMedia.atualizar(
+        numero(media.kmPorLitro, 1),
+        `em ${numero(media.distancia, 1)} km`,
+        'km/L',
+      );
+    } else {
+      cartaoMedia.atualizar('—', 'precisa rodar um pouco', '');
     }
 
     if (estado.gravando) {

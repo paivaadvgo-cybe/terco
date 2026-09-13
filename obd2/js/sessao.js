@@ -25,9 +25,10 @@ import { criarELM327, ErroDoAdaptador } from './obd/elm327.js';
 import {
   RITMOS, definicaoDe, conhecidosEntre, DERIVADOS, calcularDerivados, derivadosPossiveis,
 } from './obd/pids.js';
-import { criarAmostra, instantaneo } from './dominio/viagem.js';
+import { criarAmostra, instantaneo, criarMediaDeConsumo } from './dominio/viagem.js';
 import { alertas } from './dominio/leituras.js';
 import { criarGravadorDeVideo, suportado as temVideo, explicarFalha } from './video.js';
+import { criarVelocimetroGPS, suportado as temGPS } from './gps.js';
 
 /** Quantas falhas seguidas de comunicação derrubam a conexão. */
 const LIMITE_DE_FALHAS = 6;
@@ -40,7 +41,7 @@ const LIMITE_DE_FALHAS = 6;
  * temperatura porque um pico de 112 °C que aconteceu numa subida não aparece em
  * mais lugar nenhum: quando se olha o painel, já baixou.
  */
-export const MAXIMOS_ACOMPANHADOS = ['0D', '0C', 'TURBO', '05'];
+export const MAXIMOS_ACOMPANHADOS = ['0D', 'GPS', '0C', 'TURBO', '05'];
 
 /** De quanto em quanto tempo os recordes vão para o banco. */
 const INTERVALO_DE_GRAVACAO_DE_RECORDE = 10_000;
@@ -82,6 +83,10 @@ export function criarSessao({ armazenamento }) {
     recordes: {},
     /** O estado da câmera, quando a viagem está sendo gravada com vídeo. */
     video: { gravando: false, trechos: 0, bytes: 0, erro: null },
+    /** A leitura do GPS, quando ele está ligado. */
+    gps: { velocidade: null, precisao: null, confiavel: false, erro: null, ativo: false },
+    /** A média de consumo desde que se conectou. */
+    media: { distancia: 0, litros: 0, kmPorLitro: null, origem: null, desde: null },
   };
 
   let elm = null;
@@ -92,6 +97,8 @@ export function criarSessao({ armazenamento }) {
   let ultimaGravacao = 0;
   let ultimaGravacaoDeRecorde = 0;
   let gravadorDeVideo = null;
+  let velocimetroGPS = null;
+  let mediaDeConsumo = criarMediaDeConsumo();
   let falhasSeguidas = 0;
   let contagem = { desde: Date.now(), leituras: 0 };
 
@@ -214,14 +221,63 @@ export function criarSessao({ armazenamento }) {
     }
   }
 
-  /** Deriva o que não vem do carro: turbo, consumo, alertas, taxa de leitura. */
+  /**
+   * Liga o GPS, se os ajustes pedirem.
+   *
+   * Ele é ligado uma vez por conexão e não por gravação: quem escolheu ver as
+   * duas velocidades quer as duas o tempo todo, e não só enquanto grava. A
+   * permissão é pedida pelo navegador na primeira correção.
+   */
+  function cuidarDoGPS() {
+    const quer = configuracao?.velocimetro === 'gps' || configuracao?.velocimetro === 'ambos';
+
+    if (!quer) {
+      velocimetroGPS?.parar();
+      velocimetroGPS = null;
+      estado.gps = { velocidade: null, precisao: null, confiavel: false, erro: null, ativo: false };
+      delete estado.valores.GPS;
+      return;
+    }
+    if (velocimetroGPS) return;
+
+    if (!temGPS()) {
+      estado.gps = { ...estado.gps, erro: 'este navegador não tem GPS', ativo: false };
+      return;
+    }
+
+    velocimetroGPS = criarVelocimetroGPS({
+      aoMudar: (leitura) => {
+        estado.gps = { ...leitura };
+        // Entra em `valores` como qualquer outro: assim ele é gravado na
+        // viagem, sai na planilha e vira gráfico, sem nenhum caminho especial.
+        estado.valores.GPS = leitura.velocidade;
+      },
+      aoFalhar: (motivo) => {
+        estado.gps = { ...estado.gps, erro: motivo, confiavel: false };
+        avisar();
+      },
+    });
+    velocimetroGPS.comecar();
+    estado.gps = { ...velocimetroGPS.leitura };
+  }
+
+  /** Deriva o que não vem do carro: turbo, consumo, média, alertas, taxa. */
   function recalcular() {
     Object.assign(estado.valores, calcularDerivados(estado.valores));
+
+    // A confiança do GPS envelhece sozinha: sem reavaliá-la a cada volta, um
+    // número de trinta segundos atrás continuaria marcado como confiável.
+    if (velocimetroGPS) {
+      estado.gps = { ...velocimetroGPS.atualizarConfianca() };
+      if (!estado.gps.confiavel) delete estado.valores.GPS;
+      else estado.valores.GPS = estado.gps.velocidade;
+    }
 
     estado.consumo = instantaneo(estado.valores, {
       combustivel: configuracao?.combustivel,
       cilindrada: configuracao?.cilindrada,
     });
+    estado.media = mediaDeConsumo.adicionar(estado.valores, Date.now());
     estado.alertas = alertas(estado.valores, { luzAcesa: estado.luz?.luzAcesa ?? false });
 
     const decorrido = (Date.now() - contagem.desde) / 1000;
@@ -348,6 +404,23 @@ export function criarSessao({ armazenamento }) {
 
     async recarregarConfiguracao() {
       configuracao = await armazenamento.configuracao();
+
+      /*
+       * A média é refeita, e não continuada.
+       *
+       * Trocar o combustível nos ajustes muda a proporção ar/combustível, e os
+       * litros já acumulados foram contados pela proporção antiga. Somar os
+       * novos aos velhos daria uma média que não corresponde a nenhum dos dois
+       * combustíveis — e ninguém teria como perceber.
+       */
+      mediaDeConsumo = criarMediaDeConsumo({
+        combustivel: configuracao.combustivel,
+        cilindrada: configuracao.cilindrada,
+      });
+      estado.media = mediaDeConsumo.resultado();
+
+      cuidarDoGPS();
+      avisar();
       return configuracao;
     },
 
@@ -413,6 +486,9 @@ export function criarSessao({ armazenamento }) {
          */
         estado.recordes = { ...(estado.veiculo.recordes ?? {}) };
         estado.maximos = {};
+        mediaDeConsumo.zerar();
+        estado.media = mediaDeConsumo.resultado();
+        cuidarDoGPS();
 
         estado.situacao = 'conectado';
         estado.detalhe = '';
@@ -438,6 +514,12 @@ export function criarSessao({ armazenamento }) {
       await laco?.catch(() => {});
       laco = null;
 
+      // O GPS fica ligado enquanto há conexão, então cai junto com ela: deixá-lo
+      // vigiando depois de desconectar gastaria bateria para alimentar uma tela
+      // que ninguém está olhando.
+      velocimetroGPS?.parar();
+      velocimetroGPS = null;
+
       // O que ainda não foi para o banco vai agora: é a última chance antes de
       // a sessão acabar.
       await gravarRecordesSePreciso({ agora: true }).catch(() => {});
@@ -453,6 +535,7 @@ export function criarSessao({ armazenamento }) {
         estado.pids = [];
         estado.derivados = [];
         estado.luz = null;
+        estado.gps = { velocidade: null, precisao: null, confiavel: false, erro: null, ativo: false };
       }
       estado.adaptador = null;
       estado.transporte = null;

@@ -38,6 +38,11 @@ export const PIDS = {
   '0C': {
     nome: 'Rotação', curto: 'Giro', unidade: 'rpm', bytes: 2, ritmo: 'rapido',
     decodificar: (b) => (b[0] * 256 + b[1]) / 4, casas: 0, min: 0, max: 8000, principal: true,
+    // No mostrador a escala vai de 0 a 8, como num conta-giros de verdade:
+    // «8000» em cada traço não caberia, e ninguém lê o conta-giros dígito a
+    // dígito.
+    escalaDividida: 1000,
+    zonaVermelha: 6000,
   },
   '0D': {
     nome: 'Velocidade', curto: 'Velocidade', unidade: 'km/h', bytes: 1, ritmo: 'rapido',
@@ -144,6 +149,30 @@ export const DERIVADOS = {
   },
 };
 
+/**
+ * Valores que não vêm do carro nem de uma conta sobre ele: vêm do celular.
+ *
+ * A velocidade do GPS é o caso, e ela existe por um motivo concreto: **o
+ * velocímetro do carro mente para cima, de fábrica e por norma**. O
+ * regulamento permite marcar acima da velocidade real, nunca abaixo, e os
+ * fabricantes usam essa folga — 5 a 10% a mais é o comum. A velocidade do OBD
+ * costuma ser a mesma do painel, com a mesma folga.
+ *
+ * O GPS mede o deslocamento no chão, e é o mais perto do real que um celular
+ * alcança. Ver as duas lado a lado é a única forma de saber de quanto é a
+ * diferença no seu carro — e ela é constante o bastante para ser útil.
+ *
+ * Não é perfeito: em túnel, em viaduto e sob mata fechada o sinal degrada, e o
+ * número fica velho ou some. Por isso a leitura carrega precisão e idade, e a
+ * tela mostra quando não dá para confiar.
+ */
+export const EXTERNOS = {
+  GPS: {
+    nome: 'Velocidade (GPS)', curto: 'GPS', unidade: 'km/h',
+    casas: 0, min: 0, max: 240, externo: true, ritmo: 'rapido',
+  },
+};
+
 /** A leitura veio do barômetro do carro, ou da atmosfera presumida? */
 export function atmosfericaMedida(valores) {
   return Number.isFinite(valores?.['33']);
@@ -231,7 +260,7 @@ export function decodificar(pid, bytes) {
  */
 export function definicaoDe(pid) {
   const chave = String(pid).toUpperCase();
-  return PIDS[chave] ?? DERIVADOS[chave] ?? null;
+  return PIDS[chave] ?? DERIVADOS[chave] ?? EXTERNOS[chave] ?? null;
 }
 
 /** Os PIDs conhecidos que este carro tem, na ordem da tabela. */

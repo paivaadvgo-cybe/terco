@@ -34,6 +34,19 @@ export const CONFIGURACAO_PADRAO = {
   /** Manter a tela acesa durante a gravação. */
   manterTelaAcesa: true,
 
+  /* ------------------------------------------------------- velocímetro */
+
+  /**
+   * De onde vem a velocidade: `obd`, `gps` ou `ambos`.
+   *
+   * O padrão é `obd` porque é o que funciona sem pedir mais nenhuma permissão
+   * e sem gastar bateria de GPS. Quem quiser comparar liga `ambos`, e aí uma
+   * fonte fica no ponteiro grande e a outra na linha menor embaixo do número.
+   */
+  velocimetro: 'obd',
+  /** Qual das duas manda no ponteiro quando as duas estão ligadas. */
+  velocimetroPrincipal: 'obd',
+
   /* ------------------------------------------------------------- vídeo */
 
   /** Gravar vídeo junto com a viagem. Desligado por padrão. */

@@ -37,9 +37,16 @@ carro simulado funciona, e serve para conhecer o aplicativo.
 
 ## O que ele faz
 
-- **Painel ao vivo** — dois ponteiros grandes (rotação e velocidade) e
-  mostradores para o que você escolher: temperatura do motor, acelerador,
-  carga, tensão da bateria, fluxo de ar, nível do tanque.
+- **Painel ao vivo** — dois mostradores analógicos (conta-giros e velocímetro),
+  com ponteiro, escala numerada e o valor exato embaixo, mais mostradores para o
+  que você escolher: temperatura do motor, acelerador, carga, tensão da bateria,
+  fluxo de ar, nível do tanque.
+- **Velocidade do OBD, do GPS, ou as duas** — o velocímetro do carro marca para
+  cima de fábrica: a norma permite indicar acima da velocidade real e proíbe
+  indicar abaixo, e os fabricantes usam essa folga (5 a 10% é o comum). A
+  velocidade do OBD traz a mesma folga; a do GPS mede o deslocamento no chão.
+  Com as duas ligadas, uma fica no ponteiro e a outra menor sob o número — e dá
+  para ver de quanto é a diferença no seu carro.
 - **Pressão do turbo** — em bar, calculada como a pressão do coletor menos a
   atmosférica. É assim que um manômetro de turbo funciona: o PID do carro dá a
   pressão *absoluta*, que já inclui a atmosfera, e mostrá-lo cru faria um motor
@@ -49,10 +56,13 @@ carro simulado funciona, e serve para conhecer o aplicativo.
   valor da conexão atual e o recorde de sempre daquele carro, guardado entre
   sessões. É o maior valor **lido**; entre duas leituras o carro pode ter
   passado disso.
-- **Consumo** — pelo PID 5E quando o carro o informa; senão calculado pelo
-  fluxo de ar; senão deduzido da pressão do coletor, se você informar a
-  cilindrada. A tela sempre diz de onde veio o número, porque uma medição e
-  uma dedução não valem a mesma coisa.
+- **Consumo, agora e médio** — o instantâneo pelo PID 5E quando o carro o
+  informa; senão calculado pelo fluxo de ar; senão deduzido da pressão do
+  coletor, se você informar a cilindrada. A tela sempre diz de onde veio o
+  número, porque uma medição e uma dedução não valem a mesma coisa. A **média**
+  acumula desde que se conectou — quilômetros somados sobre litros somados, e
+  não a média dos km/L, que daria um consumo que não aconteceu em momento
+  nenhum.
 - **Falhas** — códigos confirmados, pendentes e permanentes, com descrição
   em português dos genéricos mais comuns. Dá para apagar, com o aviso de que
   apagar não conserta e zera os monitores de emissão.
@@ -92,7 +102,8 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/ui/` | Elementos, ponteiros, gráfico, CSV e as cinco telas. |
 | `js/sessao.js` | A conexão viva e o laço de leitura. |
 | `js/video.js` | A câmera: grava a estrada em trechos, com a hora de cada um. |
-| `tests/` | `npm test` — 115 testes, sem navegador e sem carro. |
+| `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
+| `tests/` | `npm test` — 131 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones e carimba a versão do cache. |
 
 ## Desenvolvimento
@@ -130,6 +141,10 @@ chega a quem já tem o aplicativo instalado.
   gravado.
 - Sem o PID da pressão atmosférica (33), o turbo é calculado contra 101,3 kPa.
   Em Goiânia, a 750 m de altitude, isso desloca a leitura em cerca de 0,08 bar.
+- O GPS perde o sinal em túnel, garagem e sob mata fechada. Quando a última
+  correção fica velha ou imprecisa, a tela diz «sem sinal» em vez de mostrar o
+  último número — que seria afirmar uma velocidade de meio minuto atrás. Ele
+  também gasta bateria, e por isso vem desligado.
 - O aplicativo **lê**. Não regrava módulo, não altera parâmetro do motor e
   não faz remapeamento. As únicas escritas são o pedido de apagar falhas
   (serviço 04) e os ajustes do próprio adaptador.

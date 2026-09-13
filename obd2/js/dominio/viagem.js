@@ -117,6 +117,80 @@ export function resumir(amostras, opcoes = {}) {
 }
 
 /**
+ * A média de consumo ao vivo, acumulada desde que se conectou.
+ *
+ * É outra pergunta que o consumo instantâneo não responde. O instantâneo salta
+ * de 4 a 40 km/L a cada toque no acelerador — serve para aprender o efeito do
+ * pé, e não para saber quanto o carro está fazendo. A média só se estabiliza
+ * depois de alguns quilômetros, e é ela que se compara com o tanque anterior.
+ *
+ * A conta é a mesma de `resumir`, e é de propósito: média não é a média das
+ * leituras de km/L. Somar «40 km/L descendo a serra» com «6 km/L subindo» e
+ * dividir por dois dá 23 km/L, que não aconteceu. O certo é somar os
+ * quilômetros, somar os litros, e dividir um pelo outro no fim.
+ */
+export function criarMediaDeConsumo(opcoes = {}) {
+  let anterior = null;
+  let anteriorEm = null;
+  let distancia = 0;
+  let litros = 0;
+  let desde = null;
+  let origem = null;
+
+  return {
+    /** Junta mais um instante à média. Devolve o estado atual. */
+    adicionar(valores, instante = Date.now()) {
+      const consumo = consumoInstantaneo(valores, opcoes);
+      const velocidade = Number.isFinite(valores['0D']) ? valores['0D'] : null;
+
+      if (anterior !== null) {
+        const bruto = instante - anteriorEm;
+        // O mesmo limite do resumo de viagem: um intervalo maior que isso é
+        // buraco (tela apagada, adaptador caído), e contá-lo inteiro inventaria
+        // distância e combustível que talvez não tenham existido.
+        const intervalo = Math.min(Math.max(0, bruto), INTERVALO_MAXIMO);
+        const horas = intervalo / 3_600_000;
+
+        if (velocidade !== null && anterior.velocidade !== null) {
+          distancia += ((velocidade + anterior.velocidade) / 2) * horas;
+        }
+        if (Number.isFinite(consumo.litrosPorHora) && Number.isFinite(anterior.litrosPorHora)) {
+          litros += ((consumo.litrosPorHora + anterior.litrosPorHora) / 2) * horas;
+          origem = consumo.origem;
+        }
+      } else {
+        desde = instante;
+      }
+
+      anterior = { velocidade, litrosPorHora: consumo.litrosPorHora };
+      anteriorEm = instante;
+      return this.resultado();
+    },
+
+    resultado() {
+      return {
+        distancia,
+        litros,
+        desde,
+        origem,
+        // Abaixo de cem metros ou de um centilitro, a divisão amplifica o ruído
+        // e devolve um número que muda de 3 para 300 entre duas leituras.
+        kmPorLitro: distancia > 0.1 && litros > 0.01 ? distancia / litros : null,
+      };
+    },
+
+    zerar() {
+      anterior = null;
+      anteriorEm = null;
+      distancia = 0;
+      litros = 0;
+      desde = null;
+      origem = null;
+    },
+  };
+}
+
+/**
  * O consumo do momento, para o painel.
  *
  * Separado de `resumir` porque responde outra pergunta: ali é «como foi a

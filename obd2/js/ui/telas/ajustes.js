@@ -136,6 +136,48 @@ export async function telaAjustes(contexto) {
       'Com a tela apagada o navegador congela a página: o painel para e a gravação fica com buracos.'),
   ]));
 
+  /* ---------------------------------------------------------- velocímetro */
+
+  const fonte = selecao(
+    [
+      { valor: 'obd', nome: 'Só o OBD (do carro)' },
+      { valor: 'gps', nome: 'Só o GPS (do celular)' },
+      { valor: 'ambos', nome: 'As duas ao mesmo tempo' },
+    ],
+    configuracao.velocimetro ?? 'obd',
+  );
+
+  const principal = selecao(
+    [{ valor: 'obd', nome: 'OBD no ponteiro, GPS embaixo' }, { valor: 'gps', nome: 'GPS no ponteiro, OBD embaixo' }],
+    configuracao.velocimetroPrincipal ?? 'obd',
+  );
+
+  const campoPrincipal = campo('Qual manda no ponteiro', principal,
+    'A outra aparece menor, sob o número, com o nome da origem ao lado.');
+  campoPrincipal.hidden = (configuracao.velocimetro ?? 'obd') !== 'ambos';
+
+  fonte.addEventListener('change', async () => {
+    await salvar({ velocimetro: fonte.value });
+    // Escolher qual manda no ponteiro só faz sentido quando há duas.
+    campoPrincipal.hidden = fonte.value !== 'ambos';
+    avisar(fonte.value === 'obd' ? 'GPS desligado' : 'GPS ligado — o navegador vai pedir a localização');
+  });
+
+  principal.addEventListener('change', async () => {
+    await salvar({ velocimetroPrincipal: principal.value });
+  });
+
+  tela.append(cartao([
+    el('h2', { classe: 'secao-titulo', texto: 'Velocímetro' }),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'O velocímetro do carro marca para cima de fábrica: a norma permite indicar acima da velocidade real e proíbe indicar abaixo, e os fabricantes usam essa folga — 5 a 10% a mais é o comum. A velocidade do OBD costuma trazer a mesma folga. O GPS mede o deslocamento no chão e fica mais perto do real.',
+    }),
+    campo('De onde vem a velocidade', fonte,
+      'O GPS pede permissão de localização e gasta bateria. Em túnel e garagem ele perde o sinal, e a tela avisa em vez de mostrar um número velho.'),
+    campoPrincipal,
+  ]));
+
   /* ---------------------------------------------------------------- vídeo */
 
   const qualidade = selecao(

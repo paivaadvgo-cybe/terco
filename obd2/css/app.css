@@ -5,7 +5,7 @@
    explicam quase tudo abaixo:
 
    · **Números grandes, rótulos pequenos.** O que se lê de relance é o valor;
-     o rótulo só existe para a primeira vez. A rotação sai em 32 px, e os
+     o rótulo só existe para a primeira vez. A rotação sai em 30 px, e os
      dígitos são tabulares — sem isso o número muda de largura a cada leitura
      e o olho perde o lugar.
    · **Nada muda de lugar.** Os mostradores têm altura mínima, a unidade fica
@@ -205,29 +205,79 @@ body.carregando .conteudo { opacity: 0; }
 .medidor-trilho {
   fill: none;
   stroke: var(--superficie-2);
-  stroke-width: 12;
+  stroke-width: 6;
   stroke-linecap: round;
+}
+
+/* A faixa vermelha do conta-giros: desenhada por baixo dos traços. */
+.medidor-zona-vermelha {
+  fill: none;
+  stroke: var(--perigo);
+  stroke-width: 6;
+  opacity: .75;
+  stroke-linecap: butt;
+}
+
+.medidor-traco {
+  stroke: var(--suave);
+  stroke-width: 1.4;
+  opacity: .65;
+}
+
+.medidor-traco.maior {
+  stroke: var(--texto);
+  stroke-width: 2.6;
+  opacity: .9;
 }
 
 /*
- * O arco cresce por `stroke-dasharray`, e a transição é curta de propósito:
- * 120 ms suaviza o degrau entre duas leituras sem atrasar a informação. Acima
- * de uns 200 ms o ponteiro passa a mostrar o passado.
+ * Os números da escala.
+ *
+ * Dígitos tabulares e tamanho fixo: é o que faz «120» ocupar a mesma largura
+ * que «100» e os números ficarem alinhados ao redor do mostrador em vez de
+ * dançarem conforme o dígito.
  */
-.medidor-arco {
-  fill: none;
-  stroke: var(--principal);
-  stroke-width: 12;
-  stroke-linecap: round;
-  transition: stroke-dasharray .12s linear, stroke .3s;
+.medidor-valor-da-escala {
+  fill: var(--suave);
+  font-size: 15px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
 }
 
-.medidor[data-faixa="atencao"] .medidor-arco { stroke: var(--atencao); }
-.medidor[data-faixa="perigo"] .medidor-arco { stroke: var(--perigo); }
-.medidor[data-faixa="frio"] .medidor-arco { stroke: var(--frio); }
-.medidor[data-faixa="sem"] .medidor-arco { stroke: var(--borda); }
+/*
+ * O ponteiro.
+ *
+ * A transição é curta de propósito: 120 ms tira o degrau entre duas leituras
+ * sem atrasar a informação. Acima de uns 200 ms o ponteiro passa a mostrar o
+ * passado, que num velocímetro é pior que não mostrar nada.
+ */
+.medidor-ponteiro {
+  fill: var(--principal);
+  transition: transform .12s linear;
+}
 
-/* Encostado na base do arco, que é onde fica o vão do mostrador. */
+.medidor[data-faixa="atencao"] .medidor-ponteiro { fill: var(--atencao); }
+.medidor[data-faixa="perigo"] .medidor-ponteiro { fill: var(--perigo); }
+.medidor[data-faixa="frio"] .medidor-ponteiro { fill: var(--frio); }
+.medidor[data-faixa="sem"] .medidor-ponteiro { fill: var(--borda); }
+
+.medidor-eixo {
+  fill: var(--superficie);
+  stroke: var(--principal);
+  stroke-width: 3;
+}
+
+.medidor[data-faixa="atencao"] .medidor-eixo { stroke: var(--atencao); }
+.medidor[data-faixa="perigo"] .medidor-eixo { stroke: var(--perigo); }
+
+/*
+ * O número digital, no vão de baixo do mostrador.
+ *
+ * Ocupa a mesma célula da grade que o desenho e encosta na base: com a abertura
+ * de 240° sobra um vão entre as duas pontas da escala, que é onde um painel de
+ * carro põe o hodômetro. O rótulo tem a linha 2 só dele, e por isso o número
+ * pode crescer de «58» para «140» sem empurrar nada.
+ */
 .medidor-centro {
   grid-area: 1 / 1;
   align-self: end;
@@ -235,27 +285,32 @@ body.carregando .conteudo { opacity: 0; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  /*
-   * Um respiro acima da base: o arco é meia-lua, e as pontas dela descem
-   * justamente onde ficam as bordas de um número largo. Com «2.384 rpm» na
-   * tela, encostado embaixo, o dígito da ponta cruzava o traço.
-   */
-  margin-bottom: 11%;
+  line-height: 1.1;
   pointer-events: none;
 }
 
 .medidor-numero {
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 700;
   line-height: 1.05;
   font-variant-numeric: tabular-nums;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
 }
 
 .medidor-unidade {
-  font-size: 12.5px;
+  font-size: 12px;
   color: var(--suave);
-  text-transform: lowercase;
+}
+
+/* A segunda fonte de velocidade: menor, e sempre com a origem ao lado. */
+.medidor-secundario {
+  display: block;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--suave);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
 
 .medidor-titulo {
@@ -284,12 +339,17 @@ body.carregando .conteudo { opacity: 0; }
   gap: 2px;
 }
 
+/*
+ * O rótulo do mostrador quebra em duas linhas em vez de virar reticências.
+ *
+ * «Consumo m…» não informa nada, e o mostrador tem altura mínima, não fixa:
+ * uma linha a mais cabe. Reticências num painel de carro são pior que texto
+ * miúdo — obrigam a parar para decifrar.
+ */
 .mostrador-titulo {
   font-size: 12px;
+  line-height: 1.25;
   color: var(--suave);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .mostrador-linha {
