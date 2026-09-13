@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR" data-tema="auto">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Painel OBD-II no navegador: lê rotação, velocidade, temperatura, consumo e códigos de falha de um adaptador ELM327 Bluetooth BLE. Sem servidor e sem internet.">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#123a5e">
+<title>Painel OBD-II</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23123a5e'/%3E%3Cpath d='M6 21a10 10 0 0 1 20 0' fill='none' stroke='%23e8eef5' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 21l6-7' stroke='%233fd39a' stroke-width='2.6' stroke-linecap='round'/%3E%3Ccircle cx='16' cy='21' r='2.2' fill='%23e8eef5'/%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icones/icone-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="OBD-II">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body class="carregando">
+
+<header class="topo">
+  <h1 id="titulo" class="topo-titulo">Painel OBD-II</h1>
+</header>
+
+<p id="atualizacao" class="atualizacao" role="status" hidden>
+  Há uma versão nova.
+  <button type="button" class="botao botao-fantasma">Atualizar</button>
+</p>
+
+<main id="conteudo" class="conteudo"></main>
+
+<div id="avisos" class="avisos"></div>
+
+<noscript>
+  <p class="erro">
+    O painel precisa de JavaScript. Tudo acontece dentro do seu aparelho —
+    nada do que o carro informa é enviado para lugar nenhum.
+  </p>
+</noscript>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
