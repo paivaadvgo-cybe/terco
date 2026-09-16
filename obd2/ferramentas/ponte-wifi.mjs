@@ -36,6 +36,7 @@
  */
 
 import net from 'node:net';
+import os from 'node:os';
 import http from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -182,6 +183,178 @@ export function quadroDeFechamento(codigo = 1000) {
   const corpo = Buffer.alloc(2);
   corpo.writeUInt16BE(codigo, 0);
   return Buffer.concat([Buffer.from([0x88, 2]), corpo]);
+}
+
+/* ------------------------------------------------------------ diagnóstico */
+
+/**
+ * As portas em que os clones ELM327 Wi-Fi atendem.
+ *
+ * 35000 é a de quase todos. 23 aparece nos que se anunciam como telnet, e 6000
+ * em alguns modelos chineses mais antigos.
+ */
+export const PORTAS_CONHECIDAS = [35000, 23, 6000];
+
+/**
+ * Onde o adaptador provavelmente está, deduzido de onde **o celular** está.
+ *
+ * Esta é a parte que resolve o problema de verdade. O manual diz
+ * `192.168.0.10`, mas cada lote de clone escolhe o seu, e descobrir qual é,
+ * sentado no carro, sem ferramenta de rede, é onde a maioria desiste.
+ *
+ * Só que o celular já sabe: ele acabou de receber um endereço por DHCP **dessa
+ * rede**. Se ele está em `192.168.4.2`, o adaptador está na mesma faixa — e o
+ * que serve DHCP é quase sempre o `.1`. Então em vez de adivinhar, deduz-se da
+ * própria interface: `.1` e `.10` de cada rede em que o aparelho está, mais os
+ * endereços conhecidos, sem repetir.
+ *
+ * Interfaces internas (`lo`) ficam de fora: o adaptador não está dentro do
+ * celular.
+ */
+export function enderecosProvaveis(interfaces = os.networkInterfaces()) {
+  const candidatos = [];
+  const visto = new Set();
+  const juntar = (endereco) => {
+    if (endereco && !visto.has(endereco)) {
+      visto.add(endereco);
+      candidatos.push(endereco);
+    }
+  };
+
+  for (const enderecos of Object.values(interfaces ?? {})) {
+    for (const { address, family, internal } of enderecos ?? []) {
+      if (internal || (family !== 'IPv4' && family !== 4)) continue;
+      const partes = String(address).split('.');
+      if (partes.length !== 4) continue;
+      const rede = partes.slice(0, 3).join('.');
+      juntar(`${rede}.1`);
+      juntar(`${rede}.10`);
+    }
+  }
+
+  // Os conhecidos entram depois: o deduzido da rede em que o aparelho está
+  // agora tem mais chance que o do manual de um lote qualquer.
+  juntar(OBD_PADRAO.servidor);
+  juntar('192.168.4.1');
+  return candidatos.filter((endereco) => endereco !== '127.0.0.1');
+}
+
+/**
+ * Bate na porta e conta o que respondeu.
+ *
+ * Três respostas distintas, e a diferença entre elas é o diagnóstico inteiro:
+ * ninguém atendeu (endereço errado, ou o celular não está na rede do
+ * adaptador); atendeu e ficou calado (alguma coisa está ali, mas não é um
+ * ELM327 — ou outro aplicativo está segurando a conexão, que esses clones só
+ * aceitam uma); atendeu e se apresentou.
+ */
+export function testarAdaptador({ servidor, porta, espera = 2500 }) {
+  return new Promise((resolver) => {
+    const soquete = net.createConnection({ host: servidor, port: porta });
+    soquete.setNoDelay(true);
+    soquete.setTimeout(espera);
+
+    let recebido = '';
+    let respondido = false;
+    /*
+     * Conectou de verdade, ou só estourou o tempo tentando?
+     *
+     * A diferença é o diagnóstico inteiro, e eu errei isto na primeira versão:
+     * o tempo estourava, e o relatório dizia «atendeu e ficou calado» para um
+     * endereço onde **nada** atendia. Num estacionamento isso manda procurar
+     * aplicativo concorrente segurando a conexão quando o problema é que o
+     * celular não está na rede do adaptador.
+     */
+    let conectou = false;
+    const terminar = (resultado) => {
+      if (respondido) return;
+      respondido = true;
+      soquete.destroy();
+      resolver({ servidor, porta, ...resultado });
+    };
+
+    soquete.on('connect', () => {
+      conectou = true;
+      // `ATZ` reinicia e faz o ELM327 se apresentar. Um aparelho que não é
+      // ELM327 ou não responde nada deixa isso passar em branco, que é
+      // exatamente o que se quer distinguir.
+      soquete.write('ATZ\r');
+    });
+    soquete.on('data', (bytes) => {
+      recebido += bytes.toString('latin1');
+      if (recebido.includes('>')) {
+        const banner = recebido.replace(/[\r\n>]+/g, ' ').trim();
+        terminar({ ok: true, banner: banner || '(respondeu, sem texto)' });
+      }
+    });
+    soquete.on('timeout', () => {
+      if (!conectou) {
+        terminar({ ok: false, erro: 'ninguém atendeu a tempo', atendeu: false });
+        return;
+      }
+      terminar({
+        ok: false,
+        erro: recebido
+          ? 'atendeu, mas não terminou a resposta'
+          : 'atendeu e ficou calado — outro aplicativo pode estar segurando a conexão',
+        atendeu: true,
+      });
+    });
+    soquete.on('error', (erro) => terminar({ ok: false, erro: erro.code ?? erro.message, atendeu: false }));
+  });
+}
+
+/**
+ * Procura o adaptador e diz o que fazer com o que achou.
+ *
+ * Existe para separar as duas perguntas que o primeiro teste mistura: «o
+ * adaptador está alcançável?» e «o navegador está falando com a ponte?». Sem
+ * essa separação, um endereço errado aparece na tela do painel como «a ponte
+ * não respondeu», e o tempo vai todo para o lugar errado.
+ */
+export async function procurarAdaptador({
+  candidatos = enderecosProvaveis(),
+  portas = PORTAS_CONHECIDAS,
+  registrar = console.log,
+} = {}) {
+  registrar('procurando o adaptador…');
+  registrar(`o celular está em: ${enderecosDoAparelho().join(', ') || '(nenhuma rede)'}`);
+  registrar('');
+
+  for (const servidor of candidatos) {
+    for (const porta of portas) {
+      const resultado = await testarAdaptador({ servidor, porta });
+      if (resultado.ok) {
+        registrar(`✓ ${servidor}:${porta} — ${resultado.banner}`);
+        registrar('');
+        registrar('É esse. Agora suba a ponte:');
+        registrar(`   node ponte-wifi.mjs${servidor === OBD_PADRAO.servidor && porta === OBD_PADRAO.porta ? '' : ` --obd ${servidor}:${porta}`}`);
+        return resultado;
+      }
+      // Só vale contar o que atendeu: uma lista de «recusou» em vinte
+      // endereços é ruído, e quem está no carro não quer ler ruído.
+      if (resultado.atendeu) registrar(`· ${servidor}:${porta} — ${resultado.erro}`);
+    }
+  }
+
+  registrar('');
+  registrar('Não achei o adaptador. As três causas, em ordem de frequência:');
+  registrar('  1. O celular não está na rede Wi-Fi do adaptador. Confira nos ajustes do Android.');
+  registrar('  2. Os dados móveis estão mandando tudo pela operadora. Desligue-os e tente de novo.');
+  registrar('  3. Outro aplicativo de OBD está aberto segurando a conexão — esses clones só aceitam uma.');
+  return null;
+}
+
+/** Os endereços IPv4 que este aparelho tem agora, para o relatório. */
+export function enderecosDoAparelho(interfaces = os.networkInterfaces()) {
+  const lista = [];
+  for (const [nome, enderecos] of Object.entries(interfaces ?? {})) {
+    for (const { address, family, internal } of enderecos ?? []) {
+      if (internal || (family !== 'IPv4' && family !== 4)) continue;
+      lista.push(`${nome} ${address}`);
+    }
+  }
+  return lista;
 }
 
 const TIPOS = {
@@ -340,5 +513,16 @@ function lerArgumentos(lista) {
 }
 
 if (process.argv[1] && process.argv[1].endsWith('ponte-wifi.mjs')) {
-  subirPonte(lerArgumentos(process.argv.slice(2)));
+  const argumentos = process.argv.slice(2);
+  if (argumentos.includes('--testar')) {
+    const opcoes = lerArgumentos(argumentos);
+    // Com `--obd`, testa só o que foi pedido: quem já sabe o endereço não quer
+    // esperar uma varredura.
+    const pediuEndereco = argumentos.includes('--obd');
+    const achado = await procurarAdaptador(pediuEndereco
+      ? { candidatos: [opcoes.obd.servidor], portas: [opcoes.obd.porta] }
+      : {});
+    process.exit(achado ? 0 : 1);
+  }
+  subirPonte(lerArgumentos(argumentos));
 }

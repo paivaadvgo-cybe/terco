@@ -17,8 +17,9 @@ import assert from 'node:assert/strict';
 
 import {
   chaveDeResposta, origemPermitida, montarQuadro, lerQuadros, quadroDeFechamento,
-  ORIGENS_PADRAO,
+  ORIGENS_PADRAO, enderecosProvaveis, enderecosDoAparelho, testarAdaptador, OBD_PADRAO,
 } from '../ferramentas/ponte-wifi.mjs';
+import net from 'node:net';
 import { problemaNoEndereco, PONTE_PADRAO } from '../js/obd/transporte-wifi.js';
 
 /** Monta um quadro de cliente, que é sempre mascarado. */
@@ -198,4 +199,85 @@ test('endereço vazio ou sem sentido é recusado antes de tentar', () => {
   assert.ok(problemaNoEndereco(''));
   assert.ok(problemaNoEndereco('   '));
   assert.ok(problemaNoEndereco('127.0.0.1:8127'), 'sem esquema não é endereço');
+});
+
+/* ------------------------------------------------------- achar o adaptador */
+
+/** Interfaces como o Node as devolve, para não depender da rede real. */
+const NA_REDE_DO_DONGLE = {
+  lo: [{ address: '127.0.0.1', family: 'IPv4', internal: true }],
+  wlan0: [{ address: '192.168.4.37', family: 'IPv4', internal: false }],
+};
+
+test('o endereço do adaptador é deduzido da rede em que o celular está', () => {
+  /*
+   * É o que resolve o problema de verdade: o manual diz 192.168.0.10, mas cada
+   * lote de clone escolhe o seu, e descobrir qual é sentado no carro, sem
+   * ferramenta de rede, é onde a maioria desiste. O celular já sabe — acabou de
+   * receber endereço por DHCP dessa mesma rede.
+   */
+  const provaveis = enderecosProvaveis(NA_REDE_DO_DONGLE);
+  assert.ok(provaveis.indexOf('192.168.4.1') >= 0, 'o que serve DHCP é quase sempre o .1');
+  assert.ok(provaveis.indexOf('192.168.4.10') >= 0);
+  assert.ok(provaveis.indexOf('192.168.4.1') < provaveis.indexOf(OBD_PADRAO.servidor),
+    'o deduzido da rede atual vem antes do endereço de manual');
+});
+
+test('os conhecidos entram mesmo sem rede nenhuma', () => {
+  // Sem Wi-Fi ligada a lista não pode vir vazia: a varredura ainda precisa ter
+  // o que tentar, nem que seja para dizer «não achei» com fundamento.
+  const provaveis = enderecosProvaveis({ lo: [{ address: '127.0.0.1', family: 'IPv4', internal: true }] });
+  assert.deepEqual(provaveis, [OBD_PADRAO.servidor, '192.168.4.1']);
+});
+
+test('o próprio celular nunca entra na lista', () => {
+  // Bater em 127.0.0.1 acharia a própria ponte e diria que é o adaptador.
+  const provaveis = enderecosProvaveis({ lo: [{ address: '127.0.0.1', family: 'IPv4', internal: false }] });
+  assert.ok(!provaveis.includes('127.0.0.1'));
+});
+
+test('o relatório diz onde o celular está', () => {
+  assert.deepEqual(enderecosDoAparelho(NA_REDE_DO_DONGLE), ['wlan0 192.168.4.37']);
+});
+
+test('quem atende e se apresenta é reconhecido', async () => {
+  const falso = net.createServer((s) => {
+    s.on('data', () => s.write('ELM327 v1.5\r\r>'));
+  });
+  await new Promise((pronto) => falso.listen(0, '127.0.0.1', pronto));
+
+  const resultado = await testarAdaptador({ servidor: '127.0.0.1', porta: falso.address().port });
+  falso.close();
+
+  assert.equal(resultado.ok, true);
+  assert.match(resultado.banner, /ELM327/);
+});
+
+test('quem atende e fica calado não é confundido com quem não atende', async () => {
+  /*
+   * Este foi um defeito real, encontrado no primeiro uso do diagnóstico: o
+   * tempo estourava e o relatório dizia «atendeu e ficou calado» para um
+   * endereço onde nada atendia. Num estacionamento, isso manda procurar
+   * aplicativo concorrente segurando a conexão quando o problema é que o
+   * celular não está na rede do adaptador — duas causas opostas.
+   */
+  const mudo = net.createServer(() => { /* aceita e não diz nada */ });
+  await new Promise((pronto) => mudo.listen(0, '127.0.0.1', pronto));
+
+  const calado = await testarAdaptador({ servidor: '127.0.0.1', porta: mudo.address().port, espera: 300 });
+  mudo.close();
+  assert.equal(calado.ok, false);
+  assert.equal(calado.atendeu, true, 'este atendeu de verdade');
+  assert.match(calado.erro, /calado/);
+});
+
+test('porta fechada é recusa, e não silêncio', async () => {
+  const efemero = net.createServer();
+  await new Promise((pronto) => efemero.listen(0, '127.0.0.1', pronto));
+  const porta = efemero.address().port;
+  await new Promise((pronto) => efemero.close(pronto));
+
+  const recusado = await testarAdaptador({ servidor: '127.0.0.1', porta, espera: 400 });
+  assert.equal(recusado.ok, false);
+  assert.equal(recusado.atendeu, false);
 });
