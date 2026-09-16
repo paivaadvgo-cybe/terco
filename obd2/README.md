@@ -44,8 +44,18 @@ painel já funciona sem ela.
 ```
 pkg install nodejs                       # no Termux, ainda com internet
 curl -O https://paivaadvgo-cybe.github.io/terco/obd2/ferramentas/ponte-wifi.mjs
-node ponte-wifi.mjs                      # já na rede do adaptador
+node ponte-wifi.mjs --testar             # já na rede do adaptador: procura e diz o comando
+node ponte-wifi.mjs                      # sobe a ponte
 ```
+
+O `--testar` existe porque o primeiro teste real erra sempre no mesmo lugar: o
+endereço. O manual diz `192.168.0.10`, cada lote de clone escolhe o seu, e
+descobrir qual é — sentado no carro, sem ferramenta de rede — é onde se desiste.
+Só que o celular já sabe: ele acabou de receber endereço por DHCP **daquela
+rede**. O diagnóstico deduz os candidatos da própria interface, bate em cada um,
+e distingue três respostas que parecem uma só: ninguém atendeu, atendeu e ficou
+calado (outro aplicativo segurando a conexão — esses clones só aceitam uma), ou
+atendeu e se apresentou.
 
 Depois, em **Conexão**, toque em «Conectar pelo Wi-Fi». O endereço do campo é o
 da **ponte** (`ws://127.0.0.1:8127`); o do adaptador se informa na ponte, com
@@ -162,7 +172,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 192 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 199 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento

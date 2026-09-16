@@ -232,14 +232,15 @@ export async function telaConexao(contexto, parametros = {}) {
       el('li', { texto: 'Instale o Termux (pela F-Droid) e, dentro dele: pkg install nodejs' }),
       el('li', { texto: 'Baixe a ponte: curl -O https://paivaadvgo-cybe.github.io/terco/obd2/ferramentas/ponte-wifi.mjs' }),
       el('li', { texto: 'Ligue o adaptador no carro e conecte o celular na rede Wi-Fi dele. Se o Android perguntar se quer manter uma rede sem internet, mantenha.' }),
-      el('li', { texto: 'No Termux: node ponte-wifi.mjs — e deixe o Termux aberto.' }),
+      el('li', { texto: 'No Termux: node ponte-wifi.mjs --testar — ele procura o adaptador, diz onde achou e escreve o comando certo.' }),
+      el('li', { texto: 'Rode o comando que ele indicou, e deixe o Termux aberto.' }),
       el('li', { texto: 'Volte aqui e toque em «Conectar pelo Wi-Fi».' }),
     ]),
     el('p', {
       classe: 'campo-dica',
-      texto: 'Se o adaptador não atender em 192.168.0.10:35000, informe o endereço dele na ponte: '
-        + 'node ponte-wifi.mjs --obd 192.168.4.1:35000. O endereço do campo acima é sempre o da ponte, nunca o do adaptador. '
-        + 'E se nada responder, desligue os dados móveis: o Android às vezes manda tudo pela operadora quando a Wi-Fi não tem internet.',
+      texto: 'O endereço do campo acima é sempre o da ponte, nunca o do adaptador — o do adaptador se informa na ponte, '
+        + 'com --obd, e o --testar descobre qual é. Se nada responder, desligue os dados móveis: o Android às vezes manda '
+        + 'tudo pela operadora quando a Wi-Fi não tem internet. E feche outros aplicativos de OBD: esses clones só aceitam uma conexão por vez.',
     }),
   ]));
 
