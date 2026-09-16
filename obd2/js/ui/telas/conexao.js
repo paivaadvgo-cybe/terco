@@ -285,7 +285,17 @@ export async function telaRegistro(contexto) {
   const linhas = el('div', { classe: 'registro' });
 
   function desenhar() {
-    const entradas = sessao.estado.adaptador?.registro ?? [];
+    /*
+     * A conversa do adaptador de agora, ou a última que houve.
+     *
+     * A segunda parte é o que faz esta tela servir para o que ela existe: numa
+     * falha de conexão o adaptador é solto, e ler só dele mostraria «nada
+     * ainda» para quem acabou de não conseguir conectar.
+     */
+    const entradas = sessao.estado.adaptador?.registro?.length
+      ? sessao.estado.adaptador.registro
+      : (sessao.estado.registro ?? []);
+
     if (entradas.length === 0) {
       linhas.replaceChildren(el('p', { classe: 'vazio-mensagem', texto: 'Nada ainda. Conecte um adaptador.' }));
       return;

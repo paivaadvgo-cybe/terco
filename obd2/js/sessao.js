@@ -59,6 +59,8 @@ export function criarSessao({ armazenamento }) {
 
   const estado = {
     situacao: 'desligado',
+    /** A última conversa com um adaptador, mesmo depois de ele sumir. */
+    registro: [],
     detalhe: '',
     transporte: null,
     adaptador: null,
@@ -561,6 +563,21 @@ export function criarSessao({ armazenamento }) {
       // a sessão acabar.
       await gravarRecordesSePreciso({ agora: true }).catch(() => {});
       if (estado.gravando) await sessao.pararGravacao();
+      /*
+       * O registro da conversa sobrevive ao adaptador que o produziu.
+       *
+       * Ele morava só dentro do `elm`, e a tela de diagnóstico o lia de lá. Só
+       * que `desconectar` zera `estado.adaptador` — inclusive na falha de
+       * conexão, que chama esta função pelo `catch`. Resultado: a conversa era
+       * apagada **exatamente** no caso em que alguém iria olhá-la. Quem tentou
+       * conectar e não conseguiu abria «Ver registro» e encontrava «Nada
+       * ainda. Conecte um adaptador» — a tela de diagnóstico dizendo que não há
+       * o que diagnosticar, logo depois de um diagnóstico ter falhado.
+       *
+       * Guardar uma cópia custa uma centena de linhas de texto na memória e é a
+       * diferença entre «não conectou» e saber em qual comando parou.
+       */
+      if (elm?.registro?.length) estado.registro = elm.registro.slice();
       await elm?.fechar();
       elm = null;
 
