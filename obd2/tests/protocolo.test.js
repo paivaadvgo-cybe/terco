@@ -35,6 +35,16 @@ test('descarta o SEARCHING da primeira consulta', () => {
 test('separa aviso de dado, e grave de não grave', () => {
   assert.equal(avisoDaLinha('NO DATA').grave, false);
   assert.equal(avisoDaLinha('UNABLE TO CONNECT').grave, true);
+  /*
+   * E diz o que fazer, não só o que houve.
+   *
+   * É a falha mais comum de uma primeira conexão, e a causa é quase sempre a
+   * ignição desligada: o conector OBD tem energia permanente, então o adaptador
+   * acende e responde a tudo, mas a linha do carro só acorda com a chave em
+   * «ligado». Sem a dica, a mensagem manda procurar defeito num adaptador que
+   * está funcionando — aconteceu num teste real.
+   */
+  assert.match(avisoDaLinha('UNABLE TO CONNECT').texto, /ignição/);
   assert.equal(avisoDaLinha('?').codigo, '?');
   assert.equal(avisoDaLinha('41 0C 1A F8'), null);
 });
