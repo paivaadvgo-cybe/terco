@@ -1321,7 +1321,49 @@ select.entrada { appearance: none; background-image: none; }
 .etiqueta-pendente { background: var(--atencao-fraco); color: var(--atencao); }
 .etiqueta-cancelado { background: var(--perigo-fraco); color: var(--perigo); }
 
+.etiqueta-aberto { background: var(--principal-fraco); color: var(--principal); }
+
 .tipo-adaptador.nao-funciona .item-nome { text-decoration: line-through; text-decoration-thickness: 1px; }
+
+/*
+ * «Com a ponte» não leva risco no nome, e é isso que a distingue de «não».
+ *
+ * Riscar diria «esqueça este, compre outro» — e para quem já tem o adaptador
+ * Wi-Fi na mão isso seria falso e caro. Ele funciona; o que falta é um programa
+ * rodando no aparelho, e a seção abaixo da tabela diz qual.
+ */
+.tipo-adaptador.com-ponte .item-nome { color: var(--principal); }
+
+/*
+ * Os passos de instalação da ponte.
+ *
+ * Números à esquerda, comando embutido no texto: são cinco linhas que alguém vai
+ * ler com o celular numa mão e o Termux na outra, e uma lista numerada é a forma
+ * que não deixa perder o lugar.
+ */
+.passos {
+  margin: 4px 0 0;
+  padding-left: 20px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--texto);
+}
+
+.passos li { margin-bottom: 5px; }
+
+.passos li::marker { color: var(--suave); }
+
+/*
+ * A dica que não pode ser lida por cima.
+ *
+ * «Os dois primeiros passos precisam de internet» é a frase que decide se a
+ * pessoa termina a instalação no sofá ou descobre no estacionamento, com o
+ * carro ligado, que não dá para baixar nada dali.
+ */
+.campo-dica-forte {
+  color: var(--texto);
+  font-weight: 600;
+}
 
 /* ----------------------------------------------------------------- falhas */
 

@@ -18,15 +18,49 @@ adaptador**:
 |---|---|---|
 | **Bluetooth BLE 4.0** | ✅ | Android com Chrome; computador com Chrome ou Edge |
 | **USB com cabo** | ✅ | Computador com Chrome ou Edge |
+| **Wi-Fi** | ⚙️ com a ponte | Android com Termux; computador |
 | Bluetooth clássico (SPP) | ❌ | Nenhum navegador |
-| Wi-Fi | ❌ | Nenhum navegador |
 
 O dongle azul de vinte reais é **Bluetooth clássico**, e navegador nenhum
 abre porta serial clássica — a limitação é das plataformas, não deste
-aplicativo, e não há biblioteca que a contorne. O de Wi-Fi fala TCP puro, e
-uma página `https` não abre soquete TCP nem conteúdo sem criptografia.
+aplicativo, e não há biblioteca que a contorne.
 
-Procure por «ELM327 BLE» ou «ELM327 4.0».
+Para comprar sem pensar, procure por «ELM327 BLE» ou «ELM327 4.0». Quem já tem
+o de **Wi-Fi** não precisa trocar: veja abaixo.
+
+## O adaptador Wi-Fi e a ponte
+
+O adaptador Wi-Fi cria uma rede própria e fala **TCP puro**, quase sempre em
+`192.168.0.10:35000`. **Navegador nenhum abre soquete TCP** — não há API, não
+há bandeira para ligar, não há biblioteca que contorne. Vale para Chrome,
+Safari e todos os outros.
+
+O que o navegador abre é **WebSocket**. Então o que falta não é código de
+navegador: é um tradutor rodando fora dele. Isso é `ferramentas/ponte-wifi.mjs`
+— WebSocket de um lado, TCP do outro, sem dependência nenhuma, rodando no
+próprio celular. Não precisa de internet: a rede do dongle não tem nenhuma, e o
+painel já funciona sem ela.
+
+```
+pkg install nodejs                       # no Termux, ainda com internet
+curl -O https://paivaadvgo-cybe.github.io/terco/obd2/ferramentas/ponte-wifi.mjs
+node ponte-wifi.mjs                      # já na rede do adaptador
+```
+
+Depois, em **Conexão**, toque em «Conectar pelo Wi-Fi». O endereço do campo é o
+da **ponte** (`ws://127.0.0.1:8127`); o do adaptador se informa na ponte, com
+`--obd 192.168.4.1:35000`.
+
+Por que uma página `https` consegue falar com `ws://127.0.0.1`: a regra de
+conteúdo misto abre exceção para origens confiáveis por natureza, e o que não
+sai do aparelho é uma delas. É o mesmo mecanismo dos programas-ponte de
+carteiras de criptomoeda e leitores de cartão. Verificado em Chromium, não
+deduzido.
+
+**A ponte confere a origem de quem conecta**, e isso não é paranoia: enquanto
+ela está de pé, qualquer página aberta no celular poderia tentar falar com o
+carro — inclusive mandar apagar código de falha. Só as origens conhecidas
+passam; outras se acrescentam com `--origem`.
 
 ### iPhone e iPad
 
@@ -119,7 +153,7 @@ Opere com o carro parado, e use suporte para o celular.
 |---|---|
 | `index.html`, `css/`, `manifest.json` | A casca, o estilo e o atualizador. |
 | `sw.js` | Service worker: guarda o aplicativo para uso sem internet. |
-| `js/obd/` | Protocolo ELM327, tabela de PIDs, códigos de falha e os transportes (BLE, serial, simulação). |
+| `js/obd/` | Protocolo ELM327, tabela de PIDs, códigos de falha e os transportes (BLE, serial, Wi-Fi pela ponte, simulação). |
 | `js/dominio/` | Consumo, resumo de viagem, datas. Sem navegador, testável no Node. |
 | `js/armazenamento/` | IndexedDB, driver em memória e a fachada de dados. |
 | `js/ui/` | Elementos, ponteiros, gráfico, CSV e as cinco telas. |
@@ -128,8 +162,8 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 173 testes, sem navegador e sem carro. |
-| `ferramentas/` | Gera os ícones e carimba a versão do cache. |
+| `tests/` | `npm test` — 192 testes, sem navegador e sem carro. |
+| `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento
 
@@ -138,6 +172,7 @@ npm test      # roda os testes
 npm run icones # regera os ícones
 npm run versao # carimba a versão do cache depois de mudar algum arquivo
 npm run servir # serve o repositório em http://localhost:8000/obd2/
+npm run ponte  # sobe a ponte do adaptador Wi-Fi (--obd, --porta, --servir)
 ```
 
 A versão do cache do service worker é o resumo do conteúdo da casca. Mudou
@@ -201,6 +236,10 @@ dirigindo decide quando. Quem responde essa pergunta é o `js/app.js`, na
   correção fica velha ou imprecisa, a tela diz «sem sinal» em vez de mostrar o
   último número — que seria afirmar uma velocidade de meio minuto atrás. Ele
   também gasta bateria, e por isso vem desligado.
+- A ponte do Wi-Fi é uma peça a mais para dar errado: se o Termux for fechado
+  pelo sistema, a conexão cai no meio da viagem. O adaptador BLE não tem esse
+  problema, e por isso continua sendo o que se recomenda comprar — a ponte é
+  para quem já tem o Wi-Fi na mão.
 - O aplicativo **lê**. Não regrava módulo, não altera parâmetro do motor e
   não faz remapeamento. As únicas escritas são o pedido de apagar falhas
   (serviço 04) e os ajustes do próprio adaptador.

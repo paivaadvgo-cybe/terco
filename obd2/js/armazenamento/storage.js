@@ -24,6 +24,7 @@ import {
   LIMITE_DE_PAINEIS, normalizarTodos, painelPadrao, painelDeInstrumentos, converterEscolhaAntiga,
 } from '../dominio/painel.js';
 import { dia as diaDe } from '../dominio/datas.js';
+import { PONTE_PADRAO } from '../obd/transporte-wifi.js';
 
 export const CONFIGURACAO_PADRAO = {
   id: 'app',
@@ -77,6 +78,17 @@ export const CONFIGURACAO_PADRAO = {
   audioNoVideo: false,
   /** Teto de espaço para vídeo, em megabytes. */
   limiteDeVideoMB: 1024,
+
+  /* -------------------------------------------------------------- Wi-Fi */
+
+  /**
+   * Onde a ponte do adaptador Wi-Fi atende.
+   *
+   * Fica guardado porque quem tem adaptador Wi-Fi vai conectar por ele todo
+   * dia, e redigitar `ws://127.0.0.1:8127` a cada viagem, num celular preso ao
+   * painel, é o tipo de atrito que faz desistir do aplicativo.
+   */
+  ponteWifi: PONTE_PADRAO,
 };
 
 export function novoId(prefixo = '') {
