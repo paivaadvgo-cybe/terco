@@ -30,10 +30,21 @@ export const PROMPT = '>';
  * PID. Não é falha de conexão, e tratá-la como falha faz o aplicativo
  * desconectar sozinho no meio de uma viagem porque perguntou a temperatura do
  * óleo a um carro que não tem o sensor.
+ *
+ * **Alguns textos dizem o que fazer, e não só o que houve.** Não é enfeite:
+ * `UNABLE TO CONNECT` é a falha mais comum de todas numa primeira conexão, e a
+ * causa quase sempre é a mesma — a ignição desligada. O conector OBD tem
+ * energia permanente, então o adaptador acende, responde a todos os comandos de
+ * configuração e parece perfeito; a linha do carro, essa só acorda com a chave
+ * na posição «ligado». Sem a dica, a mensagem está certa e não ajuda: manda
+ * procurar defeito num adaptador que está funcionando.
  */
 export const AVISOS = {
   'NO DATA': { grave: false, texto: 'o carro não respondeu a esta consulta' },
-  'UNABLE TO CONNECT': { grave: true, texto: 'o adaptador não achou a central do carro' },
+  'UNABLE TO CONNECT': {
+    grave: true,
+    texto: 'o adaptador não achou a central do carro — ligue a ignição (sem precisar dar partida) e tente de novo',
+  },
   'BUS INIT: ERROR': { grave: true, texto: 'falha ao abrir a linha de comunicação' },
   'BUS ERROR': { grave: true, texto: 'erro na linha de comunicação' },
   'BUS BUSY': { grave: false, texto: 'a linha está ocupada' },
