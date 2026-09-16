@@ -72,6 +72,22 @@ ela está de pé, qualquer página aberta no celular poderia tentar falar com o
 carro — inclusive mandar apagar código de falha. Só as origens conhecidas
 passam; outras se acrescentam com `--origem`.
 
+### Verificado em carro
+
+O caminho Wi-Fi foi testado com adaptador de verdade — um ELM327 v1.5 clone,
+atendendo em `192.168.0.10:35000`, ligado a um carro —, e não só contra o
+simulador: `--testar` achou o adaptador pelo endereço deduzido da rede, a ponte
+subiu, o painel conectou pelo `ws://127.0.0.1:8127` e mostrou tensão da bateria
+e temperatura do motor lidas da central.
+
+Três defeitos saíram desse teste, e nenhum deles apareceria na bancada: o
+diagnóstico deduzia candidatos de uma interface virtual com endereço público e
+saía batendo em servidores na internet; o registro da conversa era apagado
+justamente quando a conexão falhava, que é quando alguém vai olhá-lo; e
+`UNABLE TO CONNECT` — a falha mais comum de uma primeira conexão — dizia o que
+houve sem dizer o que fazer, mandando procurar defeito num adaptador que estava
+funcionando. A causa era a ignição desligada, que é quase sempre.
+
 ### iPhone e iPad
 
 **Não conectam.** O Safari não tem Web Bluetooth nem Web Serial, e todos os
