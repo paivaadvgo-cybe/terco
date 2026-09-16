@@ -22,7 +22,7 @@ import { criarVisor } from '../medidor.js';
 import { ligarGrade, posicionarNaGrade } from '../grade.js';
 import { tudoQueSeMostra, definicaoDe } from '../../obd/pids.js';
 import {
-  COLUNAS, LIMITE_DE_PAINEIS, TIPOS, MODELOS, criarItem, escalaDe,
+  COLUNAS, LINHAS_MAXIMAS, LIMITE_DE_PAINEIS, TIPOS, MODELOS, criarItem, escalaDe,
   mover, redimensionar, primeiroLugarVago, alturaDoPainel, linhasDoEditor,
 } from '../../dominio/painel.js';
 
@@ -184,9 +184,97 @@ export async function telaEditor(contexto, parametros = {}) {
 
   /* --------------------------------------------------- ajustes de um item */
 
+  /**
+   * Um par de botões «−» e «+» com o valor no meio.
+   *
+   * Existe porque a alça de canto não serve no celular. Ela tem trinta pixels e
+   * fica na quina de uma célula que, num painel cheio, tem oitenta — e a quina
+   * é justamente onde a alça do vizinho também está. Com o dedo, acertar aquilo
+   * é loteria; com o mouse, é trivial, e foi por isso que o defeito passou pelo
+   * computador sem aparecer. O arrasto continua para quem gosta; estes botões
+   * são o caminho que sempre funciona.
+   */
+  function passoDeTamanho(rotulo, valorNo, diminuir, aumentar) {
+    return el('div', { classe: 'passo' }, [
+      el('span', { classe: 'passo-nome', texto: rotulo }),
+      el('div', { classe: 'passo-controles' }, [
+        botao('−', diminuir, {
+          tipo: 'secundario',
+          classe: 'passo-botao',
+          atributos: { 'aria-label': `Diminuir ${rotulo.toLowerCase()}` },
+        }),
+        valorNo,
+        botao('+', aumentar, {
+          tipo: 'secundario',
+          classe: 'passo-botao',
+          atributos: { 'aria-label': `Aumentar ${rotulo.toLowerCase()}` },
+        }),
+      ]),
+    ]);
+  }
+
   function abrirAjustesDoItem(id) {
     const item = itens.find((i) => i.id === id);
     if (!item) return;
+
+    /*
+     * O item é reprocurado a cada uso, e não guardado.
+     *
+     * `redimensionar` devolve uma lista nova com um objeto novo para o item
+     * mexido — ele não altera o que já existe. Guardar a referência daqui faria
+     * o segundo toque no «+» crescer um objeto que já saiu da lista, e a tela
+     * mostraria um tamanho que ninguém salvou.
+     */
+    const atual = () => itens.find((i) => i.id === id);
+
+    const larguraNo = el('span', { classe: 'passo-valor' });
+    const alturaNo = el('span', { classe: 'passo-valor' });
+
+    function mostrarTamanho() {
+      const agora = atual();
+      larguraNo.textContent = String(agora?.largura ?? '—');
+      alturaNo.textContent = String(agora?.altura ?? '—');
+    }
+
+    function mudarTamanho(delta) {
+      const agora = atual();
+      if (!agora) return;
+
+      const alvo = {
+        largura: agora.largura + (delta.largura ?? 0),
+        altura: agora.altura + (delta.altura ?? 0),
+      };
+
+      // Recusar dizendo por quê. `redimensionar` prenderia o valor no mínimo em
+      // silêncio, e quem tocasse «−» três vezes sem nada acontecer concluiria
+      // que o botão não funciona.
+      const medida = (TIPOS[agora.tipo] ?? TIPOS.mostrador).minimo;
+      if (alvo.largura < medida.largura || alvo.altura < medida.altura) {
+        avisar(`${TIPOS[agora.tipo].nome} não cabe em menos de ${medida.largura}×${medida.altura} células`, 'atencao', 4000);
+        return;
+      }
+      if (alvo.largura > COLUNAS || alvo.altura > LINHAS_MAXIMAS) {
+        avisar(`A grade tem ${COLUNAS} colunas e ${LINHAS_MAXIMAS} linhas`, 'atencao', 4000);
+        return;
+      }
+
+      const ajustado = redimensionar(itens, id, alvo);
+      if (!ajustado) {
+        avisar('Não cabe aí: outro mostrador está no caminho. Mova-o primeiro.', 'atencao', 5000);
+        return;
+      }
+
+      itens = ajustado;
+      paineis[indice].itens = itens;
+      sujo = true;
+      // A grade atrás da folha redesenha na hora: é ela a prévia, e ver o
+      // mostrador crescer enquanto se toca no «+» é o que dispensa fechar,
+      // olhar, reabrir.
+      desenharGrade();
+      mostrarTamanho();
+    }
+
+    mostrarTamanho();
 
     const catalogo = tudoQueSeMostra();
     const qual = selecao(
@@ -204,6 +292,16 @@ export async function telaEditor(contexto, parametros = {}) {
     const maximo = entrada({ type: 'number', inputmode: 'decimal', step: 'any', value: escala.max });
 
     const folha = abrirFolha(definicaoDe(item.chave)?.nome ?? 'Mostrador', el('div', { classe: 'tela' }, [
+      /*
+       * O tamanho vem primeiro, e não é ordem alfabética: é o que mais se vem
+       * fazer aqui, e o único ajuste que vale na hora, sem «Aplicar». Numa tela
+       * de celular deitado a folha não cabe inteira de jeito nenhum — então o
+       * que fica acima da dobra tem de ser o que resolve sozinho.
+       */
+      campo('Tamanho', el('div', { classe: 'passos-de-tamanho' }, [
+        passoDeTamanho('Largura', larguraNo, () => mudarTamanho({ largura: -1 }), () => mudarTamanho({ largura: 1 })),
+        passoDeTamanho('Altura', alturaNo, () => mudarTamanho({ altura: -1 }), () => mudarTamanho({ altura: 1 })),
+      ]), 'Em células da grade, e vale na hora: o painel atrás muda enquanto você toca.'),
       campo('O que mostrar', qual),
       campo('Como mostrar', tipo, 'Ponteiro ocupa mais espaço e se lê de relance. Número cabe em uma célula.'),
       el('div', { classe: 'dois-campos' }, [
@@ -229,6 +327,11 @@ export async function telaEditor(contexto, parametros = {}) {
     ]));
 
     function aplicar() {
+      // Não `item`: mexer no tamanho antes de aplicar troca o objeto da lista,
+      // e escrever no antigo salvaria a escala num item que já não existe.
+      const alvo = atual();
+      if (!alvo) return;
+
       const novoMin = Number.parseFloat(String(minimo.value).replace(',', '.'));
       const novoMax = Number.parseFloat(String(maximo.value).replace(',', '.'));
 
@@ -239,18 +342,18 @@ export async function telaEditor(contexto, parametros = {}) {
 
       const novoTipo = tipo.value;
       const medida = TIPOS[novoTipo].minimo;
-      item.chave = qual.value;
-      item.tipo = novoTipo;
-      item.min = Number.isFinite(novoMin) ? novoMin : undefined;
-      item.max = Number.isFinite(novoMax) ? novoMax : undefined;
+      alvo.chave = qual.value;
+      alvo.tipo = novoTipo;
+      alvo.min = Number.isFinite(novoMin) ? novoMin : undefined;
+      alvo.max = Number.isFinite(novoMax) ? novoMax : undefined;
 
       // Trocar de tipo pode exigir mais espaço — um número de 1×1 que vira
       // ponteiro precisa de 2×2. Cresce só o necessário, e o teste de encaixe
       // recusa se não couber.
-      const maior = { largura: Math.max(item.largura, medida.largura), altura: Math.max(item.altura, medida.altura) };
-      const ajustado = redimensionar(itens, item.id, maior);
+      const maior = { largura: Math.max(alvo.largura, medida.largura), altura: Math.max(alvo.altura, medida.altura) };
+      const ajustado = redimensionar(itens, alvo.id, maior);
       if (ajustado) itens = ajustado;
-      else if (maior.largura > item.largura || maior.altura > item.altura) {
+      else if (maior.largura > alvo.largura || maior.altura > alvo.altura) {
         avisar('Não há espaço para este formato — mova outros mostradores primeiro', 'atencao', 5000);
       }
 

@@ -102,8 +102,11 @@ carro simulado funciona, e serve para conhecer o aplicativo.
   borda direita (gravar, vídeo, detalhes, modo cheio, editar) e o resto — estado
   da conexão, máximos, explicações — mora numa gaveta que abre quando se pede.
   Num carro, o número que exige rolar para aparecer é um número que não se lê.
-- **Painel que você monta** — arraste para mover, puxe o canto para
-  redimensionar, toque para escolher o que cada mostrador mostra e em que escala.
+- **Painel que você monta** — arraste para mover, toque para abrir os ajustes:
+  tamanho em botões «−» e «+» (que valem na hora, com o painel mudando atrás),
+  o que mostrar, o formato e a escala. Puxar o canto também redimensiona, mas
+  com o dedo num celular a alça de trinta pixels na quina da célula é loteria —
+  por isso os botões.
   Três formatos: ponteiro analógico (com escala numerada e o valor exato
   embaixo), número e barra. Até **cinco disposições salvas** — uma para a
   cidade, outra para a estrada, outra para a oficina. Começa de um modelo:
@@ -188,7 +191,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 203 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 207 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento
