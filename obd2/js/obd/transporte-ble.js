@@ -5,9 +5,10 @@
  * qual adaptador comprar. Os ELM327 azuis de vinte reais são Bluetooth
  * *clássico* (perfil SPP), e nenhum navegador — em nenhum sistema — abre uma
  * porta serial clássica: é uma decisão de segurança das plataformas, não uma
- * falta que dê para contornar com biblioteca. Adaptador Wi-Fi também não serve,
- * porque fala TCP cru, e uma página https não abre soquete TCP nem conteúdo
- * sem criptografia. Sobra o BLE 4.0, que custa pouco mais e funciona.
+ * falta que dê para contornar com biblioteca. O adaptador Wi-Fi fala TCP cru, e
+ * navegador também não abre soquete TCP — mas esse tem saída, com a ponte de
+ * `transporte-wifi.js` rodando no aparelho. Para conectar direto, do navegador
+ * e sem mais nada, sobra o BLE 4.0, que custa pouco mais e funciona.
  *
  * O adaptador BLE não tem serviço padronizado: cada fabricante de clone
  * escolheu o seu. Em vez de uma lista de modelos que envelhece, aqui se procura

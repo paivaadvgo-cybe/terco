@@ -12,17 +12,31 @@
  * chamá-los de qualquer outro lugar falha com um erro que não explica nada.
  */
 
-import { el, botao, cartao, selecao, campo, linhaDeValor } from '../elementos.js';
+import { el, botao, cartao, selecao, campo, entrada, linhaDeValor } from '../elementos.js';
 import { avisar, confirmar } from '../avisos.js';
 import { diagnostico, TIPOS_DE_ADAPTADOR } from '../../obd/transportes.js';
 import { escolherDispositivo, criarTransporteBLE, dispositivosConhecidos } from '../../obd/transporte-ble.js';
 import { escolherPorta, criarTransporteSerial, VELOCIDADES } from '../../obd/transporte-serial.js';
 import { criarTransporteDemo } from '../../obd/transporte-demo.js';
+import { criarTransporteWiFi, problemaNoEndereco, PONTE_PADRAO } from '../../obd/transporte-wifi.js';
 import { ESTADOS } from '../../sessao.js';
+
+/**
+ * As três respostas da tabela de adaptadores.
+ *
+ * Eram duas — sim e não — enquanto o Wi-Fi era impossível. Com a ponte ele
+ * passou a ser um terceiro caso, e amontoá-lo em qualquer um dos dois mentiria:
+ * dizer «funciona» esconde que é preciso subir um programa, e dizer «não»
+ * manda a pessoa comprar outro adaptador sem precisar.
+ */
+const CLASSE_DA_RESPOSTA = { true: 'funciona', false: 'nao-funciona', ponte: 'com-ponte' };
+const ETIQUETA_DA_RESPOSTA = { true: 'etiqueta-pago', false: 'etiqueta-cancelado', ponte: 'etiqueta-aberto' };
+const ROTULO_DA_RESPOSTA = { true: 'funciona', false: 'não', ponte: 'com a ponte' };
 
 export async function telaConexao(contexto, parametros = {}) {
   const { sessao } = contexto;
   const aparelho = diagnostico();
+  const configuracao = await contexto.armazenamento.configuracao();
   const tela = el('div', { classe: 'tela' });
 
   const situacao = el('p', { classe: 'situacao' });
@@ -69,6 +83,28 @@ export async function telaConexao(contexto, parametros = {}) {
     const porta = await escolherPorta();
     return criarTransporteSerial(porta, { velocidade: Number(velocidadeSerial) });
   }, 'Abrindo a porta serial');
+
+  /**
+   * Conectar pelo Wi-Fi é conectar **na ponte**, e é ela que fala com o carro.
+   *
+   * O endereço é guardado antes de tentar, e de propósito: quem digitou certo e
+   * esqueceu de subir a ponte não perde o que digitou junto com a falha.
+   */
+  const conectarWiFi = () => conectarCom(async () => {
+    const endereco = campoDaPonte.value.trim() || PONTE_PADRAO;
+    const problema = problemaNoEndereco(endereco);
+    if (problema) throw new Error(problema);
+    await contexto.armazenamento.ajustar({ ponteWifi: endereco });
+    return criarTransporteWiFi(endereco);
+  }, 'Procurando a ponte');
+
+  const campoDaPonte = entrada({
+    value: configuracao.ponteWifi ?? PONTE_PADRAO,
+    placeholder: PONTE_PADRAO,
+    inputMode: 'url',
+    spellcheck: false,
+    autocapitalize: 'off',
+  });
 
   const conectarDemo = () => conectarCom(
     async () => criarTransporteDemo(),
@@ -146,6 +182,14 @@ export async function telaConexao(contexto, parametros = {}) {
       );
     }
 
+    if (aparelho.wifi.disponivel) {
+      acoes.append(
+        botao('Conectar pelo Wi-Fi (ponte)', conectarWiFi, { tipo: 'secundario', classe: 'largo' }),
+        campo('Endereço da ponte', campoDaPonte,
+          'Aqui vai o endereço da ponte, não o do adaptador. A ponte é quem fala TCP com ele.'),
+      );
+    }
+
     acoes.append(botao('Carro simulado', conectarDemo, { tipo: 'fantasma', classe: 'largo' }));
   }
 
@@ -154,18 +198,49 @@ export async function telaConexao(contexto, parametros = {}) {
   tela.append(cartao([
     el('h2', { classe: 'secao-titulo', texto: 'Qual adaptador funciona' }),
     el('div', { classe: 'lista' }, TIPOS_DE_ADAPTADOR.map((tipo) => el('div', {
-      classe: `item tipo-adaptador ${tipo.funciona ? 'funciona' : 'nao-funciona'}`,
+      classe: `item tipo-adaptador ${CLASSE_DA_RESPOSTA[String(tipo.funciona)]}`,
     }, [
       el('div', { classe: 'item-corpo' }, [
         el('span', { classe: 'item-nome', texto: tipo.tipo }),
         el('span', { classe: 'item-detalhe', texto: tipo.nota }),
       ]),
       el('span', {
-        classe: `etiqueta etiqueta-${tipo.funciona ? 'pago' : 'cancelado'}`,
-        texto: tipo.funciona ? 'funciona' : 'não',
+        classe: `etiqueta ${ETIQUETA_DA_RESPOSTA[String(tipo.funciona)]}`,
+        texto: ROTULO_DA_RESPOSTA[String(tipo.funciona)],
       }),
     ]))),
     el('p', { classe: 'campo-dica', texto: 'O conector fica sob o painel, do lado do motorista, em quase todo carro vendido no Brasil a partir de 2010.' }),
+  ]));
+
+  /* ---------------------------------------------------------- a ponte */
+
+  tela.append(cartao([
+    el('h2', { classe: 'secao-titulo', texto: 'Adaptador Wi-Fi: como funciona' }),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'O adaptador Wi-Fi fala TCP puro, e navegador nenhum abre soquete TCP — não é falta deste '
+        + 'aplicativo, é decisão de segurança das plataformas. O que o navegador abre é WebSocket. A ponte '
+        + 'é um programinha que atende WebSocket de um lado e abre o TCP do outro. Ela roda no próprio '
+        + 'celular e não precisa de internet.',
+    }),
+    el('p', {
+      classe: 'campo-dica campo-dica-forte',
+      texto: 'Os dois primeiros passos precisam de internet, e a rede do adaptador não tem. '
+        + 'Faça-os antes de trocar de rede — de casa, do escritório, dos dados móveis.',
+    }),
+    el('ol', { classe: 'passos' }, [
+      el('li', { texto: 'Instale o Termux (pela F-Droid) e, dentro dele: pkg install nodejs' }),
+      el('li', { texto: 'Baixe a ponte: curl -O https://paivaadvgo-cybe.github.io/terco/obd2/ferramentas/ponte-wifi.mjs' }),
+      el('li', { texto: 'Ligue o adaptador no carro e conecte o celular na rede Wi-Fi dele. Se o Android perguntar se quer manter uma rede sem internet, mantenha.' }),
+      el('li', { texto: 'No Termux: node ponte-wifi.mjs — e deixe o Termux aberto.' }),
+      el('li', { texto: 'Volte aqui e toque em «Conectar pelo Wi-Fi».' }),
+    ]),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'Se o adaptador não atender em 192.168.0.10:35000, informe o endereço dele na ponte: '
+        + 'node ponte-wifi.mjs --obd 192.168.4.1:35000. O endereço do campo acima é sempre o da ponte, nunca o do adaptador. '
+        + 'E se nada responder, desligue os dados móveis: o Android às vezes manda tudo pela operadora quando a Wi-Fi não tem internet.',
+    }),
   ]));
 
   if (aparelho.apple) {

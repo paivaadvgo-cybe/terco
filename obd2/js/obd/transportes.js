@@ -15,6 +15,7 @@
 
 import { suportado as temBLE } from './transporte-ble.js';
 import { suportado as temSerial } from './transporte-serial.js';
+import { suportado as temWebSocket } from './transporte-wifi.js';
 
 /** O aparelho é um iPhone ou iPad? O iPad moderno se anuncia como Mac. */
 function ehApple() {
@@ -61,12 +62,30 @@ export function diagnostico() {
     serial.motivo = 'Web Serial existe no Chrome e no Edge de computador. No celular, use o adaptador BLE.';
   }
 
+  /*
+   * O Wi-Fi é o único que não depende de API de hardware nenhuma.
+   *
+   * Ele não fala com o adaptador: fala com uma ponte que roda no aparelho, e
+   * WebSocket todo navegador tem — inclusive o do iPhone. O que ele depende é
+   * de alguém subir a ponte, e isso o aplicativo não tem como verificar antes
+   * de tentar. Por isso «disponível» aqui quer dizer «o caminho existe», e não
+   * «vai conectar agora»; a tela diz o que falta fazer.
+   */
+  const wifi = {
+    chave: 'wifi',
+    nome: 'Adaptador Wi-Fi (pela ponte)',
+    disponivel: temWebSocket(),
+    motivo: temWebSocket() ? null : 'este navegador não tem WebSocket.',
+    precisaDePonte: true,
+  };
+
   return {
     seguro,
     apple,
     ble,
     serial,
-    algumDisponivel: ble.disponivel || serial.disponivel,
+    wifi,
+    algumDisponivel: ble.disponivel || serial.disponivel || wifi.disponivel,
   };
 }
 
@@ -74,9 +93,11 @@ export function diagnostico() {
  * Os tipos de adaptador que existem, e o que esperar de cada um.
  *
  * Esta tabela é mostrada na tela de conexão. Ela é o conteúdo mais útil do
- * aplicativo inteiro para quem ainda vai comprar: os dois primeiros funcionam,
- * os dois últimos não funcionam em navegador nenhum, e nada do que se faça no
- * código muda isso.
+ * aplicativo inteiro para quem ainda vai comprar, e tem três respostas, não
+ * duas: os dois primeiros funcionam sozinhos; o Wi-Fi funciona com a ponte
+ * rodando no aparelho, porque o navegador não abre TCP e alguém precisa abrir
+ * por ele; e o Bluetooth clássico não funciona de jeito nenhum, porque ali não
+ * falta um tradutor — falta uma API que o sistema não dá a navegador algum.
  */
 export const TIPOS_DE_ADAPTADOR = [
   {
@@ -99,8 +120,8 @@ export const TIPOS_DE_ADAPTADOR = [
   },
   {
     tipo: 'Wi-Fi',
-    funciona: false,
-    onde: 'Nenhum navegador',
-    nota: 'Fala TCP puro numa rede sem internet. Uma página https não abre soquete TCP nem conteúdo sem criptografia.',
+    funciona: 'ponte',
+    onde: 'Android com Termux, e computador',
+    nota: 'Fala TCP puro, e navegador nenhum abre soquete TCP. Funciona com a ponte deste aplicativo rodando no aparelho — um tradutor de WebSocket para TCP, sem internet.',
   },
 ];
