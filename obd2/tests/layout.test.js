@@ -41,8 +41,30 @@ test('o painel se prende à janela', () => {
   const css = ler('css/app.css');
   assert.match(tela, /classList\.add\('painel-fixo'\)/, 'a tela precisa marcar o corpo');
   assert.match(tela, /classList\.remove\('painel-fixo'\)/, 'e desmarcar ao sair, ou as outras telas param de rolar');
-  assert.match(css, /body\.painel-fixo \.conteudo \{[^}]*height: calc\(100dvh/,
+  assert.match(css, /body\.painel-fixo \.conteudo \{[\s\S]*?height: calc\(/,
     'sem altura fixa, a tela volta a rolar e o mostrador de baixo sai da janela');
+});
+
+test('a altura vem de medição, e não só do dvh', () => {
+  /*
+   * `100dvh` funciona no computador e mente no celular: com o corpo sem
+   * rolagem a barra de endereço nunca se recolhe, e o `dvh` conta o espaço dela
+   * como livre. O painel nasce mais alto que a tela e a última fileira vai
+   * parar embaixo da barra de abas — invisível e inalcançável. Aconteceu num
+   * celular de verdade depois de o mesmo painel ficar perfeito no notebook.
+   */
+  const app = ler('js/app.js');
+  assert.match(app, /visualViewport/, 'a medida precisa vir do que o navegador de fato mostra');
+  assert.match(app, /--altura-janela/, 'e ser publicada numa variável do CSS');
+  assert.match(app, /addEventListener\('resize', medirJanela\)/,
+    'e acompanhar a virada de tela, senão vale só para a orientação em que abriu');
+
+  const css = ler('css/app.css');
+  for (const regra of ['body.painel-fixo .conteudo', 'body.editor-fixo .conteudo']) {
+    const trecho = css.slice(css.indexOf(regra), css.indexOf(regra) + 600);
+    assert.match(trecho, /var\(--altura-janela, 100dvh\)/,
+      `${regra} precisa usar a altura medida, com o dvh só de reserva`);
+  }
 });
 
 test('a linha do palco não cresce com o conteúdo', () => {
@@ -96,4 +118,42 @@ test('o arrasto mede a linha pelas linhas já resolvidas', () => {
   const grade = ler('js/ui/grade.js');
   assert.match(grade, /gridTemplateRows/,
     'a altura da célula precisa vir das linhas resolvidas, não de grid-auto-rows');
+});
+
+test('o tamanho do mostrador se muda por botão, e não só puxando a ponta', () => {
+  /*
+   * A alça de canto tem trinta pixels e fica na quina de uma célula que, num
+   * painel cheio, tem oitenta — e a quina é onde a alça do vizinho também
+   * está. Com o mouse acerta-se sempre; com o dedo é loteria, e foi por isso
+   * que o defeito atravessou o teste no computador e só apareceu no celular:
+   * «não deixa aumentar nem diminuir, só mudar de lugar».
+   */
+  const editor = ler('js/ui/telas/editor.js');
+  assert.match(editor, /Aumentar \$\{rotulo/, 'os botões precisam se anunciar para quem não vê a tela');
+  assert.match(editor, /function mudarTamanho/, 'e mexer no tamanho de verdade');
+  assert.match(editor, /const atual = \(\) => itens\.find/,
+    'reprocurando o item: `redimensionar` devolve um objeto novo, e a referência antiga sai da lista');
+});
+
+test('o tamanho vem antes na folha de ajustes', () => {
+  // É o que mais se vem fazer ali, e o único ajuste que vale sem «Aplicar».
+  // Numa tela de celular deitado a folha não cabe inteira; o que fica acima da
+  // dobra tem de ser o que resolve sozinho.
+  const editor = ler('js/ui/telas/editor.js');
+  const folha = editor.slice(editor.indexOf('const folha = abrirFolha(definicaoDe'));
+  const tamanho = folha.indexOf("campo('Tamanho'");
+  const oQue = folha.indexOf("campo('O que mostrar'");
+  assert.ok(tamanho >= 0 && oQue >= 0);
+  assert.ok(tamanho < oQue, 'o tamanho precisa vir primeiro na folha');
+});
+
+test('a alça de canto tem folga para não cair sob a barra de abas', () => {
+  // Ela mora em `right: -11px; bottom: -11px`, fora do próprio mostrador. Sem
+  // folga na grade, a alça da última coluna e a da última linha saem do palco —
+  // e com `overflow: hidden` no editor preso, ficam inalcançáveis.
+  const css = ler('css/app.css');
+  const regra = css.slice(css.indexOf('.tela-editor .grade-do-painel.editando'));
+  const corpo = regra.slice(0, regra.indexOf('}'));
+  assert.doesNotMatch(corpo, /padding:\s*0;/, 'sem folga, a alça da borda fica fora da tela');
+  assert.match(corpo, /padding: 0 \d+px \d+px 0/);
 });

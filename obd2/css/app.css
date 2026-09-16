@@ -199,7 +199,13 @@ body.painel-fixo .topo { display: none; }
 body.painel-fixo .conteudo {
   padding: 0;
   max-width: none;
-  height: calc(100dvh - var(--barra-altura) - env(safe-area-inset-bottom));
+  /*
+   * `--altura-janela` é medida em JavaScript; `100dvh` fica de reserva para o
+   * primeiro quadro, antes de a medição acontecer. Ver `medirJanela` em
+   * `app.js`: num celular o `dvh` conta o espaço da barra de endereço como
+   * livre, e a última fileira de mostradores some embaixo da barra de abas.
+   */
+  height: calc(var(--altura-janela, 100dvh) - var(--barra-altura) - env(safe-area-inset-bottom));
 }
 
 .tela-painel {
@@ -419,7 +425,7 @@ body.editor-fixo { overflow: hidden; }
 body.editor-fixo .conteudo {
   padding: 0;
   max-width: none;
-  height: calc(100dvh - var(--topo-altura) - env(safe-area-inset-top)
+  height: calc(var(--altura-janela, 100dvh) - var(--topo-altura) - env(safe-area-inset-top)
     - var(--barra-altura) - env(safe-area-inset-bottom));
 }
 
@@ -431,7 +437,16 @@ body.editor-fixo .conteudo {
 .tela-editor .grade-do-painel.editando {
   flex: 1;
   min-height: 0;
-  padding: 0;
+  /*
+   * Folga à direita e embaixo para as alças de canto.
+   *
+   * Elas moram em `right: -11px; bottom: -11px`, fora do próprio mostrador. Sem
+   * esta folga, a alça da última coluna e a da última linha caíam fora do palco
+   * — e como o corpo tem `overflow: hidden` no editor preso, ficavam
+   * inalcançáveis: invisíveis, embaixo da barra de abas. Redimensionar pela
+   * ponta simplesmente não funcionava ali.
+   */
+  padding: 0 12px 12px 0;
   gap: 6px;
   grid-auto-rows: minmax(0, 1fr);
   grid-template-rows: repeat(var(--linhas, 4), minmax(0, 1fr));
@@ -645,7 +660,7 @@ body.quadro-de-instrumentos .alertas:empty { display: none !important; }
 body.quadro-de-instrumentos .conteudo {
   padding: 0;
   max-width: none;
-  height: 100dvh;
+  height: var(--altura-janela, 100dvh);
 }
 
 body.quadro-de-instrumentos .tela { gap: 0; }
@@ -806,6 +821,58 @@ body.quadro-de-instrumentos .aviso {
 .aba-painel.nova { font-size: 20px; padding: 8px 18px; }
 
 .dois-campos { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/*
+ * Os botões de tamanho do mostrador.
+ *
+ * Alvo grande de propósito: são tocados com o polegar, dentro de um carro, por
+ * quem está montando o painel — e o «−» e o «+» de meia dúzia de pixels é o
+ * tipo de controle que funciona no computador e não funciona onde importa.
+ */
+/*
+ * Largura e altura lado a lado, não empilhadas.
+ *
+ * Empilhados, os dois pares de botões custam uns cento e dez pixels de altura —
+ * e numa folha de ajustes aberta sobre um celular deitado isso é um terço da
+ * tela, que empurra o «Aplicar» para fora. Lado a lado custam setenta, e a tela
+ * baixa é justamente onde sobra largura.
+ */
+.passos-de-tamanho {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+}
+
+.passo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.passo-nome { font-size: 12.5px; color: var(--suave); }
+
+.passo-controles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.passo-botao {
+  min-width: 48px;
+  min-height: 44px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.passo-valor {
+  min-width: 34px;
+  text-align: center;
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
 
 /* ---------------------------------------------------------------- barra */
 
@@ -1580,6 +1647,41 @@ select.entrada { appearance: none; background-image: none; }
   .topo-titulo { font-size: 16px; }
   .barra-icone { font-size: 18px; }
   .barra-item { font-size: 10px; }
+
+  /*
+   * A folha de ajustes em duas colunas.
+   *
+   * Empilhada, ela tem quase o dobro da altura de um celular deitado — e o que
+   * fica abaixo da dobra é justamente o que se veio fazer: os botões de
+   * tamanho apareciam cortados no rodapé. Numa tela baixa e larga, largura é o
+   * que sobra, então os campos vão lado a lado e a folha inteira cabe sem
+   * rolar. As dicas e a coluna de botões atravessam as duas, porque quebradas
+   * ao meio não se leem.
+   */
+  .folha > .tela {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: start;
+    gap: 10px 16px;
+  }
+
+  .folha > .tela > .coluna-botoes { grid-column: 1 / -1; }
+
+  /*
+   * Numa tela baixa, o parágrafo solto de explicação sai.
+   *
+   * Não por desprezo pela explicação — este aplicativo vive dela —, mas porque
+   * ali ela custa oitenta pixels de uma folha que não cabe, e o que sai em
+   * troca é um botão inalcançável. As dicas curtas, coladas a cada campo,
+   * ficam: são as que respondem no momento da dúvida.
+   */
+  .folha > .tela > .campo-dica { display: none; }
+
+  .folha .campo-dica { font-size: 11.5px; line-height: 1.35; }
+  .folha.dialogo-corpo { padding: 14px; gap: 10px; }
+
+  .folha > .tela > .coluna-botoes { flex-direction: row; flex-wrap: wrap; }
+  .folha > .tela > .coluna-botoes > .botao { flex: 1 1 30%; }
 }
 
 @media (min-width: 720px) {

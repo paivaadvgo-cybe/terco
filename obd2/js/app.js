@@ -67,11 +67,46 @@ async function abrirArmazenamento() {
   return memoria;
 }
 
+/**
+ * A altura da janela, medida, numa variável do CSS.
+ *
+ * O painel e o editor precisam saber exatamente quanto espaço existe, porque se
+ * prendem à janela e não rolam. O CSS tem `100dvh` para isso, e no computador
+ * ele funciona. **Num celular, não dá para confiar nele.** Com o corpo sem
+ * rolagem, a barra de endereço do navegador não se recolhe nunca, e o `dvh`
+ * ainda assim conta o espaço que ela ocupa como se estivesse livre — o painel
+ * nasce mais alto que a tela e a última fileira de mostradores vai parar
+ * embaixo da barra de abas, invisível e inalcançável. Foi o que aconteceu num
+ * celular de verdade, depois de o mesmo painel ficar perfeito no notebook.
+ *
+ * `visualViewport` é a medida do que se vê de fato, e é o que o navegador usa
+ * para desenhar. `innerHeight` fica de reserva para quem não a tiver.
+ *
+ * O ouvinte é passivo e barato: mede um número e escreve uma variável. Roda na
+ * virada de tela, quando a barra do navegador aparece ou some, e quando o
+ * teclado abre.
+ */
+function medirJanela() {
+  const altura = Math.round(window.visualViewport?.height ?? window.innerHeight);
+  if (altura > 0) document.documentElement.style.setProperty('--altura-janela', `${altura}px`);
+}
+
+function acompanharJanela() {
+  medirJanela();
+  window.addEventListener('resize', medirJanela);
+  window.addEventListener('orientationchange', medirJanela);
+  window.visualViewport?.addEventListener('resize', medirJanela);
+}
+
 function aplicarTema(tema) {
   document.documentElement.dataset.tema = tema === 'claro' || tema === 'escuro' ? tema : 'auto';
 }
 
 async function iniciar() {
+  // Antes de qualquer tela: o painel nasce do tamanho da janela, e nascer com
+  // a medida errada é nascer com a última fileira fora dela.
+  acompanharJanela();
+
   const armazenamento = await abrirArmazenamento();
   const conteudo = document.getElementById('conteudo');
   const tituloDoTopo = document.getElementById('titulo');
