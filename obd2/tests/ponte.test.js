@@ -17,7 +17,7 @@ import assert from 'node:assert/strict';
 
 import {
   chaveDeResposta, origemPermitida, montarQuadro, lerQuadros, quadroDeFechamento,
-  ORIGENS_PADRAO, enderecosProvaveis, enderecosDoAparelho, testarAdaptador, OBD_PADRAO,
+  ORIGENS_PADRAO, enderecosProvaveis, enderecosDoAparelho, testarAdaptador, OBD_PADRAO, ehPrivado,
 } from '../ferramentas/ponte-wifi.mjs';
 import net from 'node:net';
 import { problemaNoEndereco, PONTE_PADRAO } from '../js/obd/transporte-wifi.js';
@@ -280,4 +280,39 @@ test('porta fechada é recusa, e não silêncio', async () => {
   const recusado = await testarAdaptador({ servidor: '127.0.0.1', porta, espera: 400 });
   assert.equal(recusado.ok, false);
   assert.equal(recusado.atendeu, false);
+});
+
+test('só rede privada vira candidato', () => {
+  /*
+   * Caso real, de uma saída de verdade: um notebook com interface virtual
+   * (driver de mesa de assinatura) anunciando o endereço **público**
+   * 54.232.189.113. Sem guarda, o diagnóstico deduzia dali 54.232.189.1 e .10 e
+   * saía abrindo conexão em servidores de terceiros na internet, procurando um
+   * ELM327 que por definição está na rede local.
+   */
+  const comVirtualPublica = {
+    'Topaz Loopback': [{ address: '54.232.189.113', family: 'IPv4', internal: false }],
+    'Wi-Fi': [{ address: '192.168.4.37', family: 'IPv4', internal: false }],
+  };
+  const provaveis = enderecosProvaveis(comVirtualPublica);
+  assert.ok(!provaveis.some((e) => e.startsWith('54.')), 'nunca bater em endereço público');
+  assert.ok(provaveis.includes('192.168.4.1'));
+});
+
+test('as faixas privadas são as do RFC 1918, mais a de autoconfiguração', () => {
+  for (const privado of ['10.123.28.66', '172.16.0.4', '172.31.255.1', '192.168.0.10', '169.254.3.9']) {
+    assert.ok(ehPrivado(privado), `${privado} é privado`);
+  }
+  for (const publico of ['54.232.189.113', '8.8.8.8', '172.15.0.1', '172.32.0.1', '192.169.0.1']) {
+    assert.ok(!ehPrivado(publico), `${publico} não é privado`);
+  }
+  // 169.254 é onde o aparelho cai quando o adaptador não entrega DHCP — e o
+  // adaptador pode estar ali junto, então continua valendo procurar.
+  assert.ok(ehPrivado('169.254.1.1'));
+});
+
+test('texto que não é endereço não vira candidato', () => {
+  for (const lixo of ['', null, undefined, 'abc', '1.2.3', '1.2.3.4.5', '300.1.1.1', '-1.0.0.1']) {
+    assert.equal(ehPrivado(lixo), false, `${lixo} não é endereço`);
+  }
 });

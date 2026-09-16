@@ -172,7 +172,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 199 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 202 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento

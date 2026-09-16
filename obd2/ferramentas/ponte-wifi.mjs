@@ -63,6 +63,33 @@ export function chaveDeResposta(chaveDoCliente) {
   return crypto.createHash('sha1').update(chaveDoCliente + SAL).digest('base64');
 }
 
+/**
+ * O endereço é de rede privada?
+ *
+ * Esta conferência apareceu por um motivo concreto, numa saída real: um
+ * notebook tinha uma interface virtual (driver de mesa de assinatura) com o
+ * endereço **público** `54.232.189.113`. Sem esta guarda, o diagnóstico deduzia
+ * dali os candidatos `54.232.189.1` e `54.232.189.10` — e saía **batendo em
+ * servidores de terceiros na internet** procurando um ELM327. Isso é errado por
+ * dois motivos independentes: não tem chance nenhuma de achar o adaptador, que
+ * por definição está na rede local; e conexões não solicitadas a máquinas
+ * alheias não são coisa que um programa deste tamanho deva fazer sem ninguém
+ * pedir.
+ *
+ * As faixas são as do RFC 1918, mais a de autoconfiguração (169.254), que é
+ * onde o aparelho cai quando o adaptador não entrega endereço por DHCP.
+ */
+export function ehPrivado(endereco) {
+  const partes = String(endereco ?? '').split('.').map(Number);
+  if (partes.length !== 4 || partes.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+  const [a, b] = partes;
+  if (a === 10) return true;
+  if (a === 172 && b >= 16 && b <= 31) return true;
+  if (a === 192 && b === 168) return true;
+  if (a === 169 && b === 254) return true;
+  return false;
+}
+
 /** Nomes que significam «este mesmo aparelho». */
 const LOCAIS = new Set(['localhost', '127.0.0.1', '[::1]', '::1']);
 
@@ -224,6 +251,8 @@ export function enderecosProvaveis(interfaces = os.networkInterfaces()) {
   for (const enderecos of Object.values(interfaces ?? {})) {
     for (const { address, family, internal } of enderecos ?? []) {
       if (internal || (family !== 'IPv4' && family !== 4)) continue;
+      // Só rede privada. Ver `ehPrivado` para o porquê — e ele é sério.
+      if (!ehPrivado(address)) continue;
       const partes = String(address).split('.');
       if (partes.length !== 4) continue;
       const rede = partes.slice(0, 3).join('.');
@@ -339,9 +368,24 @@ export async function procurarAdaptador({
 
   registrar('');
   registrar('Não achei o adaptador. As três causas, em ordem de frequência:');
-  registrar('  1. O celular não está na rede Wi-Fi do adaptador. Confira nos ajustes do Android.');
+  registrar('  1. O aparelho não está na rede Wi-Fi do adaptador. Confira na lista de redes.');
   registrar('  2. Os dados móveis estão mandando tudo pela operadora. Desligue-os e tente de novo.');
   registrar('  3. Outro aplicativo de OBD está aberto segurando a conexão — esses clones só aceitam uma.');
+
+  /*
+   * A dica que vale por todo o resto do relatório.
+   *
+   * A rede de um ELM327 Wi-Fi entrega endereço em 192.168.0.x ou 192.168.4.x,
+   * praticamente sem exceção. Estar em 10.x ou em 172.x é sinal de rede comum
+   * de internet — e dizer isso em uma linha poupa quem está no carro de sair
+   * procurando defeito no adaptador quando só falta trocar de rede.
+   */
+  const pareceDongle = enderecosDoAparelho().some((linha) => /\b192\.168\.(0|4)\./.test(linha));
+  if (!pareceDongle) {
+    registrar('');
+    registrar('E um sinal forte: a rede de um ELM327 Wi-Fi dá endereço 192.168.0.x ou 192.168.4.x.');
+    registrar('Nenhuma das suas está nessa faixa — pelo jeito o aparelho continua na rede de internet.');
+  }
   return null;
 }
 
