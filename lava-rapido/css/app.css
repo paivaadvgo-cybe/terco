@@ -30,7 +30,11 @@
   --principal-fraco: #e5f0fb;
   --ok: #12794a;
   --ok-fraco: #e2f4ea;
-  --atencao: #a15c00;
+  /* O âmbar escureceu de #a15c00 para cá por causa de uma medida: sobre o
+     azul-claro do cartão em destaque, «A receber» dava 4,49:1, e o mínimo da
+     WCAG AA é 4,5:1. Passava despercebido na tela e reprovava na auditoria —
+     e reprova de verdade no sol, que é onde este aplicativo é lido. */
+  --atencao: #8f5200;
   --atencao-fraco: #fdf0da;
   --perigo: #b8302a;
   --perigo-fraco: #fbe8e7;
@@ -570,6 +574,68 @@ body.carregando .conteudo { opacity: 0; }
 .barra-icone { font-size: 21px; line-height: 1; }
 .barra-nome { font-size: 11px; font-weight: 650; }
 .barra-item.ativa { color: var(--principal); }
+
+/* ---------------------------------------------------------------- licença */
+
+/*
+ * A faixa fica acima do conteúdo, ocupa uma linha e não cobre nada.
+ *
+ * Ela aparece em toda tela a partir do sétimo dia e não tem como ser fechada —
+ * é o ponto dela. Por isso precisa ser discreta o bastante para conviver com o
+ * trabalho: sem animação, sem cor berrante enquanto o prazo não aperta, e com
+ * o botão à direita, longe do polegar que vai tocar «+ NOVA LAVAGEM».
+ */
+.faixa-licenca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--atencao);
+  background: var(--atencao-fraco);
+  color: var(--texto);
+  margin-bottom: 12px;
+}
+
+.faixa-perigo { border-color: var(--perigo); background: var(--perigo-fraco); }
+.faixa-marca { font-size: 20px; line-height: 1; }
+.faixa-texto { margin: 0; font-size: 14px; font-weight: 600; flex: 1; }
+.faixa-botao { min-height: 44px; padding: 8px 12px; white-space: nowrap; }
+
+.etiqueta-licenca {
+  margin: 0;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.etiqueta-ok { background: var(--ok-fraco); color: var(--ok); }
+.etiqueta-atencao { background: var(--atencao-fraco); color: var(--atencao); }
+.etiqueta-perigo { background: var(--perigo-fraco); color: var(--perigo); }
+
+.tela-licenca .cartao.destaque { text-align: center; }
+.licenca-numero { margin: 0; font-size: 40px; font-weight: 750; line-height: 1.05; }
+.licenca-explicacao { margin: 0; font-size: 15px; }
+
+/* O código é lido em voz alta e colado num WhatsApp: grande, monoespaçado e
+   com os grupos separados, como se lê um número de cartão. */
+.codigo-instalacao {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: center;
+  word-break: break-all;
+  background: var(--superficie-2);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 14px 10px;
+}
 
 /* ---------------------------------------------------------------- diálogos */
 

@@ -32,7 +32,7 @@
  * nome do cache, e o teste em `tests/pwa.test.js` acusa a diferença antes da
  * publicação sair.
  */
-const VERSAO = 'lava-rapido-lite-791e4afa9724';
+const VERSAO = 'lava-rapido-lite-b9cb5f1a3378';
 const BASE = new URL('./', self.location).pathname;
 
 /**
@@ -64,6 +64,11 @@ const CASCA = [
   './js/dominio/precos.js',
   './js/dominio/servicos.js',
   './js/dominio/veiculos.js',
+  './js/licenca/assinatura.js',
+  './js/licenca/dispositivo.js',
+  './js/licenca/estado.js',
+  './js/licenca/licenca.js',
+  './js/licenca/suporte.js',
   './js/servicos/consulta-veiculo.js',
   './js/servicos/foto.js',
   './js/servicos/reconhecimento-placa.js',
@@ -73,6 +78,7 @@ const CASCA = [
   './js/ui/elementos.js',
   './js/ui/formatar.js',
   './js/ui/lavagem-cartao.js',
+  './js/ui/licenca-faixa.js',
   './js/ui/navegacao.js',
   './js/ui/receber.js',
   './js/ui/telas/caixa.js',
@@ -81,6 +87,7 @@ const CASCA = [
   './js/ui/telas/fechamento.js',
   './js/ui/telas/inicio.js',
   './js/ui/telas/lavagens.js',
+  './js/ui/telas/licenca.js',
   './js/ui/telas/nova-lavagem.js',
   './js/ui/telas/pendentes.js',
   './js/ui/telas/relatorios.js',

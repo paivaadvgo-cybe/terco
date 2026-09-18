@@ -19,6 +19,7 @@ dado nenhum. Depois de instalado, funciona sem internet.
 | **Fechamento** | O dia fechado, exportável em CSV e imprimível (ou em PDF pelo navegador). |
 | **Relatórios** | Dia, semana e mês: lavagens, faturamento, ticket médio e média diária. |
 | **Ajustes** | Serviços, preços, funcionários, PIN, backup, tema e demonstração. |
+| **Licença** | Situação da licença, código deste aparelho, contato do desenvolvedor e ativação. |
 
 A placa é o cliente: não há cadastro. Quando uma placa já passou por aqui, o
 atendimento seguinte já mostra quantas lavagens ela tem, quando foi a última e
@@ -65,9 +66,10 @@ lava-rapido/
 │   ├── app.js              abre o banco, monta a casca, troca de tela
 │   ├── dominio/            regras puras: placa, preços, estados, datas, contas
 │   ├── armazenamento/      StorageService, drivers (IndexedDB e memória), PIN
+│   ├── licenca/            avaliação de 30 dias, assinatura e registro do aparelho
 │   ├── servicos/           leitura de placa, consulta de veículo, foto
 │   └── ui/                 elementos, avisos, CSV e as telas
-├── ferramentas/        geração de ícones e versionamento da casca
+├── ferramentas/        ícones, versionamento da casca e o gerador de licenças
 └── tests/              90 testes, `node --test`, sem dependências
 ```
 
@@ -103,6 +105,66 @@ navegador.
   escrito neste repositório: consulta de placa é base regulada, e fingir que ela
   existe seria pior que não ter.
 
+## Licença de uso
+
+O aplicativo funciona **trinta dias** sem nada a fazer. Do **sétimo** ao
+trigésimo, uma faixa fica no alto de toda tela lembrando de falar com o
+desenvolvedor. Passados os trinta, **só o registro de lavagem nova é
+bloqueado**: o carro que está no pátio pode ser finalizado e recebido, e o
+histórico, o caixa, os relatórios e o backup seguem liberados.
+
+Os sete primeiros dias são calados de propósito — quem acabou de instalar está
+decidindo se o aplicativo serve, e cobrança no primeiro atendimento responde
+essa pergunta pelo lado errado. E o bloqueio nunca alcança o dinheiro já
+registrado: trancar o dono do lado de fora do próprio movimento seria usá-lo
+como refém.
+
+### Como ativar um cliente
+
+1. O cliente abre **Ajustes › Licença de uso** e manda o **código deste
+   aparelho** (ou toca no botão do WhatsApp, que já leva o código na mensagem).
+2. Você abre `ferramentas/gerador-de-licencas.html` **no seu computador** (dois
+   cliques; não precisa de internet), carrega a chave privada, cola o código,
+   escolhe a validade e gera o arquivo `.lava`.
+3. O cliente recebe o arquivo, toca em **Importar arquivo de licença** e
+   escolhe. A ativação é conferida no próprio aparelho, sem servidor.
+
+### As chaves
+
+A licença é assinada com **ECDSA P-256**. O aplicativo carrega só a **chave
+pública** (`js/licenca/assinatura.js`), que confere assinaturas e não emite
+nenhuma. A **chave privada** fica com você, fora deste repositório — que é
+público. Quem a tiver emite licenças válidas para qualquer aparelho.
+
+Para girar as chaves: `node ferramentas/gerar_chaves.mjs <pasta segura>` (ou o
+botão no próprio gerador), cole a linha da chave pública em
+`js/licenca/assinatura.js`, publique e emita arquivos novos para os clientes
+ativos — os antigos deixam de valer.
+
+### O contato
+
+`js/licenca/suporte.js` é o único arquivo a editar: o WhatsApp vai **só com
+números** (país, DDD e número, sem `+`, espaço ou traço). Vazio, a tela não
+mostra botão nenhum e explica que o contato não foi configurado — um botão que
+abre o nada é pior que um botão que não existe.
+
+### O que a licença protege, e o que não
+
+Impede que alguém escreva um arquivo de licença à mão, que uma licença de um
+aparelho valha em outro, e que voltar a data do celular estique a avaliação (o
+aplicativo guarda o maior instante que já viu). A contagem começa na data mais
+antiga entre o registro do aparelho e o nascimento do banco de dados, de modo
+que limpar o navegador não reinicia os trinta dias.
+
+Não impede que alguém edite o JavaScript servido e tire a verificação inteira.
+Num aplicativo que roda no navegador do cliente, nada impede — e prometer o
+contrário seria mentira. Isto é um combinado comercial com uma porta trancada,
+não um cofre.
+
+O registro do aparelho (código de instalação e licença) vive no `localStorage`
+e **fica fora do backup**: restaurar o backup num celular novo leva o movimento
+e não leva a licença.
+
 ## Leitura de placa e consulta de veículo
 
 `js/servicos/reconhecimento-placa.js` e `js/servicos/consulta-veiculo.js` têm
@@ -117,14 +179,18 @@ gravado neste aparelho, e diz qual dos dois está usando.
 npm test
 ```
 
-90 testes cobrem placa, tabela de preços, passagens de estado, datas, caixa,
+111 testes cobrem placa, tabela de preços, passagens de estado, datas, caixa,
 fechamento, relatórios, o serviço de armazenamento inteiro (fluxo completo,
-pendências, backup, demonstração, PIN), formatação, CSV e a coerência do PWA
-(casca × arquivos em disco, manifesto, ícones, versão do cache, importações).
+pendências, backup, demonstração, PIN), a licença (as duas fronteiras — sétimo
+e trigésimo dia —, assinatura, adulteração, relógio atrasado), formatação, CSV
+e a coerência do PWA (casca × arquivos em disco, manifesto, ícones, versão do
+cache, importações).
 
 O comportamento da tela é verificado dirigindo o aplicativo num navegador de
 verdade, com o Playwright, fora do repositório — atendimento completo, os cinco
-pagamentos, offline, foto, backup, restauração, PIN e larguras de 320 a 1280 px.
+pagamentos, offline, foto, backup, restauração, PIN, o ciclo inteiro da licença
+(do primeiro dia ao bloqueio e à ativação) e larguras de 320 a 1280 px. A
+acessibilidade é auditada com o axe-core nas treze telas, nos dois temas.
 Isso não virou teste do repositório porque exigiria uma dependência de
 instalação, e este projeto não tem nenhuma.
 

@@ -24,9 +24,24 @@ import { normalizar, eValida, paraRegistro, exibir as exibirPlaca } from '../../
 import { exibirDia, dia as diaDe } from '../../dominio/datas.js';
 import * as Reconhecimento from '../../servicos/reconhecimento-placa.js';
 import * as Foto from '../../servicos/foto.js';
+import { cartaoDeBloqueio } from './licenca.js';
 
 export async function telaNovaLavagem(contexto, parametros = {}) {
   const { armazenamento } = contexto;
+
+  /*
+   * O bloqueio da licença mora aqui, e só aqui.
+   *
+   * É a única porta por onde entra lavagem nova — o botão grande do início, a
+   * lavagem rápida e os atalhos do aplicativo instalado terminam todos nesta
+   * função. Espalhar a verificação pelas telas criaria um caminho esquecido, e
+   * o caminho esquecido é sempre o que o cliente encontra.
+   */
+  const situacao = contexto.licenca.situacao;
+  if (situacao && !situacao.permiteNovaLavagem) {
+    return el('div', { classe: 'tela tela-nova' }, [cartaoDeBloqueio(contexto, situacao)]);
+  }
+
   const configuracao = await armazenamento.configuracao();
   const funcionarios = configuracao.usarFuncionarios ? await armazenamento.funcionarios() : [];
   const modoRapido = parametros.rapido === '1' || configuracao.modoRapido === true;

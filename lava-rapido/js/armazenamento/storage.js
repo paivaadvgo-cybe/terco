@@ -491,7 +491,7 @@ export async function criarArmazenamento(driver, { agora = () => Date.now() } = 
     /** Apaga tudo e semeia de novo. Só a pedido explícito, e com PIN quando há. */
     async apagarTudo() {
       for (const nome of NOMES) await driver.limpar(nome);
-      await semear(driver);
+      await semear(driver, agora);
       return servico.configuracao();
     },
 
@@ -503,7 +503,7 @@ export async function criarArmazenamento(driver, { agora = () => Date.now() } = 
     },
   };
 
-  await semear(driver);
+  await semear(driver, agora);
   return servico;
 }
 
@@ -515,9 +515,12 @@ export async function criarArmazenamento(driver, { agora = () => Date.now() } = 
  * a quem já reajustou os seus, e isso apareceria como «o aplicativo baixou meus
  * preços sozinho».
  */
-async function semear(driver) {
+async function semear(driver, agora = () => Date.now()) {
   if (!(await driver.ler('configuracao', 'app'))) {
-    await driver.gravar('configuracao', { ...CONFIGURACAO_PADRAO, criadoEm: Date.now() });
+    // `criadoEm` com o relógio injetado, e não com `Date.now()`: é a data de
+    // nascimento do banco, e a licença conta a avaliação a partir dela. Com
+    // dois relógios diferentes, um teste que move o tempo mediria o de fora.
+    await driver.gravar('configuracao', { ...CONFIGURACAO_PADRAO, criadoEm: agora() });
   }
   if ((await driver.listar('servicos')).length === 0) {
     await driver.gravarVarios('servicos', SERVICOS_PADRAO.map((s) => ({ ...s })));

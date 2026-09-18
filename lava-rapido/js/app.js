@@ -16,6 +16,8 @@ import { criarDriverIndexedDB, disponivel as temIndexedDB } from './armazenament
 import { criarDriverEmMemoria } from './armazenamento/memoria.js';
 import { criarArmazenamento } from './armazenamento/storage.js';
 import { lerRota, montarBarra, acenderAba } from './ui/navegacao.js';
+import { abrirLicenca } from './licenca/licenca.js';
+import { faixaDeLicenca } from './ui/licenca-faixa.js';
 import { avisar, pedirPin } from './ui/avisos.js';
 import { abrirDetalhe } from './ui/detalhe-lavagem.js';
 import { telaInicio } from './ui/telas/inicio.js';
@@ -27,6 +29,7 @@ import { telaDespesas } from './ui/telas/despesas.js';
 import { telaFechamento } from './ui/telas/fechamento.js';
 import { telaRelatorios } from './ui/telas/relatorios.js';
 import { telaConfiguracoes } from './ui/telas/configuracoes.js';
+import { telaLicenca } from './ui/telas/licenca.js';
 
 const TELAS = {
   inicio: telaInicio,
@@ -38,6 +41,7 @@ const TELAS = {
   fechamento: telaFechamento,
   relatorios: telaRelatorios,
   config: telaConfiguracoes,
+  licenca: telaLicenca,
 };
 
 const TITULOS = {
@@ -50,6 +54,7 @@ const TITULOS = {
   fechamento: 'Fechamento',
   relatorios: 'Relatórios',
   config: 'Ajustes',
+  licenca: 'Licença',
 };
 
 /** Quanto tempo um PIN conferido continua valendo. */
@@ -79,10 +84,20 @@ async function iniciar() {
 
   aplicarTema((await armazenamento.configuracao()).tema);
 
+  /*
+   * A licença abre junto com o banco, e nunca depois.
+   *
+   * A faixa de aviso aparece em toda tela, e o bloqueio de lavagem nova é
+   * consultado na primeira delas. Abrir isto sob demanda deixaria a primeira
+   * tela do dia sem aviso — justamente a que todo mundo olha.
+   */
+  const licenca = await abrirLicenca(armazenamento, () => Date.now());
+
   let autorizadoAte = 0;
 
   const contexto = {
     armazenamento,
+    licenca,
     aplicarTema,
 
     /**
@@ -133,6 +148,9 @@ async function iniciar() {
     const tela = TELAS[rota] ?? telaInicio;
     tituloDoTopo.textContent = TITULOS[rota] ?? 'Lava-Rápido Lite';
     acenderAba(barra, rota);
+    // A cada desenho, e não uma vez por sessão: o aplicativo instalado fica
+    // dias aberto no balcão, e a virada da meia-noite precisa ser notada.
+    await licenca.reavaliar();
 
     // Duas chamadas quase simultâneas (toque duplo, `hashchange` + `ir`)
     // desenhariam duas telas por cima uma da outra, a última nem sempre a certa.
@@ -141,7 +159,8 @@ async function iniciar() {
     try {
       const no = await tela(contexto, parametros);
       if (desenhando !== minha) return;
-      conteudo.replaceChildren(no);
+      const faixa = rota === 'licenca' ? null : faixaDeLicenca(licenca.situacao, () => contexto.ir('licenca'));
+      conteudo.replaceChildren(...(faixa ? [faixa, no] : [no]));
       window.scrollTo({ top: 0 });
     } catch (erro) {
       console.error(erro);

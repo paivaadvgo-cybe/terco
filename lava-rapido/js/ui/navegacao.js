@@ -30,6 +30,7 @@ const ABA_DA_ROTA = {
   fechamento: 'caixa',
   relatorios: 'relatorios',
   config: 'config',
+  licenca: 'config',
 };
 
 /** `#/nova?rapido=1` vira `{ rota: 'nova', parametros: { rapido: '1' } }`. */

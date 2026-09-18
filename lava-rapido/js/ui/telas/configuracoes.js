@@ -119,6 +119,7 @@ async function secaoGeral(contexto, armazenamento) {
     botao('💲 Preços', () => contexto.ir('config?secao=precos'), { tipo: 'secundario', classe: 'largo' }),
     botao('👷 Funcionários', () => contexto.ir('config?secao=equipe'), { tipo: 'secundario', classe: 'largo' }),
     botao('💾 Backup e dados', () => contexto.ir('config?secao=dados'), { tipo: 'secundario', classe: 'largo' }),
+    botao('🔑 Licença de uso', () => contexto.ir('licenca'), { tipo: 'secundario', classe: 'largo' }),
   ]);
 
   const sobre = cartao([
