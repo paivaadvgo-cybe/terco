@@ -16,6 +16,7 @@ imagem. Depois de instalado, funciona sem internet.
 | `simulador/` | O **Simulador Financeiro GoiásFomento**, em `/simulador/`. |
 | `lava-rapido/` | O **Lava-Rápido Lite**, gestão de lava-rápido pelo celular, em `/lava-rapido/`. |
 | `obd2/` | O **Painel OBD-II**, que lê o motor por um adaptador ELM327 Bluetooth BLE, em `/obd2/`. |
+| `publicar/`, `.cpanel.yml` | A publicação do Lava-Rápido e do Painel OBD-II na hospedagem (cPanel/Apache). Ver abaixo. |
 
 O aplicativo é um arquivo só, como pedido. O `sw.js` existe porque os
 navegadores exigem que um service worker seja um `.js` servido pelo mesmo
@@ -24,6 +25,31 @@ fica disponível offline. O manifesto e o ícone não são arquivos: são gerado
 em tempo de execução (ou servidos pelo próprio service worker).
 
 ## Como publicar
+
+O AirDrums, o Terço e o Simulador vivem no GitHub Pages deste repositório. O
+**Lava-Rápido Lite** e o **Painel OBD-II** são publicados numa hospedagem
+compartilhada (cPanel, Apache), cada um na raiz do seu subdomínio —
+`https://lava-rapido.lexinteligencia.com/` e `https://obd2.lexinteligencia.com/` —
+com o `.htaccess` que está dentro de cada pasta.
+
+O que sobe é decidido por `publicar/implantar.sh`: a casca que o `sw.js` de
+cada aplicativo lista, o próprio `sw.js`, o `.htaccess` e, no OBD-II, a ponte
+do adaptador Wi-Fi. Testes, `package.json`, README e as outras ferramentas
+ficam de fora. O `.cpanel.yml` chama esse script quando se usa o «Git™ Version
+Control» do cPanel («Deploy HEAD Changes»); sem esse recurso, o mesmo script
+gera a pasta para enviar pelo Gerenciador de Arquivos:
+
+```
+bash publicar/implantar.sh obd2 /caminho/de/uma/pasta/vazia
+bash publicar/implantar.sh lava-rapido /caminho/de/outra/pasta/vazia
+```
+
+Antes de publicar qualquer um dos dois: `npm test` dentro da pasta do
+aplicativo. O teste reprova se a versão do cache ficou para trás — e ficar
+para trás significa que a publicação não chega a quem já tem o aplicativo
+instalado.
+
+### O AirDrums
 
 Os dois arquivos são estáticos. Coloque-os em qualquer endereço **https://**
 — por exemplo o GitHub Pages deste repositório. A câmera só funciona em

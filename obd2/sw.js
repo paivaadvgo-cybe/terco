@@ -34,7 +34,7 @@
  * nome do cache, e o teste em `tests/pwa.test.js` acusa a diferença antes da
  * publicação sair.
  */
-const VERSAO = 'obd2-painel-72bf8e141186';
+const VERSAO = 'obd2-painel-566b065b8da2';
 const BASE = new URL('./', self.location).pathname;
 
 /**

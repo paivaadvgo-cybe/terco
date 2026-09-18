@@ -16,10 +16,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { versaoDeclarada, versaoEsperada, cascaDe } from '../ferramentas/versionar_casca.mjs';
 
-const raiz = new URL('..', import.meta.url).pathname;
+// `fileURLToPath`, e não `.pathname`: no Windows o `pathname` de um `file:` é
+// `/C:/…`, e `path.join` faz dele `C:C:…` — os testes nem abriam o disco.
+const raiz = fileURLToPath(new URL('..', import.meta.url));
 const ler = (relativo) => fs.readFileSync(path.join(raiz, relativo), 'utf8');
 
 /** Diretórios que não vão para o navegador. */

@@ -43,7 +43,7 @@ painel já funciona sem ela.
 
 ```
 pkg install nodejs                       # no Termux, ainda com internet
-curl -O https://paivaadvgo-cybe.github.io/terco/obd2/ferramentas/ponte-wifi.mjs
+curl -O https://obd2.lexinteligencia.com/ferramentas/ponte-wifi.mjs
 node ponte-wifi.mjs --testar             # já na rede do adaptador: procura e diz o comando
 node ponte-wifi.mjs                      # sobe a ponte
 ```
@@ -165,8 +165,8 @@ tem oito colunas e os modelos são desenhados para as três linhas que a altura 
 um celular em paisagem comporta. O painel e o editor se prendem à janela — as
 linhas dividem a altura disponível, e nenhuma das duas telas rola.
 
-1. Abra o aplicativo em **https** (GitHub Pages serve), e instale na tela
-   inicial se quiser.
+1. Abra o aplicativo em **https** (é o que a hospedagem serve; sem https não
+   há Bluetooth, serial, câmera nem GPS), e instale na tela inicial se quiser.
 2. Ligue o adaptador no conector OBD-II — sob o painel, do lado do
    motorista — e dê partida no carro (ou deixe a ignição em «ligado»).
 3. Em **Conexão**, toque em «Procurar adaptador Bluetooth» e escolha-o na

@@ -50,6 +50,16 @@ export const COLECOES = {
 export const NOMES = Object.keys(COLECOES);
 
 /**
+ * As coleções que entram no backup, na ordem em que são restauradas.
+ *
+ * `videos` fica de fora de propósito. Uma viagem de meia hora em 720p são
+ * seiscentos megabytes; um arquivo desse tamanho o celular se recusa a
+ * compartilhar, e backup que ninguém consegue fazer não existe. O que se
+ * protege aqui é o que não se refaz: viagens, amostras, recordes e ajustes.
+ */
+export const NO_BACKUP = ['configuracao', 'veiculos', 'viagens', 'amostras'];
+
+/**
  * Quantas amostras vão em cada bloco gravado.
  *
  * Sessenta é um minuto de gravação a cada segundo. Blocos menores geram

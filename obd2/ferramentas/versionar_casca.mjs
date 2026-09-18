@@ -22,7 +22,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const raiz = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 const arquivoSW = path.join(raiz, 'sw.js');
@@ -60,7 +60,17 @@ export function versaoEsperada(raizDoProjeto, textoDoSW) {
   return PREFIXO + resumoDaCasca(raizDoProjeto, cascaDe(textoDoSW));
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) {
+/*
+ * «Fui chamado direto, e não importado pelo teste?»
+ *
+ * Comparar com `file://` + `argv[1]` só funcionava no Linux. No Windows o
+ * argumento é `ferramentasersionar_casca.mjs` (relativo, com barra
+ * invertida), a comparação dava falso, e `npm run versao` terminava sem
+ * imprimir nada e sem gravar — a falha silenciosa que este arquivo existe
+ * para impedir, só que agora na ferramenta que a impede.
+ */
+const chamadoDireto = Boolean(process.argv[1]) && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href;
+if (chamadoDireto) {
   const texto = fs.readFileSync(arquivoSW, 'utf8');
   const declarada = versaoDeclarada(texto);
   const esperada = versaoEsperada(raiz, texto);

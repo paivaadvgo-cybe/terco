@@ -51,8 +51,16 @@ export const OBD_PADRAO = { servidor: '192.168.0.10', porta: 35000 };
 /** A porta da ponte. Alta e sem uso conhecido, para não brigar com nada. */
 export const PORTA_PADRAO = 8127;
 
-/** As origens que podem falar com o carro sem ser perguntado. */
+/**
+ * As origens que podem falar com o carro sem ser perguntado.
+ *
+ * A primeira é onde o painel é publicado. A do GitHub Pages fica enquanto o
+ * endereço antigo estiver no ar, para quem ainda o tem instalado; sai quando
+ * ele for aposentado. Só o subdomínio do painel entra — o do Lava-Rápido, no
+ * mesmo domínio, é outra origem e não tem por que falar com o carro.
+ */
 export const ORIGENS_PADRAO = [
+  'https://obd2.lexinteligencia.com',
   'https://paivaadvgo-cybe.github.io',
   'http://localhost',
   'http://127.0.0.1',

@@ -1,0 +1,105 @@
+# .htaccess — regras do Apache para esta pasta (e só para ela)
+#
+# Este arquivo vale para o diretório onde está e para os de dentro dele. Os
+# outros sites do mesmo domínio não são afetados; em compensação, regras do
+# `.htaccess` da raiz do domínio são herdadas aqui, e algumas são desligadas
+# abaixo de propósito.
+#
+# O que este aplicativo precisa do servidor cabe em quatro coisas:
+#   1. https obrigatório — sem contexto seguro não existe service worker,
+#      Bluetooth, porta serial, câmera nem GPS. Em http o aplicativo abre e não
+#      faz nada.
+#   2. um endereço só — «www.dominio» e «dominio» são, para o navegador, dois
+#      sites diferentes, com instalação e banco de dados separados.
+#   3. o documento e o service worker sempre revalidados — é por eles que uma
+#      versão nova chega a quem já instalou. O resto pode ficar em cache longo,
+#      porque o service worker o versiona sozinho (o nome do cache é o resumo
+#      do conteúdo da casca).
+#   4. tipos de conteúdo certos — módulos ES só carregam se o servidor os
+#      declarar como JavaScript; um manifesto declarado como texto não instala.
+
+# ---------------------------------------------------------------- 1 e 2: https, um host
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Sem https, redireciona para o mesmo endereço em https. 301 = definitivo,
+  # e o navegador passa a nem tentar http.
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Com «www.» na frente, redireciona para o endereço sem «www.». Só nesta
+  # pasta: o site da raiz do domínio continua atendendo como quiser.
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+</IfModule>
+
+# ---------------------------------------------------------------- listagem
+# Sem `index.html` numa pasta, o Apache mostraria a lista de arquivos dela.
+# Aqui toda pasta interna (css/, js/, icones/) é assim, e não há razão para
+# expor a lista.
+Options -Indexes
+
+# ---------------------------------------------------------------- 4: tipos
+# O «tipo MIME» é a etiqueta que o servidor põe em cada arquivo dizendo o que
+# ele é («isto é JavaScript», «isto é imagem PNG»). O navegador confia na
+# etiqueta, não na extensão: um módulo `.js` entregue como texto simples é
+# recusado com erro de segurança, e um `.mjs` sem etiqueta desce como
+# «arquivo desconhecido».
+AddDefaultCharset UTF-8
+AddType text/javascript .js .mjs
+AddType text/css .css
+AddType image/png .png
+AddType application/json .json
+<Files "manifest.json">
+  ForceType application/manifest+json
+</Files>
+
+# Com as etiquetas certas, pede-se ao navegador que não «adivinhe» o tipo de
+# nenhum arquivo pelo conteúdo — adivinhar é como um arquivo enviado por
+# alguém vira script.
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+</IfModule>
+
+# ---------------------------------------------------------------- 3: cache
+# Primeiro desliga a regra de validade herdada da raiz (mod_expires), se
+# houver: ela daria prazo de cache ao `index.html` e ao `sw.js` por tipo, e é
+# exatamente o que não pode acontecer com esses dois.
+<IfModule mod_expires.c>
+  ExpiresActive Off
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Tudo o que é versionado pelo service worker pode ficar guardado por um ano:
+  # quando a casca muda, o worker novo baixa cada arquivo direto da rede
+  # (`cache: 'reload'`), ignorando este prazo. `immutable` diz ao navegador que
+  # nem precisa perguntar se mudou.
+  <FilesMatch "\.(css|js|mjs|png|json)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+
+  # Os arquivos por onde a atualização entra, e o manifesto, que define a
+  # identidade do aplicativo instalado (nome, ícones, atalhos). `no-cache` NÃO
+  # significa «não guardar»: significa «guarde, mas pergunte ao servidor se
+  # mudou antes de usar». Se não mudou, o servidor responde só «não mudou»
+  # (304) e o navegador usa o que tem — custa quase nada. Se mudou, vem o novo.
+  #
+  # Esta regra vem DEPOIS da de cima de propósito: `sw.js` também casa com
+  # `\.js$`, e no Apache a última que casar é a que vale.
+  <FilesMatch "^(index\.html|sw\.js|manifest\.json)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# ---------------------------------------------------------------- erro 404
+# Se o `.htaccess` da raiz do domínio mandar a página inicial do site no lugar
+# de «não encontrado», um arquivo que faltasse aqui chegaria como uma página
+# HTML de outro site — e o service worker guardaria isso como se fosse o
+# módulo. Aqui, 404 é 404.
+ErrorDocument 404 default
+
+# ---------------------------------------------------------------- compressão
+# Texto comprimido viaja menor. Sem efeito na correção, só na velocidade.
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css text/javascript application/json application/manifest+json
+</IfModule>

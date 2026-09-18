@@ -16,7 +16,7 @@
  * fica no aparelho de quem dirige, e apagar é apagar.
  */
 
-import { NOMES, AMOSTRAS_POR_BLOCO } from './esquema.js';
+import { NOME, NOMES, NO_BACKUP, AMOSTRAS_POR_BLOCO } from './esquema.js';
 import { criarViagem, resumir } from '../dominio/viagem.js';
 import { COMBUSTIVEL_PADRAO } from '../dominio/leituras.js';
 import { PADRAO_DO_PAINEL } from '../obd/pids.js';
@@ -402,6 +402,60 @@ export async function criarArmazenamento(driver) {
       const viagens = await driver.listar('viagens');
       const amostras = viagens.reduce((total, v) => total + (v.amostras ?? 0), 0);
       return { viagens: viagens.length, amostras, bytes: amostras * 90 };
+    },
+
+    /* ------------------------------------------------------------- backup */
+
+    /**
+     * Tudo o que não se refaz, num objeto só, pronto para virar JSON.
+     *
+     * Antes de ler o banco, descarrega o que ainda está em memória: durante
+     * uma gravação, o último minuto de amostras só existe na fila, e um backup
+     * tirado nesse instante sairia com a viagem em curso incompleta sem que
+     * nada avisasse.
+     */
+    async exportar() {
+      for (const viagemId of pendentes.keys()) await armazenamento.descarregar(viagemId);
+      const colecoes = {};
+      for (const nome of NO_BACKUP) colecoes[nome] = await driver.listar(nome);
+      return {
+        aplicativo: NOME,
+        formato: 1,
+        geradoEm: new Date().toISOString(),
+        colecoes,
+      };
+    },
+
+    /**
+     * Restaura um backup, substituindo o que existe.
+     *
+     * Os vídeos não viajam no backup (ver `NO_BACKUP`), mas os que já estão no
+     * aparelho não ficam intocados: um trecho cuja viagem não veio no arquivo
+     * viraria órfão — dezenas de megabytes sem nenhuma tela que o mostrasse ou
+     * permitisse apagar. Os trechos de viagens que continuam existindo ficam.
+     */
+    async restaurar(backup) {
+      if (!backup || backup.aplicativo !== NOME) {
+        throw new Error('este arquivo não é um backup do Painel OBD-II');
+      }
+      for (const nome of NO_BACKUP) {
+        const registros = backup.colecoes?.[nome] ?? [];
+        if (!Array.isArray(registros)) throw new Error(`o backup está corrompido em «${nome}»`);
+      }
+
+      for (const nome of NO_BACKUP) {
+        await driver.limpar(nome);
+        const registros = backup.colecoes?.[nome] ?? [];
+        if (registros.length) await driver.gravarVarios(nome, registros);
+      }
+      pendentes.clear();
+
+      const viagens = new Set((await driver.listar('viagens')).map((v) => v.id));
+      for (const trecho of await driver.listar('videos')) {
+        if (!viagens.has(trecho.viagem)) await driver.apagar('videos', trecho.id);
+      }
+
+      return Object.fromEntries(NO_BACKUP.map((n) => [n, (backup.colecoes?.[n] ?? []).length]));
     },
 
     async limparTudo() {

@@ -130,8 +130,13 @@ test('um tamanho absurdo é recusado, não alocado', () => {
 test('a ponte só aceita origens conhecidas', () => {
   // Enquanto a ponte está de pé, qualquer página aberta no celular pode tentar
   // falar com o carro — inclusive mandar apagar código de falha.
-  assert.ok(origemPermitida('https://paivaadvgo-cybe.github.io'));
+  assert.ok(origemPermitida('https://obd2.lexinteligencia.com'), 'a hospedagem onde o painel é publicado');
+  assert.ok(origemPermitida('https://obd2.lexinteligencia.com/#/conexao'));
+  assert.ok(origemPermitida('https://paivaadvgo-cybe.github.io'), 'o endereço antigo, enquanto estiver no ar');
   assert.ok(origemPermitida('https://paivaadvgo-cybe.github.io/terco/obd2/'));
+  assert.ok(!origemPermitida('https://lava-rapido.lexinteligencia.com'), 'outro aplicativo do mesmo domínio é outra origem');
+  assert.ok(!origemPermitida('https://lexinteligencia.com'), 'o domínio principal também');
+  assert.ok(!origemPermitida('http://obd2.lexinteligencia.com'), 'sem https, não');
   assert.ok(!origemPermitida('https://sitio-qualquer.example'));
   assert.ok(!origemPermitida('http://paivaadvgo-cybe.github.io'), 'esquema diferente é origem diferente');
 });
