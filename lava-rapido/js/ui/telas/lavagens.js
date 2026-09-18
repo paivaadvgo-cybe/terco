@@ -112,13 +112,18 @@ export async function telaLavagens(contexto, parametros = {}) {
 
     const periodoPersonalizado = estado.filtro === 'personalizado'
       ? el('div', { classe: 'periodo' }, [
+        // `aria-label` em vez de rótulo visível: são dois campos numa linha
+        // só, e «de» e «a» já dizem a quem enxerga o que cada um é. Sem isto,
+        // o leitor de tela anuncia dois «campo de edição» iguais.
         entrada({
           type: 'date', value: estado.de ?? '', classe: 'entrada',
+          atributos: { 'aria-label': 'Data inicial' },
           onchange: (evento) => { estado.de = evento.target.value; desenhar(); },
         }),
         el('span', { texto: 'a' }),
         entrada({
           type: 'date', value: estado.ate ?? '', classe: 'entrada',
+          atributos: { 'aria-label': 'Data final' },
           onchange: (evento) => { estado.ate = evento.target.value; desenhar(); },
         }),
       ])

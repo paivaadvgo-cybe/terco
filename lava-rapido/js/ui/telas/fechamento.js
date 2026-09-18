@@ -16,7 +16,7 @@
  * atualiza a fotografia.
  */
 
-import { el, botao, cartao, linhaDeValor } from '../elementos.js';
+import { el, botao, cartao, campo, linhaDeValor } from '../elementos.js';
 import { moeda, plural } from '../formatar.js';
 import { avisar } from '../avisos.js';
 import { dia as diaDe, exibirDia } from '../../dominio/datas.js';
@@ -35,12 +35,19 @@ export async function telaFechamento(contexto, parametros = {}) {
     const despesas = (await armazenamento.despesas()).filter((d) => d.dia === estado.dia);
     const resumo = fechamentoDoDia(estado.dia, lavagens, despesas);
 
-    const seletorDeDia = el('input', {
+    /*
+     * O campo de data precisa de rótulo ligado a ele, e não só de aparência.
+     * Sem `<label for>`, o leitor de tela anuncia «campo de edição» e mais
+     * nada — quem não enxerga a tela não descobre que aquilo escolhe o dia do
+     * fechamento. Uma auditoria automática (axe-core) apontou este campo como
+     * a única falha crítica do aplicativo.
+     */
+    const seletorDeDia = campo('Dia', el('input', {
       type: 'date',
       classe: 'entrada entrada-dia',
       value: estado.dia,
       onchange: (evento) => { estado.dia = evento.target.value || estado.dia; desenhar(); },
-    });
+    }));
 
     const cabecalho = cartao([
       el('p', { classe: 'fechamento-rotulo', texto: 'Fechamento do dia' }),
