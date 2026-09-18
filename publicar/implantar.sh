@@ -2,8 +2,8 @@
 #
 # Copia para a hospedagem só o que o navegador usa.
 #
-#     bash publicar/implantar.sh obd2        $HOME/public_html/obd2.lexinteligencia.com
-#     bash publicar/implantar.sh lava-rapido $HOME/public_html/lava-rapido.lexinteligencia.com
+#     bash publicar/implantar.sh obd2        $HOME/obd2.lexinteligencia.com
+#     bash publicar/implantar.sh lava-rapido $HOME/lava-rapido.lexinteligencia.com
 #     bash publicar/implantar.sh obd2        /uma/pasta/vazia     # em casa: monta o pacote à mão
 #
 # Cada aplicativo vive na raiz do seu subdomínio, e o segundo argumento é a

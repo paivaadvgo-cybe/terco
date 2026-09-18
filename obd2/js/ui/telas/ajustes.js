@@ -20,6 +20,8 @@ import { definicaoDe } from '../../obd/pids.js';
 import { LIMITE_DE_PAINEIS } from '../../dominio/painel.js';
 import { MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
 import { numero, valorDePid, unidadeDePid } from '../formatar.js';
+import { baixar } from '../csv.js';
+import { dia as diaDe } from '../../dominio/datas.js';
 
 const INTERVALOS = [
   { valor: '500', nome: '2 por segundo — detalhe fino' },
@@ -303,6 +305,48 @@ export async function telaAjustes(contexto) {
 
   /* ---------------------------------------------------------------- dados */
 
+  /*
+   * O backup é um arquivo JSON que vai e volta inteiro. É o único caminho para
+   * levar as viagens de um aparelho a outro — ou de um endereço a outro: o
+   * banco local pertence à origem da página, e o aplicativo mudando de
+   * domínio nasce vazio no novo, com tudo o que foi gravado preso no antigo.
+   */
+  const seletorDeBackup = el('input', {
+    type: 'file',
+    accept: 'application/json,.json',
+    hidden: true,
+    onchange: async (evento) => {
+      const arquivo = evento.target.files?.[0];
+      evento.target.value = '';
+      if (!arquivo) return;
+      // Restaurar no meio de uma gravação apagaria a viagem em curso debaixo
+      // da sessão, que continuaria mandando amostras para um registro que não
+      // existe mais.
+      if (sessao.estado.gravando) {
+        avisar('Pare a gravação antes de restaurar um backup', 'erro');
+        return;
+      }
+      try {
+        const backup = JSON.parse(await arquivo.text());
+        const viagens = backup.colecoes?.viagens?.length ?? 0;
+        const confirmado = await confirmar({
+          titulo: 'Restaurar backup?',
+          texto: `As viagens, os ajustes e os carros deste aparelho serão substituídos pelo conteúdo do arquivo (${viagens} viagem(ns)). Vídeos de viagens que não estão no arquivo são apagados. Não dá para desfazer.`,
+          acao: 'Restaurar',
+          perigo: true,
+        });
+        if (!confirmado) return;
+        const contagem = await armazenamento.restaurar(backup);
+        const restaurada = await sessao.recarregarConfiguracao();
+        contexto.aplicarTema(restaurada.tema);
+        avisar(`Backup restaurado: ${contagem.viagens} viagem(ns)`);
+        contexto.recarregar();
+      } catch (erro) {
+        avisar(erro.message || 'Arquivo inválido', 'erro');
+      }
+    },
+  });
+
   const ocupacao = await armazenamento.ocupacao();
   tela.append(cartao([
     el('h2', { classe: 'secao-titulo', texto: 'Dados no aparelho' }),
@@ -312,10 +356,22 @@ export async function telaAjustes(contexto) {
       linhaDeValor('Espaço aproximado', `${numero(ocupacao.bytes / 1_048_576, 1)} MB`),
       linhaDeValor('Armazenamento', armazenamento.persistente ? 'permanente' : 'só nesta sessão'),
     ]),
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'O backup é um arquivo JSON com as viagens, as amostras, os carros e seus máximos, e os ajustes. Guarde-o fora do aparelho. Os vídeos não entram — ocupam espaço demais para um arquivo que precisa caber num compartilhamento.',
+    }),
+    botao('Exportar backup', async () => {
+      const dados = await armazenamento.exportar();
+      baixar(`obd2-painel-backup-${diaDe()}.json`,
+        new Blob([JSON.stringify(dados)], { type: 'application/json' }));
+      avisar('Backup gerado');
+    }, { tipo: 'principal', classe: 'largo' }),
+    botao('Restaurar backup', () => seletorDeBackup.click(), { tipo: 'secundario', classe: 'largo' }),
+    seletorDeBackup,
     botao('Apagar tudo', async () => {
       const confirmado = await confirmar({
         titulo: 'Apagar todos os dados?',
-        texto: 'Viagens, ajustes e o que foi descoberto do carro. Nada disso está em outro lugar — não há cópia em nuvem.',
+        texto: 'Viagens, ajustes e o que foi descoberto do carro. Nada disso está em outro lugar — não há cópia em nuvem. Exporte um backup antes.',
         acao: 'Apagar tudo',
         perigo: true,
       });

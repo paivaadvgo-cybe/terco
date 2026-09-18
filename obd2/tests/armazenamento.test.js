@@ -127,3 +127,128 @@ test('apagar tudo não deixa resto', async () => {
   assert.deepEqual(await armazenamento.viagens(), []);
   assert.equal((await armazenamento.configuracao()).tema, CONFIGURACAO_PADRAO.tema);
 });
+
+/* ----------------------------------------------------------------- backup */
+
+/**
+ * Um aparelho com uma viagem de dois blocos, um carro com recorde e um ajuste
+ * fora do padrão — o suficiente para cada coleção do backup ter algo a perder.
+ */
+async function aparelhoComDados() {
+  const armazenamento = await abrir();
+  const viagem = await armazenamento.comecarViagem({ veiculo: '9BGRD08X04G111111' });
+  for (let i = 0; i < AMOSTRAS_POR_BLOCO + 7; i += 1) {
+    await armazenamento.guardarAmostra(viagem.id, criarAmostra(1_700_000_000_000 + i * 1000, { '0D': 40, '0C': 1800 }));
+  }
+  await armazenamento.encerrarViagem(viagem.id);
+  await armazenamento.guardarVeiculo({ vin: '9BGRD08X04G111111', pids: ['0C', '0D'] });
+  await armazenamento.registrarRecordes('9BGRD08X04G111111', { '0D': 137 });
+  await armazenamento.ajustar({ tema: 'escuro', combustivel: 'etanol' });
+  return { armazenamento, viagem };
+}
+
+/** O que a tela faz: o objeto vira texto num arquivo e volta de lá. */
+const pelaViaDoArquivo = (backup) => JSON.parse(JSON.stringify(backup));
+
+test('o backup vai e volta inteiro, inclusive num aparelho vazio', async () => {
+  const { armazenamento: origem, viagem } = await aparelhoComDados();
+  const backup = await origem.exportar();
+
+  const destino = await abrir();
+  const contagem = await destino.restaurar(pelaViaDoArquivo(backup));
+  assert.equal(contagem.viagens, 1);
+  assert.equal(contagem.amostras, 2);
+
+  const restaurada = await destino.viagem(viagem.id);
+  assert.equal(restaurada.amostras, AMOSTRAS_POR_BLOCO + 7);
+  assert.equal(restaurada.resumo.velocidadeMaxima, 40);
+  assert.equal((await destino.amostrasDa(viagem.id)).length, AMOSTRAS_POR_BLOCO + 7);
+  assert.equal((await destino.veiculo('9BGRD08X04G111111')).recordes['0D'], 137);
+  const configuracao = await destino.configuracao();
+  assert.equal(configuracao.tema, 'escuro');
+  assert.equal(configuracao.combustivel, 'etanol');
+});
+
+test('o backup carrega a identidade do aplicativo e deixa o vídeo de fora', async () => {
+  const { armazenamento, viagem } = await aparelhoComDados();
+  await armazenamento.guardarTrechoDeVideo(viagem.id, {
+    blob: new Blob([new Uint8Array(1024)], { type: 'video/webm' }), de: 1, ate: 2,
+  });
+
+  const backup = await armazenamento.exportar();
+  assert.equal(backup.aplicativo, 'obd2-painel');
+  assert.equal(backup.formato, 1);
+  assert.ok(!('videos' in backup.colecoes));
+  // Sem Blob dentro, o arquivo é texto puro e cabe num compartilhamento.
+  assert.equal(JSON.stringify(backup).includes('video/webm'), false);
+});
+
+test('exportar durante a gravação inclui o minuto que ainda estava na memória', async () => {
+  const armazenamento = await abrir();
+  const viagem = await armazenamento.comecarViagem();
+  for (let i = 0; i < 5; i += 1) {
+    await armazenamento.guardarAmostra(viagem.id, criarAmostra(1000 + i * 1000, { '0D': 30 }));
+  }
+  // Nada foi para o banco ainda — o bloco não encheu.
+  assert.equal((await armazenamento.amostrasDa(viagem.id)).length, 0);
+
+  const backup = await armazenamento.exportar();
+  assert.equal(backup.colecoes.amostras.length, 1);
+  assert.equal(backup.colecoes.amostras[0].pontos.length, 5);
+  assert.equal(backup.colecoes.viagens[0].amostras, 5);
+});
+
+test('restaurar substitui o que havia, e não soma', async () => {
+  const { armazenamento: origem } = await aparelhoComDados();
+  const backup = pelaViaDoArquivo(await origem.exportar());
+
+  const { armazenamento: destino, viagem: antiga } = await aparelhoComDados();
+  await destino.ajustar({ tema: 'claro' });
+  await destino.restaurar(backup);
+
+  assert.equal((await destino.viagens()).length, 1);
+  assert.equal(await destino.viagem(antiga.id), null);
+  assert.deepEqual(await destino.amostrasDa(antiga.id), []);
+  assert.equal((await destino.configuracao()).tema, 'escuro');
+});
+
+test('restaurar apaga o vídeo órfão e guarda o da viagem que continua', async () => {
+  const { armazenamento, viagem: fica } = await aparelhoComDados();
+  const backup = pelaViaDoArquivo(await armazenamento.exportar());
+
+  const some = await armazenamento.comecarViagem();
+  await armazenamento.encerrarViagem(some.id);
+  const trecho = { blob: new Blob([new Uint8Array(16)], { type: 'video/webm' }), de: 1, ate: 2 };
+  await armazenamento.guardarTrechoDeVideo(fica.id, trecho);
+  await armazenamento.guardarTrechoDeVideo(some.id, trecho);
+
+  await armazenamento.restaurar(backup);
+  assert.equal((await armazenamento.videosDa(fica.id)).length, 1);
+  // Um trecho sem viagem ocuparia dezenas de megabytes sem tela que o mostrasse.
+  assert.deepEqual(await armazenamento.videosDa(some.id), []);
+});
+
+test('restaurar recusa arquivo de outro aplicativo sem tocar no que existe', async () => {
+  const { armazenamento, viagem } = await aparelhoComDados();
+
+  await assert.rejects(() => armazenamento.restaurar({ aplicativo: 'lava-rapido-lite', colecoes: {} }), /não é um backup/);
+  await assert.rejects(() => armazenamento.restaurar(null), /não é um backup/);
+  await assert.rejects(() => armazenamento.restaurar({ aplicativo: 'obd2-painel', colecoes: { viagens: 'x' } }), /corrompido/);
+
+  assert.ok(await armazenamento.viagem(viagem.id));
+  assert.equal((await armazenamento.configuracao()).tema, 'escuro');
+});
+
+test('restaurar esquece as amostras pendentes da viagem que deixou de existir', async () => {
+  const { armazenamento: origem } = await aparelhoComDados();
+  const backup = pelaViaDoArquivo(await origem.exportar());
+
+  const destino = await abrir();
+  const emCurso = await destino.comecarViagem();
+  await destino.guardarAmostra(emCurso.id, criarAmostra(1000, { '0D': 10 }));
+  await destino.restaurar(backup);
+
+  // O que estava na fila não pode reaparecer como bloco de uma viagem apagada.
+  assert.equal(await destino.descarregar(emCurso.id), null);
+  assert.deepEqual(await destino.amostrasDa(emCurso.id), []);
+});
