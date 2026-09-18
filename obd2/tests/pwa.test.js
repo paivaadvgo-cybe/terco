@@ -16,10 +16,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 import { versaoDeclarada, versaoEsperada, cascaDe } from '../ferramentas/versionar_casca.mjs';
 
-const raiz = new URL('..', import.meta.url).pathname;
+// `fileURLToPath`, e não `.pathname`: no Windows o `pathname` de um `file:` é
+// `/C:/…`, e `path.join` faz dele `C:C:…` — os testes nem abriam o disco.
+const raiz = fileURLToPath(new URL('..', import.meta.url));
 const ler = (relativo) => fs.readFileSync(path.join(raiz, relativo), 'utf8');
 
 /** Diretórios que não vão para o navegador. */
@@ -233,4 +236,12 @@ test('nenhum módulo do aplicativo escreve HTML com dado do usuário', () => {
       assert.ok(uso === "'';", `${modulo} escreve HTML direto: ${uso}`);
     }
   }
+});
+
+test('a instrução de baixar a ponte segue o endereço do aplicativo, e não um domínio escrito à mão', () => {
+  // Com o domínio fixo, mudar de hospedagem deixava a tela mandando buscar a
+  // ponte no lugar antigo — e a ponte de lá recusa a origem nova (403).
+  const tela = ler('js/ui/telas/conexao.js');
+  assert.match(tela, /new URL\('ferramentas\/ponte-wifi\.mjs', document\.baseURI\)/);
+  assert.ok(!/github\.io/.test(tela), 'a tela ainda aponta para o GitHub Pages');
 });

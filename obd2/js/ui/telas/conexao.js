@@ -214,6 +214,19 @@ export async function telaConexao(contexto, parametros = {}) {
 
   /* ---------------------------------------------------------- a ponte */
 
+  /*
+   * De onde baixar a ponte: do mesmo lugar de onde esta página veio.
+   *
+   * O endereço era escrito à mão, apontando para o GitHub Pages. Quando o
+   * aplicativo passou a ser servido de outro domínio, a instrução continuava
+   * mandando buscar a ponte no antigo — e a ponte de lá não conhece a origem
+   * nova, então o aperto de mão volta 403 e o painel diz que a ponte recusou.
+   * Montar o endereço a partir de `document.baseURI` faz a instrução seguir o
+   * aplicativo para onde ele for, e garante que a ponte baixada é a que foi
+   * publicada junto com esta versão do painel.
+   */
+  const enderecoDaPonte = new URL('ferramentas/ponte-wifi.mjs', document.baseURI).href;
+
   tela.append(cartao([
     el('h2', { classe: 'secao-titulo', texto: 'Adaptador Wi-Fi: como funciona' }),
     el('p', {
@@ -230,7 +243,7 @@ export async function telaConexao(contexto, parametros = {}) {
     }),
     el('ol', { classe: 'passos' }, [
       el('li', { texto: 'Instale o Termux (pela F-Droid) e, dentro dele: pkg install nodejs' }),
-      el('li', { texto: 'Baixe a ponte: curl -O https://paivaadvgo-cybe.github.io/terco/obd2/ferramentas/ponte-wifi.mjs' }),
+      el('li', { texto: `Baixe a ponte: curl -O ${enderecoDaPonte}` }),
       el('li', { texto: 'Ligue o adaptador no carro e conecte o celular na rede Wi-Fi dele. Se o Android perguntar se quer manter uma rede sem internet, mantenha.' }),
       el('li', { texto: 'No Termux: node ponte-wifi.mjs --testar — ele procura o adaptador, diz onde achou e escreve o comando certo.' }),
       el('li', { texto: 'Rode o comando que ele indicou, e deixe o Termux aberto.' }),

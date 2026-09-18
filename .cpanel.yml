@@ -1,0 +1,13 @@
+---
+# Lido pelo «Git™ Version Control» do cPanel quando se clica em
+# «Deploy HEAD Changes». Ele roda os comandos abaixo dentro da cópia do
+# repositório que o próprio cPanel mantém. O que vai para cada pasta pública,
+# e o que fica de fora, está decidido em `publicar/implantar.sh`.
+#
+# As duas pastas são a «raiz do documento» de cada subdomínio, como o cPanel
+# mostrou ao criá-los. Se ele tiver escolhido outro caminho (em versões mais
+# antigas é `public_html/obd2`, sem o domínio), é aqui que se corrige.
+deployment:
+  tasks:
+    - /bin/bash publicar/implantar.sh obd2 $HOME/public_html/obd2.lexinteligencia.com
+    - /bin/bash publicar/implantar.sh lava-rapido $HOME/public_html/lava-rapido.lexinteligencia.com
