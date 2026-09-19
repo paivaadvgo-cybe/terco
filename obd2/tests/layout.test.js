@@ -90,28 +90,28 @@ test('a câmera fica à esquerda e os instrumentos à direita', () => {
     'sem a regra de três colunas, a câmera não ganha lateral nenhuma');
 });
 
-test('o editor mostra uma linha vazia, e só uma', () => {
+test('o editor mostra uma faixa vazia, e só uma', () => {
   /*
-   * Uma, porque as linhas dividem a altura da janela: com quatro linhas fixas,
-   * um painel de três aparecia um quarto menor no editor do que no painel, e a
-   * prévia deixava de valer para escolher tamanho.
+   * Uma faixa — duas linhas na régua de dezesseis —, porque as linhas dividem a
+   * altura da janela: com sobra fixa maior, um painel aparece menor no editor
+   * do que no painel, e a prévia deixa de valer para escolher tamanho.
    */
-  const tres = [
-    criarItem('0D', 'ponteiro', { x: 0, y: 0, largura: 4, altura: 3 }),
+  const seis = [
+    criarItem('0D', 'ponteiro', { x: 0, y: 0, largura: 8, altura: 6 }),
   ];
-  assert.equal(alturaDoPainel(tres), 3);
-  assert.equal(linhasDoEditor(tres), 4);
+  assert.equal(alturaDoPainel(seis), 6);
+  assert.equal(linhasDoEditor(seis), 8);
 });
 
 test('o editor nunca oferece linha além do que o painel comporta', () => {
-  const cheio = [criarItem('0D', 'ponteiro', { x: 0, y: 0, largura: 2, altura: LINHAS_MAXIMAS })];
+  const cheio = [criarItem('0D', 'ponteiro', { x: 0, y: 0, largura: 4, altura: LINHAS_MAXIMAS })];
   assert.equal(linhasDoEditor(cheio), LINHAS_MAXIMAS,
-    'oferecer a nona linha seria oferecer um lugar que o modelo recusa');
+    'oferecer uma linha além do máximo seria oferecer um lugar que o modelo recusa');
 });
 
 test('o painel vazio ainda tem grade onde arrastar', () => {
   assert.equal(alturaDoPainel([]), 0);
-  assert.ok(linhasDoEditor([]) >= 3, 'um painel vazio precisa de espaço visível para o primeiro item');
+  assert.ok(linhasDoEditor([]) >= 6, 'um painel vazio precisa de espaço visível para o primeiro item');
 });
 
 test('o arrasto mede a linha pelas linhas já resolvidas', () => {

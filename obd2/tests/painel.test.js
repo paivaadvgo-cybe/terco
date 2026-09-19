@@ -12,7 +12,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
-  COLUNAS, LIMITE_DE_PAINEIS, criarItem, escalaDe, colide, cabe,
+  COLUNAS, COLUNAS_ANTIGAS, LIMITE_DE_PAINEIS, TIPOS, criarItem, escalaDe, colide, cabe,
   primeiroLugarVago, mover, redimensionar, alturaDoPainel,
   painelPadrao, painelDeInstrumentos, MODELOS, normalizar, normalizarTodos, converterEscolhaAntiga, chavesDoPainel,
 } from '../js/dominio/painel.js';
@@ -97,17 +97,18 @@ test('mover para fora da grade é recusado', () => {
 });
 
 test('redimensionar respeita o tamanho mínimo do tipo', () => {
-  // Um ponteiro de 1×1 não tem onde desenhar escala nem número.
-  const itens = [criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 2, altura: 2 })];
+  // Um ponteiro espremido não tem onde desenhar escala nem número. Afinar a
+  // grade deu passos menores, não licença para encolher abaixo do legível.
+  const itens = [criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 4, altura: 4 })];
   const novos = redimensionar(itens, itens[0].id, { largura: 1, altura: 1 });
-  assert.equal(novos[0].largura, 2);
-  assert.equal(novos[0].altura, 2);
+  assert.equal(novos[0].largura, TIPOS.ponteiro.minimo.largura);
+  assert.equal(novos[0].altura, TIPOS.ponteiro.minimo.altura);
 });
 
 test('redimensionar por cima do vizinho é recusado', () => {
-  const a = criarItem('0D', 'mostrador', { x: 0, y: 0, largura: 1, altura: 1 });
-  const b = criarItem('0C', 'mostrador', { x: 1, y: 0, largura: 1, altura: 1 });
-  assert.equal(redimensionar([a, b], a.id, { largura: 2, altura: 1 }), null);
+  const a = criarItem('0D', 'mostrador', { x: 0, y: 0, largura: 2, altura: 2 });
+  const b = criarItem('0C', 'mostrador', { x: 2, y: 0, largura: 2, altura: 2 });
+  assert.equal(redimensionar([a, b], a.id, { largura: 4, altura: 2 }), null);
 });
 
 test('a altura do painel é a linha mais baixa ocupada', () => {
@@ -250,10 +251,11 @@ test('restaurar devolve os painéis de fábrica', async () => {
 });
 
 test('o quadro de instrumentos cabe na tela deitada', async () => {
-  // Três linhas é o que a altura de um celular em paisagem comporta; um item na
-  // quarta linha ficaria fora da tela no modo em que este painel é usado.
+  // Seis linhas na régua de dezesseis são as três de antes: o que a altura de
+  // um celular em paisagem comporta. Passar disso põe um item fora da tela no
+  // modo em que este painel é usado.
   const painel = painelDeInstrumentos();
-  assert.equal(alturaDoPainel(painel.itens), 3);
+  assert.equal(alturaDoPainel(painel.itens), 6);
   for (const item of painel.itens) {
     assert.ok(cabe(item, {}, painel.itens), `${item.chave} não cabe onde está`);
     assert.ok(item.x + item.largura <= COLUNAS);
@@ -278,4 +280,69 @@ test('todos os modelos produzem painéis válidos', () => {
       assert.ok(cabe(item, {}, painel.itens), `${modelo.chave}: ${item.chave} não cabe`);
     }
   }
+});
+
+test('painel gravado na régua antiga é convertido, e não estraga', () => {
+  /*
+   * O painel de quem já usava o aplicativo foi desenhado em oito colunas. Ele
+   * não traz `grade`, e é por essa ausência que se reconhece.
+   *
+   * O que a conversão tem de preservar não é o número, é o desenho: o item que
+   * ocupava um oitavo da largura continua ocupando um oitavo, e dois itens que
+   * se encostavam continuam encostados. Dobrar a posição sem dobrar o tamanho
+   * abriria um buraco entre cada par; dobrar o tamanho sem a posição os faria
+   * cobrir uns aos outros.
+   */
+  const antigo = {
+    id: 'p1',
+    nome: 'Antigo',
+    itens: [
+      { id: 'a', chave: '0C', tipo: 'ponteiro', x: 0, y: 0, largura: 2, altura: 2 },
+      { id: 'b', chave: '0D', tipo: 'ponteiro', x: 2, y: 0, largura: 2, altura: 2 },
+      { id: 'c', chave: '05', tipo: 'mostrador', x: 7, y: 2, largura: 1, altura: 1 },
+    ],
+  };
+
+  const posto = normalizar(antigo);
+  assert.deepEqual(
+    posto.itens.map(({ id, x, y, largura, altura }) => ({ id, x, y, largura, altura })),
+    [
+      { id: 'a', x: 0, y: 0, largura: 4, altura: 4 },
+      { id: 'b', x: 4, y: 0, largura: 4, altura: 4 },
+      { id: 'c', x: 14, y: 4, largura: 2, altura: 2 },
+    ],
+  );
+
+  // Encostados antes, encostados depois: o «b» começa exatamente onde o «a» acaba.
+  assert.equal(posto.itens[0].x + posto.itens[0].largura, posto.itens[1].x);
+  // E o que ia até a borda continua indo até a borda, sem transbordar.
+  assert.equal(posto.itens[2].x + posto.itens[2].largura, COLUNAS);
+});
+
+test('a conversão da régua acontece uma vez só', () => {
+  /*
+   * Sem a régua gravada, reler o painel o converteria de novo a cada abertura —
+   * e em três aberturas o mostrador de um oitavo viraria a tela inteira.
+   */
+  const convertido = normalizar({
+    nome: 'Um',
+    itens: [{ chave: '0C', tipo: 'ponteiro', x: 2, y: 0, largura: 2, altura: 2 }],
+  });
+  assert.equal(convertido.grade, COLUNAS, 'o painel precisa dizer em que régua está');
+
+  const relido = normalizar(convertido);
+  assert.deepEqual(
+    relido.itens.map(({ x, y, largura, altura }) => ({ x, y, largura, altura })),
+    convertido.itens.map(({ x, y, largura, altura }) => ({ x, y, largura, altura })),
+    'reler um painel já convertido não pode mexer nele',
+  );
+});
+
+test('a régua antiga é a de oito colunas, e a nova é o dobro dela', () => {
+  // Se um dia a grade afinar de novo, é esta conta que diz o que fazer com o
+  // que já está gravado — e ela precisa continuar fechando.
+  assert.equal(COLUNAS % COLUNAS_ANTIGAS, 0,
+    'uma régua que não é múltipla da anterior converte com arredondamento, e o desenho sai torto');
+  assert.equal(TIPOS.mostrador.minimo.largura, COLUNAS / COLUNAS_ANTIGAS,
+    'o menor mostrador precisa valer exatamente uma coluna da régua antiga');
 });

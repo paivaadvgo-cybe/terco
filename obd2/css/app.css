@@ -503,7 +503,7 @@ body.editor-fixo .conteudo {
 /*
  * A grade do painel personalizado.
  *
- * **Oito colunas**, o mesmo número que `dominio/painel.js` usa para colocar,
+ * **Dezesseis colunas**, o mesmo número que `dominio/painel.js` usa para colocar,
  * mover e redimensionar. Estiveram quatro aqui por um tempo, e o estrago era
  * silencioso: um mostrador em «x = 6» caía numa coluna implícita, de largura
  * automática, e o painel inteiro saía torto — colunas de tamanhos diferentes,
@@ -519,7 +519,7 @@ body.editor-fixo .conteudo {
  */
 .grade-do-painel {
   display: grid;
-  grid-template-columns: repeat(var(--colunas, 8), 1fr);
+  grid-template-columns: repeat(var(--colunas, 16), 1fr);
   grid-auto-rows: var(--celula, 84px);
   gap: 8px;
 }
@@ -923,13 +923,13 @@ body.quadro-de-instrumentos .aviso {
 }
 
 /*
- * O ponteiro e o número ocupam a mesma célula da grade, e o rótulo vem numa
- * linha só dele.
+ * O desenho ocupa a célula inteira.
  *
- * Com posicionamento absoluto o número descia sobre o rótulo quando passava de
- * três dígitos — «1.726 rpm» escrito por cima da palavra «Giro». Numa grade os
- * dois nunca se encontram, porque a linha de baixo é reservada mesmo que o
- * número cresça.
+ * Havia aqui uma segunda linha, reservada para o rótulo escrito — a palavra
+ * «Giro» embaixo do conta-giros. Ela saiu: o nome já está dentro do desenho,
+ * na unidade, e a linha reservada custava altura numa tela onde altura é o
+ * que falta. O que a grade de uma linha só garante é o que a de duas
+ * garantia: o número cresce para «1.726 rpm» sem escapar da caixa.
  */
 /*
  * O desenho ocupa o espaço que houver, e o rótulo fica embaixo.
@@ -940,11 +940,11 @@ body.quadro-de-instrumentos .aviso {
  */
 .medidor {
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: minmax(0, 1fr);
   background: var(--superficie);
   border-radius: var(--raio);
   box-shadow: var(--sombra);
-  padding: 12px 8px 10px;
+  padding: 10px 8px;
   text-align: center;
 }
 
@@ -1059,13 +1059,6 @@ body.quadro-de-instrumentos .aviso {
   font-size: 14px;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
-}
-
-.medidor-titulo {
-  grid-row: 2;
-  margin-top: 2px;
-  font-size: 13px;
-  color: var(--suave);
 }
 
 /* ------------------------------------------------------------ mostradores */
