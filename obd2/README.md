@@ -192,13 +192,14 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/obd/` | Protocolo ELM327, tabela de PIDs, códigos de falha e os transportes (BLE, serial, Wi-Fi pela ponte, simulação). |
 | `js/dominio/` | Consumo, resumo de viagem, datas. Sem navegador, testável no Node. |
 | `js/armazenamento/` | IndexedDB, driver em memória e a fachada de dados. |
-| `js/ui/` | Elementos, ponteiros, gráfico, CSV e as cinco telas. |
+| `js/ui/` | Elementos, ponteiros, gráfico, CSV e as telas. |
+| `js/licenca/` | Avaliação de trinta dias, assinatura da licença e o código do aparelho. |
 | `js/sessao.js` | A conexão viva e o laço de leitura. |
 | `js/video.js` | A câmera: grava a estrada em trechos, com a hora de cada um. |
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 242 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 267 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento
@@ -232,6 +233,43 @@ esperar um toque num aviso é esperar um toque que ninguém dá. Com o carro
 conectado ou uma viagem sendo gravada, não: aí aparece o aviso, e quem está
 dirigindo decide quando. Quem responde essa pergunta é o `js/app.js`, na
 `window.painelOcupado`.
+
+## Licença de uso
+
+O aplicativo funciona **trinta dias** para quem instala. Do sétimo dia em diante
+uma faixa avisa, em toda tela, sem botão de fechar — um aviso que se fecha é
+fechado no primeiro dia e nunca mais lido, e aí a cobrança aparece no dia em que
+o aplicativo para, que é o pior dia para descobrir.
+
+Passados os trinta dias, **só a conexão a um adaptador de verdade é
+bloqueada**. As viagens gravadas, os gráficos, a exportação, a importação e o
+carro simulado continuam. Trancar alguém do lado de fora das próprias viagens
+seria usar o dado dele como refém — e o aplicativo que promete que nada sai do
+aparelho não pode ser o que impede de olhar o que é seu.
+
+A ativação é um arquivo `.obd2`: um texto curto, assinado com ECDSA P-256,
+preso ao **código de instalação** daquele aparelho. O cliente manda o código
+(Licença → «Copiar código»), recebe o arquivo, importa. Funciona sem internet.
+
+| Onde | O quê |
+|---|---|
+| `js/licenca/` | Aparelho, assinatura, contagem de dias e o serviço que as telas usam. |
+| `ferramentas/gerador-de-licencas.html` | O gerador, que **só o desenvolvedor abre**. Serve os dois aplicativos. |
+| `ferramentas/gerar_chaves.mjs` | Cria um par de chaves novo, se um dia for preciso trocar. |
+
+**O aplicativo carrega só a chave pública** — com ela se confere uma licença, não
+se emite nenhuma. A privada nunca esteve neste repositório, e o `.gitignore`
+existe para que um `git add .` distraído não a publique. É a **mesma chave do
+Lava-Rápido**: um par só, um gerador só, e o campo `app` dentro do envelope
+assinado é o que impede a licença de um valer no outro.
+
+**O que isto protege, e o que não protege.** Impede que alguém escreva uma
+licença à mão: a assinatura não fecharia. Não impede que alguém edite o
+JavaScript servido e tire a verificação inteira — num aplicativo que roda no
+navegador do cliente, nada impede. A licença é um combinado comercial com uma
+porta trancada, não um cofre. Quem precisa de porta de verdade tranca o
+servidor: no cPanel, «Privacidade de Diretório» põe usuário e senha antes de
+qualquer arquivo ser servido.
 
 ## Limites, ditos na cara
 

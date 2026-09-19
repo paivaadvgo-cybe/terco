@@ -1695,3 +1695,71 @@ select.entrada { appearance: none; background-image: none; }
   .medidor-arco { transition: none; }
   .aviso { animation: none; }
 }
+
+/* ---------------------------------------------------------------- licença */
+
+/*
+ * Os mesmos estilos do Lava-Rápido, e de propósito: são dois aplicativos do
+ * mesmo desenvolvedor, com a mesma licença e o mesmo fluxo de ativação. Quem
+ * usa os dois reconhece a faixa e a tela sem reaprender nada.
+ *
+ * A faixa some inteira no modo quadro de instrumentos: com o celular preso ao
+ * painel, a tela é do carro, e um aviso de cobrança atravessado ali é pior que
+ * inútil — é distração a oitenta por hora.
+ */
+.faixa-licenca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--atencao);
+  background: var(--atencao-fraco);
+  color: var(--texto);
+  margin-bottom: 12px;
+}
+
+.faixa-marca { font-size: 20px; line-height: 1; }
+
+.faixa-texto { margin: 0; font-size: 14px; font-weight: 600; flex: 1; }
+
+.faixa-botao { min-height: 44px; padding: 8px 12px; white-space: nowrap; }
+
+.faixa-perigo { border-color: var(--perigo); background: var(--perigo-fraco); }
+
+.etiqueta-licenca {
+  margin: 0;
+  align-self: center;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+}
+
+.licenca-numero { margin: 0; font-size: 40px; font-weight: 750; line-height: 1.05; }
+
+.licenca-explicacao { margin: 0; font-size: 15px; }
+
+.codigo-instalacao {
+  margin: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-align: center;
+  word-break: break-all;
+  background: var(--superficie-2);
+  border: 1px solid var(--borda);
+  border-radius: 12px;
+  padding: 14px 10px;
+}
+
+.tela-licenca .cartao.destaque { text-align: center; }
+
+body.quadro-de-instrumentos .faixa-licenca { display: none !important; }
+
+/* Na tela presa à janela, a faixa entra no cálculo da altura em vez de
+   empurrar a última fileira de mostradores para fora dela. */
+body.painel-fixo .conteudo:has(.faixa-licenca) .tela-painel { height: calc(100% - var(--faixa-altura, 44px)); }

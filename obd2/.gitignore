@@ -1,0 +1,14 @@
+# Nada que assine licença pode entrar num repositório.
+#
+# A chave privada mora no computador de quem vende o aplicativo, e o gerador
+# (`ferramentas/gerador-de-licencas.html`) a lê de um arquivo ali. É a mesma
+# chave do Lava-Rápido: um par só, para os dois aplicativos. Estas linhas
+# existem para que um `git add .` distraído, feito na pasta errada, não publique
+# a chave — e junto com ela a capacidade de emitir licenças dos dois.
+#
+# Valem mesmo com o repositório privado. Privado hoje não é privado para
+# sempre, e a chave que vazou não se despubliica: troca-se, e toda licença já
+# entregue deixa de valer.
+*.jwk.json
+*.obd2
+*.lava
