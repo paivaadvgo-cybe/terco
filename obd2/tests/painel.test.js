@@ -346,3 +346,75 @@ test('a régua antiga é a de oito colunas, e a nova é o dobro dela', () => {
   assert.equal(TIPOS.mostrador.minimo.largura, COLUNAS / COLUNAS_ANTIGAS,
     'o menor mostrador precisa valer exatamente uma coluna da régua antiga');
 });
+
+test('todo painel montado pelo aplicativo declara a régua em que foi desenhado', () => {
+  /*
+   * É a ausência de `grade` que faz `normalizar` reconhecer um painel antigo e
+   * dobrá-lo. Um painel de fábrica que esquecesse de declará-la seria dobrado
+   * como se fosse de oito colunas — e os itens que transbordassem sumiriam sem
+   * aviso nenhum.
+   *
+   * Aconteceu: o «Voltar ao painel de fábrica» passava por `normalizarTodos` e
+   * devolvia 4 dos 7 mostradores do quadro de instrumentos, e 10 dos 14 do
+   * completo.
+   */
+  const montados = [
+    ['Instrumentos', painelDeInstrumentos()],
+    ['Completo', painelPadrao('Completo')],
+    ['Convertido', converterEscolhaAntiga(['05', '42'])],
+    ...MODELOS.map((modelo) => [modelo.nome, modelo.montar(modelo.nome)]),
+  ];
+
+  for (const [nome, painel] of montados) {
+    assert.equal(painel.grade, COLUNAS, `${nome} não declara a régua`);
+    assert.equal(normalizar(painel).itens.length, painel.itens.length,
+      `${nome} perdeu mostrador ao ser posto em forma`);
+  }
+});
+
+test('instalação nova guarda os painéis de fábrica, e eles não trocam sozinhos', async () => {
+  /*
+   * A gravação da data de nascimento do banco criava o registro de
+   * configuração. A partir daí a leitura seguinte via «tem registro e não tem
+   * painéis», concluía «instalação antiga» e convertia — então a primeira
+   * abertura mostrava o quadro de instrumentos e a segunda, um «Padrão» de
+   * oito mostradores que ninguém escolheu.
+   */
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  const nomes = async () => (await armazenamento.configuracao()).paineis.map((p) => p.nome);
+
+  const primeira = await nomes();
+  assert.deepEqual(primeira, ['Instrumentos', 'Completo']);
+  assert.deepEqual(await nomes(), primeira, 'a segunda abertura não pode trocar o painel');
+  assert.deepEqual(await nomes(), primeira, 'nem a terceira');
+});
+
+test('«voltar ao painel de fábrica» devolve os painéis inteiros', async () => {
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  await armazenamento.restaurarPaineis();
+  const { paineis } = await armazenamento.configuracao();
+  assert.deepEqual(
+    paineis.map((p) => [p.nome, p.itens.length]),
+    [['Instrumentos', 7], ['Completo', 14]],
+  );
+});
+
+test('instalação de verdade antiga continua sendo convertida', async () => {
+  // O registro sem `paineis`, escrito por uma versão anterior. A escolha de
+  // PIDs dela vira layout — perdê-la seria apagar o que a pessoa montou.
+  const driver = criarDriverEmMemoria();
+  await driver.gravar('configuracao', { id: 'app', painel: ['05', '42'], combustivel: 'gasolina' });
+  const armazenamento = await criarArmazenamento(driver);
+
+  const primeira = await armazenamento.configuracao();
+  assert.equal(primeira.paineis.length, 1);
+  assert.ok(primeira.paineis[0].itens.some((i) => i.chave === '05'),
+    'a escolha antiga precisa aparecer no painel convertido');
+
+  const segunda = await armazenamento.configuracao();
+  assert.deepEqual(
+    segunda.paineis.map((p) => p.itens.length),
+    primeira.paineis.map((p) => p.itens.length),
+    'a conversão precisa ser estável entre aberturas',
+  );
+});

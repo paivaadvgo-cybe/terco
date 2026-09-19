@@ -142,6 +142,29 @@ export async function criarArmazenamento(driver, { agora = () => Date.now() } = 
        */
       if (!junta.criadoEm) {
         junta.criadoEm = agora();
+
+        /*
+         * Instalação nova grava os painéis de fábrica junto com a data.
+         *
+         * Sem isto, a própria gravação desta data derrubava o painel de
+         * fábrica na segunda abertura. O registro de configuração não existia
+         * antes; gravá-lo aqui o faz existir, e a decisão logo abaixo — «tem
+         * registro e não tem `paineis`, logo é instalação antiga, converta a
+         * escolha dela» — passava a valer para todo mundo. A primeira leitura
+         * entregava o quadro de instrumentos e o painel completo; a segunda,
+         * um «Padrão» de oito mostradores que ninguém escolheu.
+         *
+         * A decisão precisa ser gravada, e não recalculada: é o que a torna a
+         * mesma em toda leitura seguinte.
+         *
+         * Quem já abriu o aplicativo com o defeito continua com o painel que
+         * está vendo. Do lado de fora ele é indistinguível de uma instalação
+         * de verdade antiga, e trocar o painel de alguém uma segunda vez, para
+         * corrigir a primeira troca, seria repetir o erro em vez de desfazê-lo.
+         */
+        if (!guardada) {
+          junta.paineis = normalizarTodos([painelDeInstrumentos(), painelPadrao('Completo')]);
+        }
         await driver.gravar('configuracao', { ...junta, id: 'app' });
       }
 

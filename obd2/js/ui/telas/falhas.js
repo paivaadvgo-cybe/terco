@@ -120,10 +120,17 @@ export async function telaFalhas(contexto) {
   }
 
   function desenharAcoes() {
-    acoes.replaceChildren(
+    /*
+     * O `filter` não é enfeite: `replaceChildren` é método nativo, e um `null`
+     * entregue a ele **vira a palavra «null» escrita na tela**. O ajudante
+     * `el()` do projeto descarta filhos nulos, e a semelhança entre os dois
+     * esconde a diferença — antes de ler as falhas, a segunda posição é nula, e
+     * a tela dizia «null» embaixo do botão.
+     */
+    acoes.replaceChildren(...[
       botao(ultimaLeitura ? 'Ler de novo' : 'Ler falhas', ler, { tipo: 'principal', classe: 'largo' }),
       ultimaLeitura ? botao('Apagar falhas e a luz', apagar, { tipo: 'perigo', classe: 'largo' }) : null,
-    );
+    ].filter(Boolean));
   }
 
   desenharCabecalho();

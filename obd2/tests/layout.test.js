@@ -160,3 +160,86 @@ test('a alça de canto tem folga para não cair sob a barra de abas', () => {
   assert.doesNotMatch(corpo, /padding:\s*0;/, 'sem folga, a alça da borda fica fora da tela');
   assert.match(corpo, /padding: 0 \d+px \d+px 0/);
 });
+
+test('nenhum replaceChildren recebe um filho que pode ser nulo', () => {
+  /*
+   * `el()` descarta filhos nulos; `replaceChildren` é método nativo e converte
+   * `null` no **texto** «null», escrito na tela. A semelhança entre os dois
+   * esconde a diferença, e o defeito não dá erro nenhum — só aparece a palavra.
+   *
+   * Aconteceu em dois lugares: na tela de falhas, antes da primeira leitura, o
+   * botão de apagar era nulo e a tela mostrava «null» embaixo de «Ler falhas»;
+   * no editor, com cinco painéis salvos, o botão «+» é nulo e a barra de abas
+   * mostraria «null» no lugar dele.
+   */
+  const arquivos = [
+    'js/app.js',
+    'js/ui/elementos.js',
+    ...['painel', 'editor', 'conexao', 'falhas', 'viagens', 'ajustes', 'licenca']
+      .map((tela) => `js/ui/telas/${tela}.js`),
+  ];
+
+  /**
+   * Os `null` que chegam **ao próprio** `replaceChildren`.
+   *
+   * Duas distinções que uma expressão regular não faz, e sem as quais o teste
+   * acusa o que está certo:
+   *
+   * · Um `null` dentro de `el(...)` ou `cartao(...)` é inofensivo — esses
+   *   ajudantes filtram. Um `null` dentro de um `[...]` solto, não: o `...` o
+   *   entrega ao método nativo do mesmo jeito.
+   * · Onde uma chamada acaba se descobre contando parênteses. A primeira
+   *   versão deste teste casava do `replaceChildren(` de uma chamada até o
+   *   `);` de outra, dez linhas abaixo.
+   */
+  function nulosPerigosos(fonte) {
+    const achados = [];
+    const marca = 'replaceChildren(';
+    let de = fonte.indexOf(marca);
+
+    while (de !== -1) {
+      const abre = de + marca.length - 1;
+      // Cada nível guarda se foi aberto por uma chamada de função: `el(` filtra
+      // os nulos, `[` não.
+      const pilha = [];
+      let fim = fonte.length;
+
+      for (let i = abre; i < fonte.length; i += 1) {
+        const c = fonte[i];
+        if (c === '(' || c === '[' || c === '{') {
+          const anterior = fonte[i - 1] ?? '';
+          pilha.push({ chamada: c === '(' && /[\w$]/.test(anterior) });
+          continue;
+        }
+        if (c === ')' || c === ']' || c === '}') {
+          pilha.pop();
+          if (pilha.length === 0) { fim = i; break; }
+          continue;
+        }
+        if (fonte.startsWith('null', i) && !/[\w$]/.test(fonte[i - 1] ?? '') && !/[\w$]/.test(fonte[i + 4] ?? '')) {
+          // O nível 0 é o do próprio `replaceChildren(`; dele para dentro, basta
+          // uma chamada de função no caminho para o nulo nunca chegar ao método.
+          if (!pilha.slice(1).some((nivel) => nivel.chamada)) achados.push({ de, i });
+        }
+      }
+
+      const chamada = fonte.slice(de, fim + 1);
+      // `.filter(Boolean)` na lista é a defesa aceita: os nulos somem antes.
+      if (!chamada.includes('.filter(Boolean)')) {
+        for (const achado of achados.filter((a) => a.de === de)) {
+          assert.fail(`um filho possivelmente nulo em replaceChildren escreve «null» na tela:\n${chamada.slice(0, 200)}`
+            + `\n(o null está na posição ${achado.i - de} da chamada)`);
+        }
+      }
+      de = fonte.indexOf(marca, fim);
+    }
+  }
+
+  for (const caminho of arquivos) {
+    try {
+      nulosPerigosos(ler(caminho));
+    } catch (erro) {
+      assert.fail(`${caminho}: ${erro.message}`);
+    }
+  }
+});
