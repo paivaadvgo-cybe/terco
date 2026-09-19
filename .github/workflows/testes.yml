@@ -1,0 +1,51 @@
+# Roda, a cada push na main e a cada pull request, o que um colaborador
+# rodaria antes de abrir o PR: a bateria de testes de cada aplicativo e a
+# conferência do carimbo da casca.
+#
+# Nenhum dos três tem dependência externa — não há `package-lock.json` e
+# nada a instalar — então não existe passo de `npm ci` aqui de propósito.
+
+name: testes
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+# Um push novo no mesmo ramo cancela a execução anterior, que já não interessa.
+concurrency:
+  group: testes-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  testes:
+    name: ${{ matrix.app }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      # Um aplicativo quebrado não esconde o resultado dos outros dois.
+      fail-fast: false
+      matrix:
+        app: [obd2, lava-rapido, simulador]
+
+    defaults:
+      run:
+        working-directory: ${{ matrix.app }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Testes
+        run: npm test
+
+      # Falha quando a casca mudou e a versão do cache não — o descuido que
+      # deixa o aparelho do cliente preso numa versão velha do aplicativo.
+      - name: Carimbo da casca
+        run: node ferramentas/versionar_casca.mjs
