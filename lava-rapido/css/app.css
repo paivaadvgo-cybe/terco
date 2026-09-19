@@ -127,15 +127,51 @@ body.carregando .conteudo { opacity: 0; }
   z-index: 5;
   background: var(--principal);
   color: var(--principal-texto);
-  padding: calc(10px + env(safe-area-inset-top)) 16px 10px;
+  padding: calc(6px + env(safe-area-inset-top)) 8px 6px;
+  display: grid;
+  /* Três colunas, e as laterais com a mesma largura: assim o título fica
+     centrado de verdade, com ou sem os botões. */
+  grid-template-columns: 48px 1fr 48px;
+  align-items: center;
+  gap: 4px;
+  min-height: 56px;
 }
 
 .topo-titulo {
   margin: 0;
+  grid-column: 2;
+  text-align: center;
   font-size: 18px;
   font-weight: 650;
   letter-spacing: .2px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* 48 px de alvo, que é o mínimo confortável para o polegar, e nenhuma borda:
+   dentro de uma barra colorida, um botão desenhado pesaria mais que o título. */
+.topo-acao {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 26px;
+  line-height: 1;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topo-acao:active { background: rgba(255, 255, 255, .18); }
+.topo-acao:focus-visible { outline: 3px solid var(--principal-texto); outline-offset: -3px; }
+#voltar { grid-column: 1; }
+#fechar { grid-column: 3; font-size: 20px; }
 
 .atualizacao {
   margin: 0;

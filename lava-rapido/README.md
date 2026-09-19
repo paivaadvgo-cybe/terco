@@ -105,6 +105,26 @@ navegador.
   escrito neste repositório: consulta de placa é base regulada, e fingir que ela
   existe seria pior que não ter.
 
+## Como se anda entre as telas
+
+Três caminhos, e cada um para uma coisa:
+
+- **A barra de baixo** leva às cinco seções principais. Fica embaixo porque é
+  onde o polegar chega com uma mão só.
+- **«‹» no alto, à esquerda** volta uma tela — ou, dentro do atendimento, um
+  passo. Aparece em toda tela de dentro e em nenhuma das cinco abas: voltar de
+  uma aba seria sair do aplicativo.
+- **«✕» no alto, à direita** abandona o que está em curso. Hoje só o
+  atendimento o mostra; sair por ali não registra nada e apaga a foto que
+  tivesse sido tirada, para não deixar imagem órfã ocupando o aparelho.
+
+O lugar dos dois botões não muda de tela para tela — cada tela diz o que eles
+fazem, nenhuma decide onde eles ficam. O «voltar» usa o histórico de verdade
+quando há: devolve a tela de onde a pessoa veio, e não um palpite. Quem abriu o
+aplicativo direto numa tela de dentro (pelo atalho do aplicativo instalado)
+sobe para a tela de cima em vez de sair. O botão de voltar do próprio aparelho
+continua funcionando como sempre.
+
 ## Licença de uso
 
 O aplicativo funciona **trinta dias** sem nada a fazer. Do **sétimo** ao
@@ -179,10 +199,11 @@ gravado neste aparelho, e diz qual dos dois está usando.
 npm test
 ```
 
-111 testes cobrem placa, tabela de preços, passagens de estado, datas, caixa,
+114 testes cobrem placa, tabela de preços, passagens de estado, datas, caixa,
 fechamento, relatórios, o serviço de armazenamento inteiro (fluxo completo,
 pendências, backup, demonstração, PIN), a licença (as duas fronteiras — sétimo
-e trigésimo dia —, assinatura, adulteração, relógio atrasado), formatação, CSV
+e trigésimo dia —, assinatura, adulteração, relógio atrasado), a navegação
+(toda tela de dentro tem para onde voltar), formatação, CSV
 e a coerência do PWA (casca × arquivos em disco, manifesto, ícones, versão do
 cache, importações).
 

@@ -15,10 +15,11 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 
 import { moeda, moedaCurta, lerValor, valorParaCampo, numero, plural } from '../js/ui/formatar.js';
 import { campoCSV, numeroCSV, montarCSV, lavagensEmCSV, fechamentoEmCSV, nomeDoArquivo } from '../js/ui/csv.js';
-import { lerRota, ABAS } from '../js/ui/navegacao.js';
+import { lerRota, ABAS, rotaPai, ehAba } from '../js/ui/navegacao.js';
 import { extrairPlaca, disponivel, reconhecer } from '../js/servicos/reconhecimento-placa.js';
 import { fechamentoDoDia } from '../js/dominio/caixa.js';
 
@@ -159,6 +160,38 @@ test('as rotas do endereço são lidas com os parâmetros', () => {
 
 test('a barra de baixo tem as cinco seções do menu principal', () => {
   assert.deepEqual(ABAS.map((a) => a.rota), ['inicio', 'lavagens', 'caixa', 'relatorios', 'config']);
+});
+
+test('as abas não têm «voltar», e as telas de dentro têm', () => {
+  // Voltar de uma aba seria sair do aplicativo — por isso o botão nem aparece.
+  for (const aba of ABAS) {
+    assert.ok(ehAba(aba.rota), `${aba.rota} é aba`);
+    assert.equal(rotaPai(aba.rota), null, `${aba.rota} não pode ter voltar`);
+  }
+  assert.equal(rotaPai('nova'), 'inicio');
+  assert.equal(rotaPai('pendentes'), 'inicio');
+  assert.equal(rotaPai('despesas'), 'caixa');
+  assert.equal(rotaPai('fechamento'), 'caixa');
+  assert.equal(rotaPai('licenca'), 'config');
+});
+
+test('as seções de Ajustes voltam para Ajustes, e não para fora', () => {
+  // Quem entrou em «Preços» quer voltar para a lista de Ajustes; mandá-lo para
+  // o início custaria dois toques para cada correção de preço.
+  assert.equal(rotaPai('config', { secao: 'precos' }), 'config');
+  assert.equal(rotaPai('config', { secao: 'dados' }), 'config');
+  assert.equal(rotaPai('config', {}), null, 'a lista de Ajustes é a própria aba');
+});
+
+test('toda tela de dentro tem para onde voltar', () => {
+  // O defeito que isto impede: acrescenta-se uma tela, esquece-se do mapa, e
+  // ela nasce sem botão de voltar — sem nada na tela avisando.
+  const html = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
+  const bloco = html.slice(html.indexOf('const TELAS = {'), html.indexOf('};', html.indexOf('const TELAS = {')));
+  const rotas = [...bloco.matchAll(/^\s{2}(\w+):/gm)].map((m) => m[1]);
+  for (const rota of rotas) {
+    assert.ok(ehAba(rota) || rotaPai(rota), `a rota «${rota}» não é aba e não tem para onde voltar`);
+  }
 });
 
 /* ------------------------------------------------------- leitura de placa */

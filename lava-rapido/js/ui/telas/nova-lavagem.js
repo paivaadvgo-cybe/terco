@@ -65,6 +65,49 @@ export async function telaNovaLavagem(contexto, parametros = {}) {
 
   const ir = (passo) => { atendimento.passo = passo; desenhar(); };
 
+  /** De cada passo, para onde o «voltar» leva. O primeiro não volta: sai. */
+  const PASSO_ANTERIOR = { tipo: 'placa', servico: 'tipo', confirmacao: 'servico' };
+
+  /**
+   * Sai do atendimento pelo meio.
+   *
+   * A foto já otimizada e guardada vai junto: sem isto, cada atendimento
+   * abandonado depois da foto deixaria uma imagem órfã no aparelho, que nunca
+   * mais seria mostrada nem apagada — e o armazenamento do navegador, quando
+   * enche, não avisa: apaga o banco inteiro.
+   */
+  async function sair() {
+    if (atendimento.fotoId && !atendimento.registrada) {
+      await armazenamento.removerFoto(atendimento.fotoId).catch(() => {});
+    }
+    Foto.liberar(atendimento.fotoEndereco);
+    contexto.ir('inicio');
+  }
+
+  /**
+   * O cabeçalho acompanha o passo.
+   *
+   * Aqui «voltar» é um passo atrás no atendimento, e não uma tela atrás — sair
+   * da escolha do serviço tem de devolver a escolha do tipo, não a tela
+   * inicial. Quem quer abandonar tudo usa o «fechar», que é o outro botão e
+   * fica do outro lado.
+   */
+  function ajustarCabecalho() {
+    if (atendimento.passo === 'placa' && atendimento.digitando) {
+      contexto.definirCabecalho({
+        voltar: () => { atendimento.digitando = false; desenhar(); },
+        fechar: sair,
+      });
+      return;
+    }
+    const anterior = PASSO_ANTERIOR[atendimento.passo];
+    contexto.definirCabecalho({
+      voltar: anterior ? () => ir(anterior) : null,
+      // No fim, «fechar» é o jeito de encerrar sem registrar outro veículo.
+      fechar: atendimento.passo === 'pronto' ? () => contexto.ir('inicio') : sair,
+    });
+  }
+
   /* ------------------------------------------------------------------ placa */
 
   async function usarPlaca(texto) {
@@ -119,6 +162,9 @@ export async function telaNovaLavagem(contexto, parametros = {}) {
     const campoPlaca = entrada({
       classe: 'entrada entrada-placa',
       placeholder: 'ABC1D23',
+      // Quem volta para cá quase sempre volta para corrigir a placa, e não
+      // para digitá-la de novo: o campo nasce com o que já estava lá.
+      value: atendimento.placa ?? '',
       maxLength: 8,
       autocomplete: 'off',
       autocapitalize: 'characters',
@@ -216,7 +262,7 @@ export async function telaNovaLavagem(contexto, parametros = {}) {
         el('span', { classe: 'tipo-icone', texto: tipo.icone }),
         el('span', { classe: 'tipo-nome', texto: tipo.nome }),
       ]))),
-      botao('‹ Voltar', () => { atendimento.digitando = false; ir('placa'); }, { tipo: 'fantasma', classe: 'largo' }),
+      botao('‹ Voltar', () => ir('placa'), { tipo: 'fantasma', classe: 'largo' }),
     ]);
   }
 
@@ -384,6 +430,7 @@ export async function telaNovaLavagem(contexto, parametros = {}) {
       pronto: passoPronto,
     };
     const conteudo = await passos[atendimento.passo]();
+    ajustarCabecalho();
     tela.replaceChildren(
       trilha(atendimento.passo, modoRapido),
       conteudo,

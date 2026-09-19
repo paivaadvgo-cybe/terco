@@ -15,7 +15,7 @@
 import { criarDriverIndexedDB, disponivel as temIndexedDB } from './armazenamento/indexeddb.js';
 import { criarDriverEmMemoria } from './armazenamento/memoria.js';
 import { criarArmazenamento } from './armazenamento/storage.js';
-import { lerRota, montarBarra, acenderAba } from './ui/navegacao.js';
+import { lerRota, montarBarra, acenderAba, rotaPai } from './ui/navegacao.js';
 import { abrirLicenca } from './licenca/licenca.js';
 import { faixaDeLicenca } from './ui/licenca-faixa.js';
 import { avisar, pedirPin } from './ui/avisos.js';
@@ -81,6 +81,40 @@ async function iniciar() {
   const armazenamento = await abrirArmazenamento();
   const conteudo = document.getElementById('conteudo');
   const tituloDoTopo = document.getElementById('titulo');
+  const botaoVoltar = document.getElementById('voltar');
+  const botaoFechar = document.getElementById('fechar');
+
+  /*
+   * Os dois botões do cabeçalho são um só par, reaproveitado por todas as
+   * telas — e não um botão criado dentro de cada uma.
+   *
+   * O motivo é o lugar: quem está atendendo aprende que «voltar» fica no canto
+   * de cima à esquerda e «fechar» no de cima à direita, e isso só se aprende se
+   * não mudar de tela para tela. Cada tela diz o que os botões fazem; nenhuma
+   * decide onde eles ficam.
+   */
+  let acaoVoltar = null;
+  let acaoFechar = null;
+  botaoVoltar.addEventListener('click', () => acaoVoltar?.());
+  botaoFechar.addEventListener('click', () => acaoFechar?.());
+
+  function definirCabecalho({ voltar = null, fechar = null } = {}) {
+    acaoVoltar = voltar;
+    acaoFechar = fechar;
+    botaoVoltar.hidden = !voltar;
+    botaoFechar.hidden = !fechar;
+  }
+
+  /*
+   * Quantas telas o aplicativo empilhou nesta sessão.
+   *
+   * Com ela, «voltar» é o voltar de verdade do navegador — devolve a tela de
+   * onde a pessoa veio, e não um palpite. Sem ela, quem abriu o aplicativo
+   * direto numa tela de dentro (pelo atalho do aplicativo instalado, ou por um
+   * endereço guardado) sairia do aplicativo ao tocar em voltar, em vez de subir
+   * para a tela de cima. Os dois casos acontecem, e o contador distingue os dois.
+   */
+  let telasEmpilhadas = 0;
 
   aplicarTema((await armazenamento.configuracao()).tema);
 
@@ -110,9 +144,25 @@ async function iniciar() {
      */
     ir(destino) {
       const alvo = `#/${destino}`;
-      if (location.hash === alvo) desenhar();
-      else location.hash = alvo;
+      if (location.hash === alvo) {
+        desenhar();
+      } else {
+        telasEmpilhadas += 1;
+        location.hash = alvo;
+      }
     },
+
+    /** «Voltar» genérico: usa o histórico quando há, e a tela de cima quando não. */
+    voltar(rota, parametros) {
+      if (telasEmpilhadas > 0) {
+        telasEmpilhadas -= 1;
+        history.back();
+        return;
+      }
+      contexto.ir(rotaPai(rota, parametros) ?? 'inicio');
+    },
+
+    definirCabecalho,
 
     recarregar: () => desenhar(),
 
@@ -148,6 +198,11 @@ async function iniciar() {
     const tela = TELAS[rota] ?? telaInicio;
     tituloDoTopo.textContent = TITULOS[rota] ?? 'Lava-Rápido Lite';
     acenderAba(barra, rota);
+
+    // O padrão vale para toda tela de dentro; as que quiserem outra coisa —
+    // o atendimento, que volta um passo em vez de uma tela — redefinem isto
+    // enquanto se desenham.
+    definirCabecalho(rotaPai(rota, parametros) ? { voltar: () => contexto.voltar(rota, parametros) } : {});
     // A cada desenho, e não uma vez por sessão: o aplicativo instalado fica
     // dias aberto no balcão, e a virada da meia-noite precisa ser notada.
     await licenca.reavaliar();
