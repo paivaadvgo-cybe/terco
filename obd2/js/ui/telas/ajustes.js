@@ -20,7 +20,7 @@ import { definicaoDe } from '../../obd/pids.js';
 import { LIMITE_DE_PAINEIS } from '../../dominio/painel.js';
 import { MAXIMOS_ACOMPANHADOS } from '../../sessao.js';
 import { numero, valorDePid, unidadeDePid } from '../formatar.js';
-import { baixar } from '../csv.js';
+import { baixar, lerViagensDeCSV } from '../csv.js';
 import { dia as diaDe } from '../../dominio/datas.js';
 
 const INTERVALOS = [
@@ -347,6 +347,56 @@ export async function telaAjustes(contexto) {
     },
   });
 
+  /**
+   * A importação da planilha.
+   *
+   * Recusa no meio de uma gravação pelo mesmo motivo que a restauração recusa:
+   * a sessão está escrevendo amostras, e mexer no banco embaixo dela é o tipo
+   * de corrida que sai como viagem truncada sem nada avisando.
+   */
+  const seletorDeCSV = el('input', {
+    type: 'file',
+    accept: '.csv,text/csv',
+    hidden: true,
+    onchange: async (evento) => {
+      const arquivo = evento.target.files?.[0];
+      evento.target.value = '';
+      if (!arquivo) return;
+
+      if (sessao.estado.gravando) {
+        avisar('Pare a gravação antes de importar viagens', 'erro');
+        return;
+      }
+
+      try {
+        const { viagens, avisos } = lerViagensDeCSV(await arquivo.text());
+        if (viagens.length === 0) {
+          avisar('Nenhuma viagem encontrada neste arquivo', 'atencao', 5000);
+          return;
+        }
+
+        const comAmostras = viagens.filter((v) => v.amostras.length > 0).length;
+        const confirmado = await confirmar({
+          titulo: `Importar ${viagens.length} viagem(ns)?`,
+          texto: `Elas serão acrescentadas às que já estão no aparelho, sem apagar nada. `
+            + `${comAmostras} com amostras. Vídeos não voltam pela planilha.`,
+          acao: 'Importar',
+        });
+        if (!confirmado) return;
+
+        const conta = await armazenamento.importarViagens(viagens);
+        // O que já existia é dito junto, e não escondido: «12 importadas» sem o
+        // «3 já estavam aqui» faz parecer que três gravações sumiram.
+        const repetidas = conta.repetidas ? `, ${conta.repetidas} já estava(m) aqui` : '';
+        avisar(`${conta.importadas} viagem(ns) importada(s)${repetidas}`, 'ok', 6000);
+        for (const aviso of avisos.slice(0, 3)) avisar(aviso, 'atencao', 7000);
+        contexto.recarregar();
+      } catch (erro) {
+        avisar(erro.message || 'Não foi possível ler o arquivo', 'erro', 6000);
+      }
+    },
+  });
+
   const ocupacao = await armazenamento.ocupacao();
   tela.append(cartao([
     el('h2', { classe: 'secao-titulo', texto: 'Dados no aparelho' }),
@@ -368,6 +418,15 @@ export async function telaAjustes(contexto) {
     }, { tipo: 'principal', classe: 'largo' }),
     botao('Restaurar backup', () => seletorDeBackup.click(), { tipo: 'secundario', classe: 'largo' }),
     seletorDeBackup,
+    botao('Importar viagens (CSV)', () => seletorDeCSV.click(), { tipo: 'secundario', classe: 'largo' }),
+    seletorDeCSV,
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'Importar soma: as viagens do arquivo entram sem apagar as que já estão aqui, e as repetidas '
+        + 'são reconhecidas pelo começo e pelo fim. Serve para juntar num aparelho só o que foi gravado em '
+        + 'dois. Restaurar, ao contrário, substitui tudo. Da planilha não voltam os vídeos nem as casas '
+        + 'decimais além do que aparecia na tela — para mudança de casa sem perda nenhuma, use o backup.',
+    }),
     botao('Apagar tudo', async () => {
       const confirmado = await confirmar({
         titulo: 'Apagar todos os dados?',

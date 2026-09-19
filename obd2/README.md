@@ -149,9 +149,12 @@ carro simulado funciona, e serve para conhecer o aplicativo.
   parado, máximos e consumo médio, desenha o gráfico de qualquer leitura e
   exporta em CSV que o Excel brasileiro abre certo. Uma viagem por vez, ou
   **todas num arquivo só** — em cima uma linha por viagem, embaixo todas as
-  amostras com a coluna «Viagem» identificando cada uma. É o que levar antes de
-  trocar de aparelho ou de endereço: o navegador guarda os dados por origem, e
-  num endereço novo o histórico não aparece.
+  amostras com a coluna «Viagem» identificando cada uma. E esse arquivo **volta**:
+  em Ajustes, «Importar viagens (CSV)» acrescenta ao que já está no aparelho, sem
+  apagar nada, reconhecendo pelo começo e pelo fim o que já foi importado. É o
+  que junta num celular só o que foi gravado em dois — e o que salva o histórico
+  ao trocar de endereço, porque o navegador guarda os dados por origem e num
+  endereço novo o passado não aparece.
 - **Vídeo da estrada** — grava a câmera traseira junto com a viagem, em trechos
   de 30 segundos, e na tela da viagem o vídeo aparece com os dados do instante
   que está tocando. É o que transforma «4.300 rpm às 14h32» em ver a
@@ -195,7 +198,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 216 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 242 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento
@@ -243,6 +246,11 @@ dirigindo decide quando. Quem responde essa pergunta é o `js/app.js`, na
   aplicativo pede para manter a tela acesa; se o sistema recusar, a gravação
   fica com buracos — que o resumo declara, em vez de inventar distância. Vale
   igual para o vídeo: em segundo plano a câmera para.
+- Da planilha não voltam os vídeos — não estão nela — nem as casas decimais
+  além do que aparecia na tela: o CSV guarda o que se lia, não o número cru. A
+  duração é a exceção, porque se refaz das amostras. Para mudança de casa sem
+  perda nenhuma, o backup em JSON dos Ajustes é o caminho; o CSV é o que se abre
+  no Excel e o que ainda serve quando só ele existe.
 - Vídeo ocupa espaço de verdade — perto de 20 MB por minuto em 720p. Há um teto
   configurável, e ao batê-lo a gravação de vídeo para com aviso, em vez de ser
   cortada pelo navegador quando a cota estourar. Os dados da viagem continuam.
