@@ -31,6 +31,9 @@ import { telaConexao, telaRegistro } from './ui/telas/conexao.js';
 import { telaFalhas } from './ui/telas/falhas.js';
 import { telaViagens, telaViagem } from './ui/telas/viagens.js';
 import { telaAjustes } from './ui/telas/ajustes.js';
+import { telaLicenca } from './ui/telas/licenca.js';
+import { abrirLicenca } from './licenca/licenca.js';
+import { faixaDeLicenca } from './ui/licenca-faixa.js';
 
 const TELAS = {
   painel: telaPainel,
@@ -41,6 +44,7 @@ const TELAS = {
   viagens: telaViagens,
   viagem: telaViagem,
   ajustes: telaAjustes,
+  licenca: telaLicenca,
 };
 
 const TITULOS = {
@@ -52,6 +56,7 @@ const TITULOS = {
   viagens: 'Viagens',
   viagem: 'Viagem',
   ajustes: 'Ajustes',
+  licenca: 'Licença',
 };
 
 async function abrirArmazenamento() {
@@ -116,12 +121,15 @@ async function iniciar() {
   const sessao = criarSessao({ armazenamento });
   await sessao.recarregarConfiguracao();
 
+  const licenca = await abrirLicenca(armazenamento);
+
   /** O que a tela atual precisa devolver quando sair. */
   let limpezas = [];
 
   const contexto = {
     armazenamento,
     sessao,
+    licenca,
     aplicarTema,
 
     /** Registra algo a desfazer quando esta tela sair (assinatura, cronômetro). */
@@ -179,7 +187,17 @@ async function iniciar() {
     try {
       const no = await tela(contexto, parametros);
       if (desenhando !== minha) return;
-      conteudo.replaceChildren(no);
+      /*
+       * A faixa é remontada a cada desenho, e a situação relida antes.
+       *
+       * Reavaliar aqui é o que faz a contagem virar sozinha à meia-noite de um
+       * aplicativo que ficou aberto — e é barato: aritmética de datas sobre o
+       * que já está em memória. Na própria tela de licença ela não aparece:
+       * seria dizer duas vezes a mesma coisa, uma delas por cima da outra.
+       */
+      await licenca.reavaliar();
+      const faixa = rota === 'licenca' ? null : faixaDeLicenca(licenca.situacao, () => contexto.ir('licenca'));
+      conteudo.replaceChildren(...(faixa ? [faixa, no] : [no]));
       window.scrollTo({ top: 0 });
     } catch (erro) {
       console.error(erro);

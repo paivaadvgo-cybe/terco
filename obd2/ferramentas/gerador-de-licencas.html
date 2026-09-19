@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gerador de licenças — Lava-Rápido Lite</title>
+<!--
+  Gerador de licenças do Lava-Rápido Lite.
+
+  Abra este arquivo com dois cliques, no SEU computador. Ele não vai para a
+  hospedagem: `publicar/implantar.sh` copia só o que o navegador do cliente
+  usa, e `ferramentas/` fica de fora de propósito. Se um dia este arquivo for
+  parar num servidor junto com a chave privada, qualquer pessoa emite licença.
+
+  Por que tudo está escrito aqui dentro, repetindo funções que o aplicativo já
+  tem em `js/licenca/assinatura.js`: um arquivo aberto do disco (`file://`) não
+  consegue importar módulos — o navegador bloqueia. Ou seria um arquivo só, ou
+  exigiria subir um servidor para emitir uma licença. A duplicação é pequena,
+  está apontada nos dois lados, e o teste `tests/licenca.test.js` prova que o
+  formato aceito pelo aplicativo é este mesmo.
+
+  Nada sai deste computador: a assinatura acontece no próprio navegador, sem
+  internet.
+-->
+<style>
+  :root { color-scheme: light dark; --linha: #d8dfe7; --azul: #0b6bcb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 24px 16px 60px; font: 16px/1.5 system-ui, sans-serif; background: #eef1f5; color: #101720; }
+  main { max-width: 680px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  h1 { font-size: 22px; margin: 0; }
+  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .6px; color: #55616f; margin: 0 0 4px; }
+  section { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 1px 3px rgba(16,23,32,.09); }
+  label { display: block; font-size: 14px; font-weight: 600; color: #55616f; margin: 10px 0 4px; }
+  input, select, textarea { width: 100%; padding: 10px 12px; font: inherit; border: 1px solid var(--linha); border-radius: 10px; background: #f6f8fa; color: inherit; }
+  textarea { min-height: 96px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 13px; }
+  button { appearance: none; border: 1px solid var(--azul); background: var(--azul); color: #fff; font: inherit; font-weight: 650; padding: 12px 16px; border-radius: 10px; cursor: pointer; width: 100%; margin-top: 10px; }
+  button.secundario { background: #e5f0fb; color: var(--azul); }
+  button.fantasma { background: transparent; color: #55616f; border-color: var(--linha); }
+  .aviso { background: #fdf0da; border: 1px solid #8f5200; color: #3a2a06; border-radius: 12px; padding: 12px; font-size: 14px; }
+  .ok { background: #e2f4ea; border-color: #12794a; color: #0c3d26; }
+  .erro { background: #fbe8e7; border-color: #b8302a; color: #5c1512; }
+  .saida { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; word-break: break-all; background: #f6f8fa; border: 1px solid var(--linha); border-radius: 10px; padding: 12px; max-height: 180px; overflow: auto; }
+  .linha { display: flex; gap: 10px; }
+  .linha > * { flex: 1; }
+  p.dica { font-size: 13px; color: #55616f; margin: 6px 0 0; }
+  @media (prefers-color-scheme: dark) {
+    body { background: #0e1319; color: #eef3f9; }
+    section { background: #182029; box-shadow: none; }
+    input, select, textarea, .saida { background: #212b36; border-color: #2c3946; }
+    h2, label, p.dica { color: #a3b1c0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <h1>Gerador de licenças — Lava-Rápido Lite</h1>
+  <p class="aviso">
+    A chave privada abaixo assina licenças válidas para qualquer aparelho.
+    Guarde-a fora do repositório e não a mande por WhatsApp. Este arquivo não é
+    publicado no site.
+  </p>
+
+  <section>
+    <h2>1. Chave privada</h2>
+    <label for="arquivoChave">Arquivo <code>lava-rapido-chave-privada.jwk.json</code></label>
+    <input id="arquivoChave" type="file" accept=".json,application/json">
+    <label for="chaveColada">ou cole o conteúdo dela</label>
+    <textarea id="chaveColada" placeholder='{"kty":"EC","crv":"P-256","x":"…","y":"…","d":"…"}'></textarea>
+    <div id="estadoChave" class="dica"></div>
+  </section>
+
+  <section>
+    <h2>2. Dados da licença</h2>
+    <label for="produto">Aplicativo</label>
+    <select id="produto">
+      <option value="PainelOBD2" data-extensao="obd2">Painel OBD-II</option>
+      <option value="LavaRapidoLite" data-extensao="lava">Lava-Rápido Lite</option>
+    </select>
+    <p class="dica">
+      Os dois aplicativos usam o mesmo par de chaves e este mesmo gerador. É este campo,
+      assinado junto com o resto, que impede a licença de um valer no outro — escolher errado
+      aqui gera um arquivo que o cliente não consegue importar, com a mensagem «este arquivo é
+      de outro aplicativo».
+    </p>
+    <label for="instalacao">Código de instalação (o cliente manda este número)</label>
+    <input id="instalacao" placeholder="ABCDE-FGHIJ-KLMNO-PQRST" autocapitalize="characters" spellcheck="false">
+    <label for="cliente">Cliente</label>
+    <input id="cliente" placeholder="nome do cliente">
+    <label for="numero">Número da licença</label>
+    <input id="numero" placeholder="2026-0001">
+    <div class="linha">
+      <div>
+        <label for="tipo">Validade</label>
+        <select id="tipo">
+          <option value="365">1 ano</option>
+          <option value="180">6 meses</option>
+          <option value="30">1 mês</option>
+          <option value="perpetua">Sem prazo</option>
+          <option value="data">Escolher data</option>
+        </select>
+      </div>
+      <div>
+        <label for="vencimento">Vence em</label>
+        <input id="vencimento" type="date">
+      </div>
+    </div>
+    <label for="observacao">Observação (opcional, aparece só para você)</label>
+    <input id="observacao" placeholder="pago em 12/09, PIX">
+    <button id="gerar">Gerar licença</button>
+    <div id="resultado"></div>
+  </section>
+
+  <section>
+    <h2>Conferir um arquivo</h2>
+    <p class="dica">Cole o conteúdo de um <code>.obd2</code> ou <code>.lava</code> para ver de qual aplicativo ele é, a quem pertence, e se a assinatura fecha com esta chave.</p>
+    <textarea id="conferirTexto" placeholder="conteúdo do arquivo .obd2 ou .lava"></textarea>
+    <button class="secundario" id="conferir">Conferir</button>
+    <div id="saidaConferir"></div>
+  </section>
+
+  <section>
+    <h2>Trocar o par de chaves</h2>
+    <p class="dica">
+      Só quando houver motivo — a chave privada vazou, por exemplo. Gera um par
+      novo: a chave privada baixa para este computador e a pública precisa ser
+      colada em <code>js/licenca/assinatura.js</code> e publicada. Licenças
+      antigas param de valer, e cada cliente ativo precisará de um arquivo novo.
+    </p>
+    <button class="fantasma" id="novoPar">Gerar par de chaves novo</button>
+    <div id="saidaPar"></div>
+  </section>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const codificador = new TextEncoder();
+let chavePrivada = null;
+
+/* --- as mesmas regras de js/licenca/assinatura.js, repetidas aqui porque um
+       arquivo aberto do disco não importa módulos --- */
+function canonico(v) {
+  if (Array.isArray(v)) return '[' + v.map(canonico).join(',') + ']';
+  if (v && typeof v === 'object') return '{' + Object.keys(v).sort().map(k => JSON.stringify(k) + ':' + canonico(v[k])).join(',') + '}';
+  return JSON.stringify(v);
+}
+const paraBase64 = (b) => btoa(String.fromCharCode(...new Uint8Array(b)));
+const deBase64 = (s) => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function usarChave(texto) {
+  try {
+    const jwk = JSON.parse(texto);
+    if (!jwk.d) throw new Error('esta é a chave pública; preciso da privada (a que tem "d")');
+    chavePrivada = await crypto.subtle.importKey('jwk', jwk, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['sign']);
+    $('estadoChave').textContent = '✅ chave carregada';
+    $('estadoChave').className = 'dica';
+  } catch (e) {
+    chavePrivada = null;
+    $('estadoChave').textContent = '⚠️ ' + e.message;
+  }
+}
+
+$('arquivoChave').onchange = async (e) => {
+  const arquivo = e.target.files[0];
+  if (arquivo) { const texto = await arquivo.text(); $('chaveColada').value = texto; usarChave(texto); }
+};
+$('chaveColada').oninput = (e) => { if (e.target.value.trim()) usarChave(e.target.value); };
+
+$('tipo').onchange = () => { $('vencimento').disabled = $('tipo').value !== 'data'; };
+$('vencimento').disabled = true;
+
+function vencimentoEscolhido() {
+  const tipo = $('tipo').value;
+  if (tipo === 'perpetua') return null;
+  if (tipo === 'data') {
+    if (!$('vencimento').value) throw new Error('escolha a data de vencimento');
+    // Meio-dia, para que fuso horário não mova o vencimento um dia para trás.
+    return new Date($('vencimento').value + 'T12:00:00').getTime();
+  }
+  return Date.now() + Number(tipo) * 86400000;
+}
+
+$('gerar').onclick = async () => {
+  const saida = $('resultado');
+  try {
+    if (!chavePrivada) throw new Error('carregue a chave privada primeiro');
+    const instalacaoId = $('instalacao').value.trim().toUpperCase();
+    if (!instalacaoId) throw new Error('falta o código de instalação do cliente');
+
+    const licenca = {
+      numero: $('numero').value.trim() || new Date().toISOString().slice(0, 10) + '-' + Math.random().toString(36).slice(2, 6).toUpperCase(),
+      cliente: $('cliente').value.trim() || '—',
+      instalacaoId,
+      emissao: Date.now(),
+      vencimento: vencimentoEscolhido(),
+      observacao: $('observacao').value.trim() || undefined,
+    };
+    const sig = await crypto.subtle.sign({ name: 'ECDSA', hash: 'SHA-256' }, chavePrivada, codificador.encode(canonico(licenca)));
+    const escolhido = $('produto').selectedOptions[0];
+    const envelope = { app: escolhido.value, tipo: 'licenca', versao: 1, licenca, sig: paraBase64(sig) };
+    const texto = paraBase64(codificador.encode(JSON.stringify(envelope)));
+
+    const nome = 'licenca-' + licenca.numero.replace(/[^\w-]/g, '') + '.' + escolhido.dataset.extensao;
+    const url = URL.createObjectURL(new Blob([texto], { type: 'text/plain' }));
+    saida.innerHTML = '';
+    const ok = document.createElement('div');
+    ok.className = 'aviso ok';
+    ok.textContent = 'Licença ' + licenca.numero + ' para ' + licenca.cliente + ' · '
+      + (licenca.vencimento ? 'vence em ' + new Date(licenca.vencimento).toLocaleDateString('pt-BR') : 'sem prazo');
+    const baixar = document.createElement('a');
+    baixar.href = url; baixar.download = nome;
+    baixar.textContent = '⬇️ baixar ' + nome;
+    baixar.style.cssText = 'display:block;margin-top:10px;font-weight:650';
+    const caixa = document.createElement('div');
+    caixa.className = 'saida'; caixa.style.marginTop = '10px'; caixa.textContent = texto;
+    const copiar = document.createElement('button');
+    copiar.className = 'secundario'; copiar.textContent = 'Copiar conteúdo (para colar no WhatsApp)';
+    copiar.onclick = () => navigator.clipboard.writeText(texto).then(() => { copiar.textContent = 'copiado ✓'; });
+    saida.append(ok, baixar, caixa, copiar);
+  } catch (e) {
+    saida.innerHTML = '';
+    const erro = document.createElement('div');
+    erro.className = 'aviso erro';
+    erro.textContent = e.message;
+    saida.append(erro);
+  }
+};
+
+$('conferir').onclick = async () => {
+  const saida = $('saidaConferir');
+  saida.innerHTML = '';
+  const div = document.createElement('div');
+  div.className = 'aviso';
+  try {
+    const bruto = $('conferirTexto').value.trim();
+    let envelope;
+    try { envelope = JSON.parse(bruto); } catch { envelope = JSON.parse(new TextDecoder().decode(deBase64(bruto))); }
+    const jwk = JSON.parse($('chaveColada').value);
+    const publica = await crypto.subtle.importKey('jwk', { kty: jwk.kty, crv: jwk.crv, x: jwk.x, y: jwk.y }, { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+    const confere = await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, publica, deBase64(envelope.sig), codificador.encode(canonico(envelope.licenca)));
+    div.className = 'aviso ' + (confere ? 'ok' : 'erro');
+    div.textContent = (confere ? '✅ assinatura confere · ' : '❌ assinatura NÃO confere · ')
+      + envelope.licenca.cliente + ' · aparelho ' + envelope.licenca.instalacaoId
+      + ' · ' + (envelope.licenca.vencimento ? 'vence ' + new Date(envelope.licenca.vencimento).toLocaleDateString('pt-BR') : 'sem prazo');
+  } catch (e) {
+    div.className = 'aviso erro';
+    div.textContent = 'não consegui ler: ' + e.message;
+  }
+  saida.append(div);
+};
+
+$('novoPar').onclick = async () => {
+  if (!confirm('Gerar um par novo invalida todas as licenças já emitidas. Continuar?')) return;
+  const par = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+  const privada = await crypto.subtle.exportKey('jwk', par.privateKey);
+  const publica = await crypto.subtle.exportKey('jwk', par.publicKey);
+  const limpa = ({ kty, crv, x, y, d }) => d ? { kty, crv, x, y, d } : { kty, crv, x, y };
+
+  const url = URL.createObjectURL(new Blob([JSON.stringify(limpa(privada), null, 2)], { type: 'application/json' }));
+  const saida = $('saidaPar');
+  saida.innerHTML = '';
+  const baixar = document.createElement('a');
+  baixar.href = url; baixar.download = 'lava-rapido-chave-privada.jwk.json';
+  baixar.textContent = '⬇️ baixar a chave privada nova';
+  baixar.style.cssText = 'display:block;margin:10px 0;font-weight:650';
+  const caixa = document.createElement('div');
+  caixa.className = 'saida';
+  caixa.textContent = 'export const CHAVE_PUBLICA = ' + JSON.stringify(limpa(publica)) + ';';
+  const nota = document.createElement('p');
+  nota.className = 'dica';
+  nota.textContent = 'Cole a linha acima em js/licenca/assinatura.js, publique o aplicativo e emita licenças novas para os clientes ativos.';
+  saida.append(baixar, caixa, nota);
+};
+</script>
+</body>
+</html>

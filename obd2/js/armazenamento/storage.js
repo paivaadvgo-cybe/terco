@@ -28,6 +28,8 @@ import { PONTE_PADRAO } from '../obd/transporte-wifi.js';
 
 export const CONFIGURACAO_PADRAO = {
   id: 'app',
+  /** Quando este banco nasceu. Ver `configuracao()`: é âncora da avaliação. */
+  criadoEm: null,
   tema: 'auto',
   combustivel: COMBUSTIVEL_PADRAO,
   /** Cilindrada em litros, só usada para estimar consumo em carro sem MAF. */
@@ -98,7 +100,15 @@ export function novoId(prefixo = '') {
   return `${prefixo}${base}`;
 }
 
-export async function criarArmazenamento(driver) {
+/**
+ * @param {object} driver
+ * @param {object} [opcoes]
+ * @param {() => number} [opcoes.agora]  o relógio, injetável para os testes da
+ *   licença: é `criadoEm` que ancora a avaliação, e sem poder fingir a data de
+ *   nascimento do banco não há como testar «apagar o navegador não reinicia a
+ *   contagem» sem esperar trinta dias.
+ */
+export async function criarArmazenamento(driver, { agora = () => Date.now() } = {}) {
   /** O que ainda não foi para o banco, por viagem. */
   const pendentes = new Map();
 
@@ -120,6 +130,20 @@ export async function criarArmazenamento(driver) {
     async configuracao() {
       const guardada = await driver.ler('configuracao', 'app');
       const junta = { ...CONFIGURACAO_PADRAO, ...(guardada ?? {}) };
+
+      /*
+       * Quando este banco nasceu.
+       *
+       * Gravado na primeira leitura e nunca mais tocado. É a segunda âncora da
+       * avaliação: limpar o `localStorage` apaga a data de instalação e
+       * pareceria recomeçar os trinta dias, mas o banco com as viagens continua
+       * aqui e denuncia a data verdadeira. Quem apagar os dois recomeça a
+       * contagem e perde as viagens junto — a essa altura não é mais atalho.
+       */
+      if (!junta.criadoEm) {
+        junta.criadoEm = agora();
+        await driver.gravar('configuracao', { ...junta, id: 'app' });
+      }
 
       /*
        * De onde sai o painel, em três casos distintos:
@@ -218,6 +242,9 @@ export async function criarArmazenamento(driver) {
      * testa alguma coisa na garagem — sobrescreveria a máxima de 130 km/h pela
      * de 0 km/h daquela sessão parada.
      */
+    /** Os carros que este aparelho já conheceu. */
+    veiculos: () => driver.listar('veiculos'),
+
     async registrarRecordes(veiculoId, recordes) {
       const veiculo = (await driver.ler('veiculos', veiculoId)) ?? { id: veiculoId };
       const anteriores = veiculo.recordes ?? {};

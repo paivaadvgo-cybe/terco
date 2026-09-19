@@ -20,6 +20,7 @@ import { escolherPorta, criarTransporteSerial, VELOCIDADES } from '../../obd/tra
 import { criarTransporteDemo } from '../../obd/transporte-demo.js';
 import { criarTransporteWiFi, problemaNoEndereco, PONTE_PADRAO } from '../../obd/transporte-wifi.js';
 import { ESTADOS } from '../../sessao.js';
+import { cartaoDeBloqueio } from './licenca.js';
 
 /**
  * As três respostas da tabela de adaptadores.
@@ -43,6 +44,13 @@ export async function telaConexao(contexto, parametros = {}) {
   const detalhes = el('div', { classe: 'detalhe-linhas' });
   const acoes = el('div', { classe: 'coluna-botoes' });
   tela.append(cartao([situacao, detalhes, acoes]));
+
+  // Quando a licença não permite conectar, o motivo e o caminho vêm antes da
+  // tabela de adaptadores: quem chegou aqui quer conectar, e a tabela não
+  // responde por que não consegue.
+  if (!contexto.licenca?.permiteConectar()) {
+    tela.append(cartaoDeBloqueio(contexto, contexto.licenca.situacao));
+  }
 
   let velocidadeSerial = VELOCIDADES[0];
 
@@ -148,6 +156,19 @@ export async function telaConexao(contexto, parametros = {}) {
 
     if (estado.situacao === 'conectando') {
       acoes.append(el('p', { classe: 'campo-dica', texto: 'Aguarde: a primeira conexão procura o protocolo do carro e pode levar alguns segundos.' }));
+      return;
+    }
+
+    /*
+     * A licença tranca só o adaptador de verdade.
+     *
+     * O carro simulado continua embaixo, e é deliberado: é com ele que se
+     * mostra o aplicativo a quem ainda vai decidir, e tirá-lo tiraria o
+     * argumento de venda junto. As viagens já gravadas também continuam — o
+     * dado é de quem dirigiu.
+     */
+    if (!contexto.licenca?.permiteConectar()) {
+      acoes.append(botao('Carro simulado', conectarDemo, { tipo: 'secundario', classe: 'largo' }));
       return;
     }
 
