@@ -18,8 +18,17 @@
 </head>
 <body class="carregando">
 
+<!--
+  O cabeçalho tem três lugares fixos: voltar à esquerda, título no meio, fechar
+  à direita. Os dois botões aparecem e somem conforme a tela, mas o lugar deles
+  não se move — um botão que muda de posição entre telas é um botão que ninguém
+  acha com pressa. Eles nascem escondidos porque a primeira tela é o início, de
+  onde não se volta nem se fecha.
+-->
 <header class="topo">
+  <button id="voltar" class="topo-acao" type="button" aria-label="Voltar" hidden>‹</button>
   <h1 id="titulo" class="topo-titulo">Lava-Rápido Lite</h1>
+  <button id="fechar" class="topo-acao" type="button" aria-label="Fechar" hidden>✕</button>
 </header>
 
 <p id="atualizacao" class="atualizacao" role="status" hidden>

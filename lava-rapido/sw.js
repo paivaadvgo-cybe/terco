@@ -32,7 +32,7 @@
  * nome do cache, e o teste em `tests/pwa.test.js` acusa a diferença antes da
  * publicação sair.
  */
-const VERSAO = 'lava-rapido-lite-b9cb5f1a3378';
+const VERSAO = 'lava-rapido-lite-cd8daefffe60';
 const BASE = new URL('./', self.location).pathname;
 
 /**

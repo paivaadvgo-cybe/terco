@@ -41,6 +41,32 @@ export function lerRota(hash = location.hash) {
   return { rota: rota || 'inicio', parametros };
 }
 
+/**
+ * De onde cada tela de dentro veio.
+ *
+ * As cinco abas não têm «voltar» — elas são o chão do aplicativo, e voltar dali
+ * seria sair. As outras têm, e o destino é sempre a tela que faz sentido ter
+ * vindo antes, não a última visitada: quem chegou em «Fechamento» pelo atalho
+ * do aplicativo instalado nunca passou pelo Caixa, e mesmo assim é para lá que
+ * ele quer ir ao voltar.
+ */
+const PAI_DA_ROTA = {
+  nova: 'inicio',
+  pendentes: 'inicio',
+  despesas: 'caixa',
+  fechamento: 'caixa',
+  licenca: 'config',
+};
+
+export const ehAba = (rota) => ABAS.some((a) => a.rota === rota);
+
+/** A rota para onde «voltar» leva, ou `null` quando não há de onde voltar. */
+export function rotaPai(rota, parametros = {}) {
+  // As seções de Ajustes voltam para a lista de Ajustes, e não para fora.
+  if (rota === 'config' && parametros.secao) return 'config';
+  return PAI_DA_ROTA[rota] ?? null;
+}
+
 export function montarBarra(irPara) {
   const barra = document.createElement('nav');
   barra.className = 'barra';
