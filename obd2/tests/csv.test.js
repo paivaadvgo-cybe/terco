@@ -11,7 +11,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { campoCSV, numeroCSV, montarCSV, colunasDe, amostrasEmCSV, viagemEmCSV , viagensEmCSV } from '../js/ui/csv.js';
+import { campoCSV, numeroCSV, montarCSV, colunasDe, amostrasEmCSV, viagemEmCSV , viagensEmCSV, lerCSV, numeroDeCSV, chaveDaColuna, lerViagensDeCSV } from '../js/ui/csv.js';
 import { criarAmostra, resumir } from '../js/dominio/viagem.js';
 
 test('o arquivo começa com BOM e separa por ponto e vírgula', () => {
@@ -223,4 +223,152 @@ test('o desempate numerado cobre o mesmo segundo', () => {
   const rotulos = movimentoDe(viagensEmCSV(gemeas, amostras)).map((l) => l.split(';')[0]);
   assert.equal(new Set(rotulos).size, 2);
   assert.ok(rotulos.some((r) => r.endsWith('(2)')));
+});
+
+/* -------------------------------------------------- a planilha de volta */
+
+test('o analisador respeita campo entre aspas com ponto e vírgula dentro', () => {
+  /*
+   * `campoCSV` põe aspas em volta de qualquer campo com `;`, aspas ou quebra de
+   * linha. Um `split(';')` cortaria esse campo ao meio e deslocaria a linha
+   * inteira — e o estrago sai como número na coluna errada, que é pior que erro.
+   */
+  const linhas = lerCSV('a;"b;c";d\r\n"ele disse ""oi""";2\r\n');
+  assert.deepEqual(linhas[0], ['a', 'b;c', 'd']);
+  assert.deepEqual(linhas[1], ['ele disse "oi"', '2']);
+});
+
+test('o analisador aceita quebra de linha dentro do campo', () => {
+  const linhas = lerCSV('a;"duas\nlinhas";c\r\n');
+  assert.deepEqual(linhas[0], ['a', 'duas\nlinhas', 'c']);
+});
+
+test('número do Excel pt-BR volta a número, e vazio volta a ausência', () => {
+  assert.equal(numeroDeCSV('12,50'), 12.5);
+  assert.equal(numeroDeCSV('1.234,5'), 1234.5);
+  assert.equal(numeroDeCSV(''), null, 'célula vazia é ausência, nunca zero');
+  assert.equal(numeroDeCSV('—'), null);
+});
+
+test('a chave da coluna vem dos colchetes', () => {
+  assert.equal(chaveDaColuna('Rotação (rpm) [0C]'), '0C');
+  assert.equal(chaveDaColuna('PID A1 [A1]'), 'A1');
+});
+
+test('sem colchetes, a chave ainda se acha pelo nome', () => {
+  // Planilha exportada antes de a chave existir. Frágil de propósito: serve
+  // para não descartar o arquivo que alguém já tinha.
+  assert.equal(chaveDaColuna('Rotação (rpm)'), '0C');
+  assert.equal(chaveDaColuna('Coluna que não existe (x)'), null);
+});
+
+test('a planilha de todas as viagens volta com o que importa', () => {
+  const texto = viagensEmCSV(VIAGENS, AMOSTRAS);
+  const { viagens, avisos } = lerViagensDeCSV(texto);
+
+  assert.deepEqual(avisos, [], 'o que este arquivo escreveu, ele tem de saber ler');
+  assert.equal(viagens.length, 2);
+
+  const [primeira, segunda] = viagens;
+  assert.equal(primeira.dia, '2026-09-15');
+  assert.equal(primeira.amostras.length, 2);
+  assert.equal(primeira.resumo.distancia, 3.1);
+  assert.equal(segunda.resumo.velocidadeMaxima, 88);
+  assert.equal(segunda.amostras[1].v['0C'], 2600, 'a rotação volta na chave certa');
+  assert.equal(primeira.amostras[0].v['0C'], undefined, 'e não aparece na viagem que não a tinha');
+});
+
+test('os instantes das amostras são reconstruídos do início mais os segundos', () => {
+  const texto = viagensEmCSV(VIAGENS, AMOSTRAS);
+  const { viagens } = lerViagensDeCSV(texto);
+  const primeira = viagens[0];
+  assert.equal(primeira.amostras[1].t - primeira.amostras[0].t, 1000,
+    'um segundo entre as duas, como na origem');
+});
+
+test('viagem que atravessa a meia-noite não volta com duração negativa', () => {
+  /*
+   * O dia registrado é o do começo, e a coluna «Fim» traz só o relógio. Sem
+   * somar um dia, uma viagem das 23h50 às 00h10 voltaria terminando vinte e
+   * três horas e quarenta minutos antes de começar.
+   */
+  const inicio = new Date(2026, 8, 16, 23, 50, 0).getTime();
+  const madrugada = [{
+    id: 'm', dia: '2026-09-16', inicio, fim: inicio + 20 * 60_000, amostras: 1,
+    resumo: { distancia: 9 },
+  }];
+  const amostras = new Map([['m', [{ t: inicio, v: { '0D': 60 } }]]]);
+
+  const { viagens } = lerViagensDeCSV(viagensEmCSV(madrugada, amostras));
+  assert.equal(viagens[0].fim - viagens[0].inicio, 20 * 60_000);
+});
+
+test('um arquivo que não é do aplicativo é recusado dizendo o que é', () => {
+  assert.throws(() => lerViagensDeCSV('nome;idade\r\nana;30\r\n'), /Painel OBD-II/);
+});
+
+test('uma coluna desconhecida vira aviso, e o resto do arquivo entra', () => {
+  // Um arquivo com meses de viagens boas não se descarta por causa de uma
+  // coluna que alguém acrescentou na planilha.
+  const texto = viagensEmCSV(VIAGENS, AMOSTRAS)
+    .replace('Consumo (L/h)', 'Coluna estranha;Consumo (L/h)');
+  const { viagens, avisos } = lerViagensDeCSV(texto);
+  assert.ok(avisos.some((a) => /estranha/.test(a)));
+  assert.equal(viagens.length, 2, 'as viagens continuam lá');
+});
+
+test('a duração sobrevive à ida e à volta em viagens curtas', () => {
+  /*
+   * Com uma casa decimal em minutos, a resolução é de seis segundos: duas
+   * gravações de cinco e de seis segundos voltavam as duas com seis. Apareceu
+   * num teste de mudança de aparelho, com viagens curtas de propósito — e uma
+   * viagem curta é exatamente o caso de parar e recomeçar num semáforo.
+   */
+  const inicio = Date.UTC(2026, 8, 16, 21, 0, 0);
+  const curtas = [
+    { id: 'c1', dia: '2026-09-16', inicio, fim: inicio + 5000, resumo: { duracao: 5000 } },
+    { id: 'c2', dia: '2026-09-16', inicio: inicio + 60000, fim: inicio + 66000, resumo: { duracao: 6000 } },
+  ];
+  /** Uma leitura por segundo, como a gravação de verdade produz. */
+  const porSegundo = (de, quantos) => Array.from({ length: quantos + 1 }, (_, i) => ({
+    t: de + i * 1000,
+    v: { '0D': 10 + i },
+  }));
+  const comAmostras = new Map([
+    ['c1', porSegundo(inicio, 5)],
+    ['c2', porSegundo(inicio + 60000, 6)],
+  ]);
+
+  const { viagens } = lerViagensDeCSV(viagensEmCSV(curtas, comAmostras));
+  assert.equal(viagens[0].resumo.duracao, 5000, 'exata, porque veio das amostras');
+  assert.equal(viagens[1].resumo.duracao, 6000);
+});
+
+test('sem amostras, a duração vem da coluna e é aproximada', () => {
+  // A coluna é o que há, e serve: em minutos com duas casas, o erro é de seis
+  // décimos de segundo — invisível numa viagem de verdade.
+  const inicio = Date.UTC(2026, 8, 16, 21, 0, 0);
+  const so_resumo = [{ id: 's', dia: '2026-09-16', inicio, fim: inicio + 2_700_000, resumo: { duracao: 2_700_000 } }];
+  const { viagens } = lerViagensDeCSV(viagensEmCSV(so_resumo, new Map([['s', []]])));
+  assert.ok(Math.abs(viagens[0].resumo.duracao - 2_700_000) < 600);
+});
+
+test('um buraco na gravação não entra na duração refeita', () => {
+  /*
+   * Tela apagada, aplicativo em segundo plano: a gravação fica com um buraco, e
+   * a duração da viagem não conta esse tempo. A volta usa o mesmo corte, senão
+   * uma viagem de dez minutos com meia hora de buraco voltaria como quarenta.
+   */
+  const inicio = Date.UTC(2026, 8, 16, 21, 0, 0);
+  const comBuraco = [{ id: 'b', dia: '2026-09-16', inicio, fim: inicio + 3_600_000, resumo: { duracao: 4000 } }];
+  const amostras = new Map([['b', [
+    { t: inicio, v: { '0D': 10 } },
+    { t: inicio + 2000, v: { '0D': 12 } },
+    { t: inicio + 3_600_000, v: { '0D': 14 } },
+  ]]]);
+
+  const { viagens } = lerViagensDeCSV(viagensEmCSV(comBuraco, amostras));
+  // Dois segundos de viagem mais o buraco limitado a cinco — a mesma conta que
+  // a gravação faz, e é a igualdade entre as duas que importa.
+  assert.equal(viagens[0].resumo.duracao, 7000);
 });

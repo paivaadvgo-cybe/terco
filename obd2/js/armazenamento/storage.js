@@ -458,6 +458,72 @@ export async function criarArmazenamento(driver) {
       return Object.fromEntries(NO_BACKUP.map((n) => [n, (backup.colecoes?.[n] ?? []).length]));
     },
 
+    /**
+     * Acrescenta viagens vindas de fora, sem apagar o que já existe.
+     *
+     * É o oposto de `restaurar`, e os dois têm razão de ser. Restaurar
+     * substitui — é a mudança de casa, o aparelho novo que chega vazio.
+     * Importar soma — é trazer para o celular as viagens que ficaram no
+     * notebook, sem perder as do celular.
+     *
+     * **A repetição é recusada em silêncio, e isso é deliberado.** O arquivo
+     * não traz identificador: os que existiam morreram com o banco de origem, e
+     * inventar outros aqui faria a mesma viagem importada duas vezes virar duas
+     * viagens, com a distância contada em dobro no total do aparelho. Duas
+     * gravações distintas não começam e terminam no mesmo instante — começo e
+     * fim identificam de forma boa o bastante, e errar para o lado de não
+     * duplicar é o lado certo de errar.
+     *
+     * Devolve o que entrou e o que já estava lá, porque a tela precisa dizer as
+     * duas coisas: «12 importadas» sem o «3 já existiam» faz parecer que sumiu
+     * gravação.
+     */
+    async importarViagens(entrada) {
+      const existentes = await driver.listar('viagens');
+      const conhecidas = new Set(existentes.map((v) => `${v.inicio}|${v.fim}`));
+
+      let importadas = 0;
+      let repetidas = 0;
+      let amostrasGravadas = 0;
+
+      for (const bruta of entrada ?? []) {
+        if (!Number.isFinite(bruta.inicio)) continue;
+        const assinatura = `${bruta.inicio}|${bruta.fim}`;
+        if (conhecidas.has(assinatura)) { repetidas += 1; continue; }
+        conhecidas.add(assinatura);
+
+        const pontos = [...(bruta.amostras ?? [])].sort((a, b) => a.t - b.t);
+        const viagem = {
+          ...criarViagem(bruta.inicio),
+          dia: bruta.dia,
+          inicio: bruta.inicio,
+          fim: bruta.fim ?? bruta.inicio,
+          amostras: pontos.length,
+          resumo: bruta.resumo ?? {},
+          importada: true,
+        };
+        await driver.gravar('viagens', viagem);
+
+        // Em blocos, como a gravação ao vivo grava: uma viagem de uma hora num
+        // registro só é um objeto de megabytes que o banco lê inteiro para
+        // mostrar a lista.
+        for (let i = 0; i < pontos.length; i += AMOSTRAS_POR_BLOCO) {
+          const fatia = pontos.slice(i, i + AMOSTRAS_POR_BLOCO);
+          await driver.gravar('amostras', {
+            id: `${viagem.id}:${novoId()}`,
+            viagem: viagem.id,
+            de: fatia[0].t,
+            ate: fatia[fatia.length - 1].t,
+            pontos: fatia,
+          });
+          amostrasGravadas += fatia.length;
+        }
+        importadas += 1;
+      }
+
+      return { importadas, repetidas, amostras: amostrasGravadas };
+    },
+
     async limparTudo() {
       for (const colecao of NOMES) await driver.limpar(colecao);
       pendentes.clear();

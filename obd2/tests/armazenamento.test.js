@@ -252,3 +252,84 @@ test('restaurar esquece as amostras pendentes da viagem que deixou de existir', 
   assert.equal(await destino.descarregar(emCurso.id), null);
   assert.deepEqual(await destino.amostrasDa(emCurso.id), []);
 });
+
+/* ------------------------------------------------- importar sem apagar */
+
+/** Uma viagem pronta para importar, como `lerViagensDeCSV` devolve. */
+function viagemDeFora(inicio, quantas = 3) {
+  return {
+    dia: '2026-09-16',
+    inicio,
+    fim: inicio + quantas * 1000,
+    resumo: { distancia: 4.2, velocidadeMaxima: 70 },
+    amostras: Array.from({ length: quantas }, (_, i) => ({ t: inicio + i * 1000, v: { '0D': 40 + i } })),
+  };
+}
+
+test('importar acrescenta sem apagar o que já existe', async () => {
+  /*
+   * É o oposto de restaurar, e os dois têm razão de ser. Restaurar substitui —
+   * o aparelho novo que chega vazio. Importar soma — trazer para o celular as
+   * viagens que ficaram no notebook, sem perder as do celular.
+   */
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  const daCasa = await armazenamento.comecarViagem();
+  await armazenamento.guardarAmostra(daCasa.id, { t: Date.now(), v: { '0D': 10 } });
+  await armazenamento.encerrarViagem(daCasa.id);
+
+  const conta = await armazenamento.importarViagens([viagemDeFora(Date.UTC(2026, 8, 16, 10, 0, 0))]);
+  assert.equal(conta.importadas, 1);
+  assert.equal(conta.amostras, 3);
+
+  const viagens = await armazenamento.viagens();
+  assert.equal(viagens.length, 2, 'a de casa continua lá');
+});
+
+test('as amostras importadas voltam a sair em ordem', async () => {
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  const inicio = Date.UTC(2026, 8, 16, 10, 0, 0);
+  await armazenamento.importarViagens([viagemDeFora(inicio, 5)]);
+
+  const [viagem] = await armazenamento.viagens();
+  const amostras = await armazenamento.amostrasDa(viagem.id);
+  assert.equal(amostras.length, 5);
+  assert.deepEqual(amostras.map((a) => a.t), [0, 1, 2, 3, 4].map((i) => inicio + i * 1000));
+  assert.equal(viagem.amostras, 5, 'a contagem da viagem bate com o que entrou');
+});
+
+test('importar duas vezes o mesmo arquivo não duplica', async () => {
+  /*
+   * O arquivo não traz identificador — os que existiam morreram com o banco de
+   * origem. Sem esta guarda, importar duas vezes contaria a distância em dobro
+   * no total do aparelho, e a lista mostraria a mesma viagem duas vezes sem
+   * nada explicando.
+   */
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  const lote = [viagemDeFora(Date.UTC(2026, 8, 16, 10, 0, 0)), viagemDeFora(Date.UTC(2026, 8, 16, 12, 0, 0))];
+
+  const primeira = await armazenamento.importarViagens(lote);
+  const segunda = await armazenamento.importarViagens(lote);
+
+  assert.equal(primeira.importadas, 2);
+  assert.equal(segunda.importadas, 0);
+  assert.equal(segunda.repetidas, 2, 'e diz que já estavam aqui, em vez de calar');
+  assert.equal((await armazenamento.viagens()).length, 2);
+});
+
+test('uma viagem sem início não entra', async () => {
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  const conta = await armazenamento.importarViagens([{ dia: '2026-09-16', amostras: [] }]);
+  assert.equal(conta.importadas, 0);
+  assert.equal((await armazenamento.viagens()).length, 0);
+});
+
+test('viagem importada sem amostras continua valendo pelo resumo', async () => {
+  // Acontece quando a planilha traz o resumo mas as amostras ficaram de fora.
+  const armazenamento = await criarArmazenamento(criarDriverEmMemoria());
+  const inicio = Date.UTC(2026, 8, 16, 10, 0, 0);
+  await armazenamento.importarViagens([{ ...viagemDeFora(inicio), amostras: [] }]);
+
+  const [viagem] = await armazenamento.viagens();
+  assert.equal(viagem.amostras, 0);
+  assert.equal(viagem.resumo.distancia, 4.2);
+});
