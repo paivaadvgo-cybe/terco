@@ -48,6 +48,11 @@ export const COLUNAS = 16;
  *
  * Quem já tinha o aplicativo tem painéis gravados em oito colunas. Eles são
  * convertidos uma vez, ao serem lidos — ver `normalizar`.
+ *
+ * **Todo painel montado aqui declara `grade`.** É por essa ausência que
+ * `normalizar` reconhece o painel antigo, e um painel de fábrica que se
+ * esquecesse de declará-la seria dobrado como se fosse de oito colunas — os
+ * itens que transbordassem a grade sumiriam sem aviso.
  */
 export const COLUNAS_ANTIGAS = 8;
 
@@ -226,6 +231,7 @@ export function painelPadrao(nome = 'Padrão') {
   return {
     id: novoId('p'),
     nome,
+    grade: COLUNAS,
     itens: [
       criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 4, altura: 4 }),
       criarItem('0D', 'ponteiro', { x: 4, y: 0, largura: 4, altura: 4 }),
@@ -260,6 +266,7 @@ export function painelDeInstrumentos(nome = 'Instrumentos') {
   return {
     id: novoId('p'),
     nome,
+    grade: COLUNAS,
     itens: [
       /*
        * O velocímetro ocupa oito colunas por seis linhas, no centro — metade
@@ -296,7 +303,7 @@ export function painelDeInstrumentos(nome = 'Instrumentos') {
 export const MODELOS = [
   { chave: 'instrumentos', nome: 'Instrumentos', descricao: 'Velocímetro grande no centro, conta-giros ao lado', montar: painelDeInstrumentos },
   { chave: 'padrao', nome: 'Completo', descricao: 'Dois ponteiros e todos os números', montar: painelPadrao },
-  { chave: 'vazio', nome: 'Vazio', descricao: 'Começar do zero', montar: (nome) => ({ id: novoId('p'), nome, itens: [] }) },
+  { chave: 'vazio', nome: 'Vazio', descricao: 'Começar do zero', montar: (nome) => ({ id: novoId('p'), nome, grade: COLUNAS, itens: [] }) },
 ];
 
 /**
@@ -413,7 +420,7 @@ export function converterEscolhaAntiga(lista) {
     }));
   });
 
-  return { ...painel, itens };
+  return { ...painel, grade: COLUNAS, itens };
 }
 
 /** Os painéis gravados, em forma, com pelo menos um e no máximo cinco. */

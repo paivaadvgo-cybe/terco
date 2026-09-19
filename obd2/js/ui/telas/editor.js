@@ -55,7 +55,11 @@ export async function telaEditor(contexto, parametros = {}) {
   const abas = el('div', { classe: 'abas-de-painel' });
 
   function desenharAbas() {
-    abas.replaceChildren(
+    // O `filter` guarda contra a armadilha do `replaceChildren`: ele é método
+    // nativo e escreve a palavra «null» na tela para um filho nulo. Com cinco
+    // painéis salvos — o limite —, o botão «+» é nulo, e a barra de abas
+    // mostrava «null» no lugar dele.
+    abas.replaceChildren(...[
       ...paineis.map((painel, ordem) => el('button', {
         type: 'button',
         classe: `aba-painel ${ordem === indice ? 'ativa' : ''}`.trim(),
@@ -71,7 +75,7 @@ export async function telaEditor(contexto, parametros = {}) {
           aoTocar: novoPainel,
         })
         : null,
-    );
+    ].filter(Boolean));
   }
 
   async function trocarDePainel(ordem) {
