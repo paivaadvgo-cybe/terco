@@ -15,7 +15,7 @@
 import { el, botao, cartao, vazio, selecao, linhaDeValor } from '../elementos.js';
 import { avisar, confirmar } from '../avisos.js';
 import { criarGrafico } from '../grafico.js';
-import { viagemEmCSV, baixar } from '../csv.js';
+import { viagemEmCSV, viagensEmCSV, baixar } from '../csv.js';
 import { distancia, consumo, litros, inteiro, numero, desdeQuando, valorDePid, unidadeDePid } from '../formatar.js';
 import { exibirDia, hora, duracao } from '../../dominio/datas.js';
 import { serieDe } from '../../dominio/viagem.js';
@@ -60,10 +60,62 @@ export async function telaViagens(contexto) {
     ]);
   })));
 
+  /**
+   * Levar tudo embora de uma vez.
+   *
+   * Existe por um motivo concreto: trocar o endereço de onde o aplicativo é
+   * servido cria um armazenamento novo e vazio — navegador guarda dado por
+   * origem. Quem muda de hospedagem, ou só quer um backup antes de limpar o
+   * aparelho, precisava abrir viagem por viagem e exportar uma a uma.
+   *
+   * O botão avisa antes e avisa durante. Ler todas as amostras de todas as
+   * viagens pode levar alguns segundos num celular com meses de gravação, e um
+   * botão que não responde por cinco segundos é um botão que a pessoa toca de
+   * novo — e aí são duas leituras do banco disputando a mesma tela.
+   */
+  const exportarTudo = botao('Exportar todas as viagens (CSV)', async () => {
+    if (exportarTudo.disabled) return;
+    exportarTudo.disabled = true;
+    const rotulo = exportarTudo.textContent;
+    exportarTudo.textContent = 'Lendo as viagens…';
+
+    try {
+      const configuracao = await contexto.armazenamento.configuracao();
+      const amostrasPorViagem = new Map();
+
+      for (const [ordem, viagem] of viagens.entries()) {
+        exportarTudo.textContent = `Lendo ${ordem + 1} de ${viagens.length}…`;
+        amostrasPorViagem.set(viagem.id, await contexto.armazenamento.amostrasDa(viagem.id));
+      }
+
+      exportarTudo.textContent = 'Montando a planilha…';
+      const conteudo = viagensEmCSV(viagens, amostrasPorViagem, {
+        combustivel: configuracao.combustivel,
+        cilindrada: configuracao.cilindrada,
+      });
+
+      const hoje = new Date().toISOString().slice(0, 10);
+      baixar(`viagens-${hoje}.csv`, conteudo);
+      avisar(`${viagens.length} viagem(ns) exportada(s)`, 'ok');
+    } catch (erro) {
+      avisar(`Não foi possível exportar: ${erro.message}`, 'erro', 6000);
+    } finally {
+      exportarTudo.textContent = rotulo;
+      exportarTudo.disabled = false;
+    }
+  }, { tipo: 'secundario', classe: 'largo' });
+
   tela.append(cartao([
     el('p', {
       classe: 'campo-dica',
       texto: `${ocupacao.viagens} viagem(ns), ${inteiro(ocupacao.amostras)} amostras — cerca de ${numero(ocupacao.bytes / 1_048_576, 1)} MB no aparelho.`,
+    }),
+    exportarTudo,
+    el('p', {
+      classe: 'campo-dica',
+      texto: 'Um arquivo só: em cima, uma linha por viagem; embaixo, todas as amostras com a coluna «Viagem» '
+        + 'identificando cada uma. É o que levar antes de trocar o aparelho ou o endereço do aplicativo — '
+        + 'o navegador guarda os dados por endereço, e num endereço novo o histórico não aparece.',
     }),
   ]));
 

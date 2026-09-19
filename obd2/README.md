@@ -147,7 +147,11 @@ carro simulado funciona, e serve para conhecer o aplicativo.
   apagar não conserta e zera os monitores de emissão.
 - **Viagens** — grava uma amostra por segundo, calcula distância, tempo
   parado, máximos e consumo médio, desenha o gráfico de qualquer leitura e
-  exporta em CSV que o Excel brasileiro abre certo.
+  exporta em CSV que o Excel brasileiro abre certo. Uma viagem por vez, ou
+  **todas num arquivo só** — em cima uma linha por viagem, embaixo todas as
+  amostras com a coluna «Viagem» identificando cada uma. É o que levar antes de
+  trocar de aparelho ou de endereço: o navegador guarda os dados por origem, e
+  num endereço novo o histórico não aparece.
 - **Vídeo da estrada** — grava a câmera traseira junto com a viagem, em trechos
   de 30 segundos, e na tela da viagem o vídeo aparece com os dados do instante
   que está tocando. É o que transforma «4.300 rpm às 14h32» em ver a
@@ -191,7 +195,7 @@ Opere com o carro parado, e use suporte para o celular.
 | `js/gps.js` | A velocidade pelo GPS, com precisão e idade da correção. |
 | `js/dominio/painel.js` | A disposição: grade, colisão, escala, modelos e as cinco configurações. |
 | `js/ui/grade.js` | Arrastar e redimensionar com o dedo, e a célula quadrada. |
-| `tests/` | `npm test` — 207 testes, sem navegador e sem carro. |
+| `tests/` | `npm test` — 216 testes, sem navegador e sem carro. |
 | `ferramentas/` | Gera os ícones, carimba a versão do cache e a ponte do adaptador Wi-Fi. |
 
 ## Desenvolvimento
