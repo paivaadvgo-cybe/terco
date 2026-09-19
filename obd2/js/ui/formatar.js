@@ -75,3 +75,30 @@ export function desdeQuando(instante) {
   const dias = Math.round(horas / 24);
   return dias === 1 ? 'ontem' : `há ${dias} dias`;
 }
+
+/**
+ * As coordenadas de uma leitura, em texto — ou vazio quando não há.
+ *
+ * **Com a letra do hemisfério, e não com o sinal.** «-16,68012» é o mesmo
+ * lugar que «16,68012 S», mas só o segundo se lê sem saber a convenção. Quem
+ * abre a viagem para lembrar onde estava não deveria precisar saber que
+ * negativo é sul.
+ *
+ * **Cinco casas.** Vale cerca de um metro, que é o limite do que um GPS de
+ * celular entrega. Escrever mais casas seria inventar precisão.
+ *
+ * O texto sai no formato que serviços de mapa aceitam colado — mas colar é
+ * decisão de quem está olhando, e é a única forma de essa informação sair do
+ * aparelho. O aplicativo não consulta nada.
+ */
+export function coordenadas(valores) {
+  const lat = valores?.LAT;
+  const lon = valores?.LON;
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return '';
+
+  const grau = (valor, positivo, negativo) => {
+    const letra = valor >= 0 ? positivo : negativo;
+    return `${numero(Math.abs(valor), 5)}° ${letra}`;
+  };
+  return `${grau(lat, 'N', 'S')}  ${grau(lon, 'L', 'O')}`;
+}

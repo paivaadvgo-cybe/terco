@@ -287,6 +287,22 @@ export function criarSessao({ armazenamento }) {
       estado.gps = { ...velocimetroGPS.atualizarConfianca() };
       if (!estado.gps.confiavel) delete estado.valores.GPS;
       else estado.valores.GPS = estado.gps.velocidade;
+
+      /*
+       * A posição entra pela própria porta, e não pela da velocidade.
+       *
+       * São duas confianças diferentes: parado num semáforo não há velocidade
+       * calculável, e ainda assim o lugar é conhecido. Amarrar as coordenadas à
+       * confiança da velocidade apagaria justamente as paradas — que é o trecho
+       * sobre o qual mais se pergunta «onde era isso?».
+       */
+      if (!estado.gps.posicaoConfiavel) {
+        delete estado.valores.LAT;
+        delete estado.valores.LON;
+      } else {
+        estado.valores.LAT = estado.gps.latitude;
+        estado.valores.LON = estado.gps.longitude;
+      }
     }
 
     estado.consumo = instantaneo(estado.valores, {
