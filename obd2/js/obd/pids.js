@@ -171,6 +171,31 @@ export const EXTERNOS = {
     nome: 'Velocidade (GPS)', curto: 'GPS', unidade: 'km/h',
     casas: 0, min: 0, max: 240, externo: true, ritmo: 'rapido',
   },
+
+  /*
+   * Onde o carro estava, em graus.
+   *
+   * Ficam guardadas como qualquer outra leitura, e por isso viajam sozinhas
+   * para a planilha e voltam na importação — sem coluna especial, sem formato
+   * novo. É o que permite abrir o CSV e ver, na mesma linha, a rotação e o
+   * ponto do mapa em que ela aconteceu.
+   *
+   * **Cinco casas, e não mais.** A quinta casa vale cerca de um metro; a sexta
+   * valeria dez centímetros, que nenhum GPS de celular entrega — escrevê-la
+   * seria inventar precisão que o aparelho não tem.
+   *
+   * **Nada é consultado na internet.** O aplicativo guarda e mostra o número;
+   * traduzir em nome de rua exigiria mandar para fora onde a pessoa esteve, e
+   * essa troca não se faz sem pedir.
+   */
+  LAT: {
+    nome: 'Latitude', curto: 'Lat', unidade: '°',
+    casas: 5, min: -90, max: 90, externo: true, ritmo: 'rapido',
+  },
+  LON: {
+    nome: 'Longitude', curto: 'Lon', unidade: '°',
+    casas: 5, min: -180, max: 180, externo: true, ritmo: 'rapido',
+  },
 };
 
 /**

@@ -16,7 +16,7 @@ import { el, botao, cartao, vazio, selecao, linhaDeValor } from '../elementos.js
 import { avisar, confirmar } from '../avisos.js';
 import { criarGrafico } from '../grafico.js';
 import { viagemEmCSV, viagensEmCSV, baixar } from '../csv.js';
-import { distancia, consumo, litros, inteiro, numero, desdeQuando, valorDePid, unidadeDePid } from '../formatar.js';
+import { distancia, consumo, litros, inteiro, numero, desdeQuando, valorDePid, unidadeDePid, coordenadas } from '../formatar.js';
 import { exibirDia, hora, duracao } from '../../dominio/datas.js';
 import { serieDe } from '../../dominio/viagem.js';
 import { definicaoDe } from '../../obd/pids.js';
@@ -135,12 +135,29 @@ export async function telaViagens(contexto) {
  * exata não acharia nada. Pega-se a amostra mais próxima, e se a mais próxima
  * estiver a mais de três segundos — um buraco na gravação — mostra-se travessão
  * em vez do dado de outro momento.
+ *
+ * **Os dados ficam por cima da imagem, e não gravados dentro dela.** Escrevê-los
+ * no arquivo exigiria passar cada quadro por um `canvas` durante a viagem
+ * inteira — o mesmo celular que já conversa com o adaptador, gastando bateria e
+ * esquentando no suporte —, e o resultado seria irreversível: número errado
+ * gravado não sai mais. Por cima, a faixa custa nada, funciona nas viagens que
+ * já estão no aparelho, e desliga com um toque. O preço, que é honesto dizer: o
+ * arquivo baixado sai limpo, sem os números.
  */
 function cartaoDeVideo(trechos, amostras, contexto) {
   const tocador = el('video', { classe: 'tocador', controls: true, playsInline: true });
   tocador.setAttribute('playsinline', '');
 
   const leitura = el('div', { classe: 'leitura-do-video' });
+  const local = el('p', { classe: 'leitura-local' });
+
+  /*
+   * O palco existe para a faixa ter em relação a que se posicionar.
+   *
+   * Sem um pai posicionado, «embaixo» seria o fim da página, e a faixa
+   * apareceria depois da lista de trechos em vez de dentro da imagem.
+   */
+  const palcoDoVideo = el('div', { classe: 'palco-do-video' }, [tocador, leitura]);
   const lista = el('div', { classe: 'trechos' });
 
   let atual = null;
@@ -174,20 +191,32 @@ function cartaoDeVideo(trechos, amostras, contexto) {
     }
 
     if (!maisPerto || menorDiferenca > 3000) {
+      local.textContent = '';
       leitura.replaceChildren(el('span', { classe: 'leitura-vazia', texto: 'sem dados neste instante' }));
       return;
     }
 
-    const mostrar = ['0D', '0C', 'TURBO', '05']
+    /*
+     * A velocidade do GPS entra ao lado da do carro, e não no lugar dela.
+     *
+     * O velocímetro do carro marca para cima de fábrica, e ver os dois números
+     * juntos é a única forma de saber de quanto é a folga. Trocar um pelo outro
+     * esconderia exatamente a comparação que faz a leitura valer.
+     */
+    const mostrar = ['0D', 'GPS', '0C', 'TURBO', '05']
       .filter((pid) => Number.isFinite(maisPerto.v[pid]))
       .map((pid) => el('span', { classe: 'leitura-item' }, [
         el('strong', { texto: `${valorDePid(pid, maisPerto.v[pid])} ${unidadeDePid(pid)}` }),
         el('small', { texto: definicaoDe(pid)?.curto ?? pid }),
       ]));
 
+    // O lugar entra como último filho da mesma faixa, e não numa camada
+    // própria: duas camadas absolutas sobre o vídeo disputavam o mesmo pé da
+    // imagem, e numa tela estreita uma cobria a outra.
+    local.textContent = coordenadas(maisPerto.v);
     leitura.replaceChildren(...(mostrar.length ? mostrar : [
       el('span', { classe: 'leitura-vazia', texto: 'sem dados neste instante' }),
-    ]));
+    ]), local);
   }
 
   tocador.addEventListener('timeupdate', () => {
@@ -223,10 +252,16 @@ function cartaoDeVideo(trechos, amostras, contexto) {
 
   tocar(trechos[0]);
 
+  const alternar = botao('Ocultar os dados sobre o vídeo', () => {
+    const escondido = palcoDoVideo.classList.toggle('sem-dados');
+    alternar.textContent = escondido ? 'Mostrar os dados sobre o vídeo' : 'Ocultar os dados sobre o vídeo';
+    alternar.setAttribute('aria-pressed', String(!escondido));
+  }, { tipo: 'fantasma', classe: 'largo' });
+  alternar.setAttribute('aria-pressed', 'true');
+
   return cartao([
     el('h2', { classe: 'secao-titulo', texto: 'Vídeo da viagem' }),
-    tocador,
-    leitura,
+    palcoDoVideo,
     lista,
     el('div', { classe: 'coluna-botoes' }, [
       botao('Baixar o trecho em cartaz', () => {
@@ -234,10 +269,13 @@ function cartaoDeVideo(trechos, amostras, contexto) {
         baixar(`viagem-${hora(atual.de).replace(':', 'h')}.${atual.tipo?.includes('mp4') ? 'mp4' : 'webm'}`, atual.blob, atual.tipo);
         avisar('Trecho salvo');
       }, { tipo: 'fantasma', classe: 'largo' }),
+      alternar,
     ]),
     el('p', {
       classe: 'campo-dica',
-      texto: `${trechos.length} trecho(s), ${numero(total / 1_048_576, 1)} MB no aparelho. Apagar a viagem apaga o vídeo junto.`,
+      texto: `${trechos.length} trecho(s), ${numero(total / 1_048_576, 1)} MB no aparelho. `
+        + 'Os dados aparecem por cima da imagem, não gravados nela: o arquivo baixado sai limpo. '
+        + 'Apagar a viagem apaga o vídeo junto.',
     }),
   ]);
 }

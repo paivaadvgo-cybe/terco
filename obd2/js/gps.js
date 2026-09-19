@@ -1,5 +1,5 @@
 /**
- * A velocidade pelo GPS do celular.
+ * A velocidade e a posição pelo GPS do celular.
  *
  * **Por que ela existe ao lado da do OBD.** O velocímetro do carro marca para
  * cima de fábrica: a norma permite indicar acima da velocidade real e proíbe
@@ -99,12 +99,21 @@ export function explicarFalha(erro) {
 }
 
 /**
- * Acompanha a velocidade pelo GPS.
+ * Acompanha a velocidade e a posição pelo GPS.
  *
- * `aoMudar` recebe `{ velocidade, precisao, quando, confiavel }` a cada
- * correção. `confiavel` já junta os dois motivos de desconfiança — erro de
- * posição grande e correção velha —, para que a tela não precise repetir essa
- * regra em cada lugar onde mostra o número.
+ * `aoMudar` recebe `{ velocidade, latitude, longitude, precisao, quando,
+ * confiavel, posicaoConfiavel }` a cada correção. As duas confianças são
+ * separadas porque as duas grandezas falham por motivos diferentes, e juntá-las
+ * apagaria a posição em situações em que ela está perfeita.
+ *
+ * `confiavel` vale para a **velocidade**: junta erro de posição grande e
+ * correção velha, para que a tela não repita essa regra em cada lugar.
+ *
+ * `posicaoConfiavel` vale para as **coordenadas**, e não exige velocidade. O
+ * carro parado num semáforo não tem velocidade calculável — duas correções no
+ * mesmo ponto —, e ainda assim está num lugar perfeitamente conhecido. Exigir
+ * velocidade para gravar a posição faria sumir exatamente o trecho parado, que
+ * é onde se costuma querer saber onde se estava.
  */
 export function criarVelocimetroGPS({ aoMudar, aoFalhar } = {}) {
   let vigia = null;
@@ -112,9 +121,12 @@ export function criarVelocimetroGPS({ aoMudar, aoFalhar } = {}) {
 
   const leitura = {
     velocidade: null,
+    latitude: null,
+    longitude: null,
     precisao: null,
     quando: null,
     confiavel: false,
+    posicaoConfiavel: false,
     erro: null,
     ativo: false,
   };
@@ -122,9 +134,13 @@ export function criarVelocimetroGPS({ aoMudar, aoFalhar } = {}) {
   /** A leitura envelhece sozinha: quem pergunta sempre recebe o estado de agora. */
   function atualizarConfianca() {
     const idade = leitura.quando ? Date.now() - leitura.quando : Infinity;
-    leitura.confiavel = Number.isFinite(leitura.velocidade)
-      && idade <= IDADE_MAXIMA
+    const recenteEPrecisa = idade <= IDADE_MAXIMA
       && (leitura.precisao === null || leitura.precisao <= PRECISAO_RUIM);
+
+    leitura.confiavel = Number.isFinite(leitura.velocidade) && recenteEPrecisa;
+    leitura.posicaoConfiavel = Number.isFinite(leitura.latitude)
+      && Number.isFinite(leitura.longitude)
+      && recenteEPrecisa;
     return leitura;
   }
 
@@ -143,12 +159,24 @@ export function criarVelocimetroGPS({ aoMudar, aoFalhar } = {}) {
         (correcao) => {
           const velocidade = velocidadeDaCorrecao(correcao, anterior);
           anterior = correcao;
-          if (velocidade === null) return;
 
-          leitura.velocidade = velocidade;
-          leitura.precisao = correcao.coords.accuracy ?? null;
+          /*
+           * A posição entra em toda correção; a velocidade, só quando dá para
+           * calculá-la.
+           *
+           * Antes a correção inteira era descartada quando a velocidade não
+           * saía — e ela não sai na primeira correção (não há anterior para
+           * comparar) nem quando o carro está parado. O resultado era uma
+           * viagem cujo começo e cujas paradas não tinham lugar nenhum
+           * gravado, que são justamente os momentos que se procura depois.
+           */
+          leitura.latitude = correcao.coords?.latitude ?? null;
+          leitura.longitude = correcao.coords?.longitude ?? null;
+          leitura.precisao = correcao.coords?.accuracy ?? null;
           leitura.quando = correcao.timestamp ?? Date.now();
           leitura.erro = null;
+          if (velocidade !== null) leitura.velocidade = velocidade;
+
           atualizarConfianca();
           aoMudar?.(leitura);
         },
@@ -178,7 +206,10 @@ export function criarVelocimetroGPS({ aoMudar, aoFalhar } = {}) {
       anterior = null;
       leitura.ativo = false;
       leitura.velocidade = null;
+      leitura.latitude = null;
+      leitura.longitude = null;
       leitura.confiavel = false;
+      leitura.posicaoConfiavel = false;
     },
   };
 }

@@ -1292,22 +1292,95 @@ select.entrada { appearance: none; background-image: none; }
   display: block;
 }
 
-/* A leitura do instante que está tocando: números grandes, rótulo pequeno. */
-.leitura-do-video {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-  padding: 10px 12px;
-  background: var(--superficie-2);
-  border-radius: 10px;
-  min-height: 54px;
-  align-items: center;
+/*
+ * O palco do vídeo: a imagem, e os dados por cima dela.
+ *
+ * `position: relative` aqui é o que dá à faixa um «embaixo» que seja o pé da
+ * imagem, e não o pé da página.
+ */
+.palco-do-video {
+  position: relative;
+  line-height: 0;
 }
 
-.leitura-item { display: flex; flex-direction: column; line-height: 1.15; }
-.leitura-item strong { font-size: 18px; font-variant-numeric: tabular-nums; }
-.leitura-item small { font-size: 11.5px; color: var(--suave); }
-.leitura-vazia { font-size: 13.5px; color: var(--suave); }
+/*
+ * A faixa de dados, no pé da imagem.
+ *
+ * **O degradê não é enfeite.** A faixa cai sobre a estrada, que muda de cor a
+ * cada quadro: branco no asfalto claro some, e uma tarja opaca esconderia
+ * justamente o que se quer ver. O degradê escurece só o suficiente, e só onde
+ * o texto passa.
+ *
+ * **`pointer-events: none`** deixa o toque atravessar para os controles do
+ * vídeo. Sem isso, a faixa engoliria o toque de pausar — e o controle está
+ * exatamente embaixo dela.
+ *
+ * **A folga de baixo é a barra de controles do navegador.** Ela tem perto de
+ * quarenta pixels e aparece por cima da imagem; sem a folga, os números ficam
+ * atrás dela sempre que os controles estão à mostra.
+ */
+.leitura-do-video {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 14px;
+  align-items: flex-end;
+  padding: 22px 10px 54px;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(to bottom, transparent, rgb(0 0 0 / 80%) 60%);
+  color: #fff;
+  line-height: 1.1;
+  pointer-events: none;
+}
+
+/*
+ * O lugar ocupa uma linha inteira, sempre a última.
+ *
+ * `flex-basis: 100%` é o que garante isso sem depender de quantos números
+ * couberam antes dele: um texto de trinta caracteres espremido como sexta
+ * coluna quebraria no meio da coordenada.
+ */
+.leitura-local {
+  flex: 0 0 100%;
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  font-variant-numeric: tabular-nums;
+  color: rgb(255 255 255 / 80%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 90%);
+}
+
+.leitura-local:empty { display: none; }
+
+/* Desligada, a faixa some inteira — a imagem limpa também é uma forma de ver. */
+.palco-do-video.sem-dados .leitura-do-video { display: none; }
+
+.leitura-item { display: flex; flex-direction: column; line-height: 1.1; }
+.leitura-item strong {
+  font-size: 16px;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 4px rgb(0 0 0 / 90%);
+}
+.leitura-item small {
+  font-size: 10.5px;
+  color: rgb(255 255 255 / 76%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 90%);
+}
+.leitura-vazia {
+  font-size: 13px;
+  color: rgb(255 255 255 / 78%);
+  text-shadow: 0 1px 3px rgb(0 0 0 / 90%);
+}
+
+/* Numa tela larga sobra espaço, e os números podem voltar a ser grandes. */
+@media (min-width: 600px) {
+  .leitura-do-video { gap: 4px 20px; padding: 26px 14px 56px; }
+  .leitura-item strong { font-size: 19px; }
+  .leitura-item small { font-size: 11.5px; }
+  .leitura-local { font-size: 12.5px; }
+}
 
 .trechos {
   display: flex;

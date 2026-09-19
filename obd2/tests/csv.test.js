@@ -372,3 +372,35 @@ test('um buraco na gravação não entra na duração refeita', () => {
   // a gravação faz, e é a igualdade entre as duas que importa.
   assert.equal(viagens[0].resumo.duracao, 7000);
 });
+
+test('as coordenadas vão para a planilha e voltam dela', () => {
+  /*
+   * Latitude e longitude não ganharam caminho próprio: são leituras como
+   * qualquer outra, e é exatamente por isso que atravessam a exportação e a
+   * importação sem uma linha de código dedicada. Este teste existe para o dia
+   * em que alguém «otimizar» as colunas e as deixar de fora.
+   */
+  const viagens = [{
+    id: 'g1',
+    dia: '2026-09-19',
+    inicio: Date.UTC(2026, 8, 19, 12, 0, 0),
+    fim: Date.UTC(2026, 8, 19, 12, 0, 1),
+    amostras: 2,
+    resumo: { distancia: 0.1, duracao: 1000, velocidadeMaxima: 39 },
+  }];
+  const amostras = new Map([['g1', [
+    { t: Date.UTC(2026, 8, 19, 12, 0, 0), v: { '0D': 38, LAT: -16.68012, LON: -49.25441 } },
+    { t: Date.UTC(2026, 8, 19, 12, 0, 1), v: { '0D': 39, LAT: -16.68002, LON: -49.25451 } },
+  ]]]);
+
+  const texto = viagensEmCSV(viagens, amostras);
+  assert.match(texto, /Latitude \(°\) \[LAT\]/, 'a coluna precisa levar a chave entre colchetes');
+  assert.match(texto, /-16,68012/, 'com vírgula decimal, ou o Excel brasileiro lê como texto');
+
+  const { viagens: volta, avisos } = lerViagensDeCSV(texto);
+  assert.deepEqual(avisos, []);
+  assert.equal(volta[0].amostras[0].v.LAT, -16.68012);
+  assert.equal(volta[0].amostras[0].v.LON, -49.25441);
+  assert.equal(volta[0].amostras[1].v.LAT, -16.68002,
+    'as cinco casas precisam sobreviver à ida e à volta — a quinta vale um metro');
+});

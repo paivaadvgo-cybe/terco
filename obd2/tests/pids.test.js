@@ -90,3 +90,47 @@ test('todo PID declara unidade, ritmo e a conta', () => {
     assert.equal(typeof definicao.decodificar, 'function');
   }
 });
+
+/* ------------------------------------------------------- a posição no mapa */
+
+test('latitude e longitude são leituras como qualquer outra', async () => {
+  /*
+   * Elas entram na tabela de PIDs por um motivo prático: é isso que as faz
+   * viajar sozinhas para a planilha, voltar na importação e poder virar um
+   * mostrador do painel. Uma coluna especial exigiria um caminho paralelo em
+   * cada um desses três lugares — e um deles seria esquecido.
+   */
+  for (const chave of ['LAT', 'LON']) {
+    const definicao = definicaoDe(chave);
+    assert.ok(definicao, `${chave} precisa existir na tabela`);
+    assert.equal(definicao.externo, true, 'vem do celular, não do carro');
+    assert.equal(definicao.casas, 5,
+      'a quinta casa vale cerca de um metro; a sexta seria precisão inventada');
+  }
+  assert.deepEqual(
+    [definicaoDe('LAT').min, definicaoDe('LAT').max],
+    [-90, 90],
+  );
+  assert.deepEqual(
+    [definicaoDe('LON').min, definicaoDe('LON').max],
+    [-180, 180],
+  );
+});
+
+test('as coordenadas saem com a letra do hemisfério, não com o sinal', async () => {
+  const { coordenadas } = await import('../js/ui/formatar.js');
+
+  // «-16,68012» é o mesmo lugar que «16,68012 S», mas só o segundo se lê sem
+  // saber que negativo é sul.
+  assert.equal(coordenadas({ LAT: -16.68012, LON: -49.25441 }), '16,68012° S  49,25441° O');
+  assert.equal(coordenadas({ LAT: 1.5, LON: 2.25 }), '1,50000° N  2,25000° L');
+});
+
+test('sem coordenadas, não se escreve coordenada nenhuma', async () => {
+  const { coordenadas } = await import('../js/ui/formatar.js');
+  // Meia coordenada é pior que nenhuma: um número sozinho parece um lugar.
+  assert.equal(coordenadas({}), '');
+  assert.equal(coordenadas({ LAT: -16.68 }), '');
+  assert.equal(coordenadas({ LAT: -16.68, LON: null }), '');
+  assert.equal(coordenadas(null), '');
+});

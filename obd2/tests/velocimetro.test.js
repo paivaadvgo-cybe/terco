@@ -165,3 +165,81 @@ test('zerar recomeça do zero', () => {
   assert.equal(media.resultado().distancia, 0);
   assert.equal(media.resultado().kmPorLitro, null);
 });
+
+/* ------------------------------------------------------------- a posição */
+
+/**
+ * Um GPS de mentira, para dirigir o vigia sem sair do teste.
+ *
+ * Guardar o callback é o que permite entregar correções na ordem e no instante
+ * que o teste quiser — inclusive duas no mesmo ponto, que é o carro parado.
+ */
+function gpsDeMentira() {
+  let aoCorrigir = null;
+  // `globalThis.navigator` no Node é só de leitura; `defineProperty` é o jeito
+  // de pôr um no lugar sem que o teste esbarre no getter.
+  Object.defineProperty(globalThis, 'navigator', {
+    configurable: true,
+    writable: true,
+    value: {
+      geolocation: {
+        watchPosition(ok) { aoCorrigir = ok; return 1; },
+        clearWatch() {},
+      },
+    },
+  });
+  return {
+    corrigir(latitude, longitude, { accuracy = 8, timestamp = Date.now() } = {}) {
+      aoCorrigir?.({ coords: { latitude, longitude, accuracy, speed: null }, timestamp });
+    },
+  };
+}
+
+test('a posição é gravada mesmo quando a velocidade não dá para calcular', async () => {
+  /*
+   * O carro parado num semáforo entrega duas correções no mesmo ponto: a
+   * velocidade sai zero ou nem sai, e antes disso a correção inteira era
+   * descartada. O resultado era uma viagem cujas paradas não tinham lugar
+   * nenhum gravado — justamente o trecho sobre o qual se pergunta «onde era?».
+   */
+  const { criarVelocimetroGPS } = await import('../js/gps.js');
+  const falso = gpsDeMentira();
+  const velocimetro = criarVelocimetroGPS({});
+  velocimetro.comecar();
+
+  // A primeira correção nunca tem velocidade: não há anterior para comparar.
+  falso.corrigir(-16.68012, -49.25441);
+  assert.equal(velocimetro.leitura.velocidade, null, 'a primeira correção não tem com que comparar');
+  assert.equal(velocimetro.leitura.latitude, -16.68012);
+  assert.equal(velocimetro.leitura.longitude, -49.25441);
+  assert.equal(velocimetro.leitura.posicaoConfiavel, true,
+    'sem velocidade, a posição ainda é boa — e é o que se quer gravar');
+  assert.equal(velocimetro.leitura.confiavel, false,
+    'a velocidade não pode ser dada como confiável quando não existe');
+});
+
+test('posição imprecisa não é dada como confiável', async () => {
+  const { criarVelocimetroGPS } = await import('../js/gps.js');
+  const falso = gpsDeMentira();
+  const velocimetro = criarVelocimetroGPS({});
+  velocimetro.comecar();
+
+  falso.corrigir(-16.68012, -49.25441, { accuracy: PRECISAO_RUIM + 1 });
+  assert.equal(velocimetro.leitura.posicaoConfiavel, false,
+    'um erro de posição maior que o tolerado põe o carro noutra rua');
+});
+
+test('parar o GPS esquece onde se estava', async () => {
+  // A posição é o dado mais sensível que o aplicativo guarda em memória.
+  // Deixá-la na leitura depois de desligado é guardá-la sem motivo.
+  const { criarVelocimetroGPS } = await import('../js/gps.js');
+  const falso = gpsDeMentira();
+  const velocimetro = criarVelocimetroGPS({});
+  velocimetro.comecar();
+  falso.corrigir(-16.68012, -49.25441);
+
+  velocimetro.parar();
+  assert.equal(velocimetro.leitura.latitude, null);
+  assert.equal(velocimetro.leitura.longitude, null);
+  assert.equal(velocimetro.leitura.posicaoConfiavel, false);
+});
