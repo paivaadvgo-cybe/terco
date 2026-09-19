@@ -6,11 +6,16 @@
  * A **chave pública** vai para dentro do aplicativo (`js/licenca/assinatura.js`)
  * e serve só para conferir assinaturas. A **chave privada** assina as licenças,
  * fica no computador de quem vende o aplicativo e **nunca** entra neste
- * repositório — que é público. Quem tiver a chave privada emite licenças
- * válidas para qualquer aparelho.
+ * repositório. Quem tiver a chave privada emite licenças válidas para qualquer
+ * aparelho.
  *
- * Girar as chaves é trocar as duas de uma vez: a pública no arquivo do
- * aplicativo, a privada no gerador. Licenças emitidas com a chave antiga param
+ * **Um par serve os dois aplicativos.** O Painel OBD-II e o Lava-Rápido usam a
+ * mesma chave e o mesmo gerador; o que separa as licenças de um e de outro é o
+ * campo `app` dentro do envelope assinado. Se você já tem a chave privada de um
+ * deles, **não gere outra**: use a que tem.
+ *
+ * Girar as chaves é trocar as duas de uma vez: a pública no arquivo dos **dois**
+ * aplicativos, a privada no gerador. Licenças emitidas com a chave antiga param
  * de valer, e os clientes ativos precisam de um arquivo novo — por isso só se
  * gira quando há motivo (a privada vazou, por exemplo).
  *
@@ -37,10 +42,10 @@ const privada = await crypto.subtle.exportKey('jwk', par.privateKey);
 const limpa = ({ kty, crv, x, y, d }) => (d ? { kty, crv, x, y, d } : { kty, crv, x, y });
 
 fs.mkdirSync(destino, { recursive: true });
-const arquivo = path.join(destino, 'lava-rapido-chave-privada.jwk.json');
+const arquivo = path.join(destino, 'licenca-chave-privada.jwk.json');
 fs.writeFileSync(arquivo, `${JSON.stringify(limpa(privada), null, 2)}\n`, { mode: 0o600 });
 
 console.log('chave privada gravada em:', arquivo);
 console.log('  → guarde fora do repositório, em lugar de onde você consiga recuperá-la.');
-console.log('\nchave pública, para colar em js/licenca/assinatura.js:');
+console.log('\nchave pública, para colar em js/licenca/assinatura.js DOS DOIS aplicativos:');
 console.log(`export const CHAVE_PUBLICA = ${JSON.stringify(limpa(publica))};`);
