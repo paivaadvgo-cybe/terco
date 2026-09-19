@@ -244,8 +244,20 @@ export function criarMedidor(pid, { titulo = null, secundario = false, escala = 
 
   desenho.append(numero, unidade, segunda);
 
-  const rotulo = el('span', { classe: 'medidor-titulo', texto: titulo ?? definicao.curto ?? definicao.nome ?? pid });
-  const no = el('div', { classe: 'medidor', dados: { pid } }, [desenho, rotulo]);
+  /*
+   * O ponteiro não leva rótulo escrito.
+   *
+   * A palavra «Giro» embaixo de um mostrador que já desenha «rpm» dentro do
+   * círculo não acrescenta nada — e ocupava uma linha inteira da célula, que
+   * numa tela deitada de celular é espaço que falta para outro marcador. Quem
+   * usa leitor de tela continua ouvindo o nome: ele está no `aria-label` do
+   * desenho, que é onde o leitor procura.
+   *
+   * Os mostradores pequenos continuam com o título, e é uma diferença de
+   * fundo, não de estilo: ali o número aparece sozinho, e «92» sem a palavra
+   * «Motor» é adivinhação.
+   */
+  const no = el('div', { classe: 'medidor', dados: { pid } }, [desenho]);
 
   let ultimo;
   return {

@@ -25,29 +25,52 @@ import { definicaoDe } from '../obd/pids.js';
 export const LIMITE_DE_PAINEIS = 5;
 
 /**
- * Colunas da grade. Oito, porque o painel é sempre usado deitado.
+ * Colunas da grade. Dezesseis, porque o passo é que tem de ser fino.
  *
- * Um celular em paisagem tem perto de 840 por 390 pixels úteis: oito colunas dão
- * células de uns 95 px, e três linhas dessas é tudo que cabe em altura. Não é
- * uma escolha estética — é a forma do espaço disponível. Com quatro colunas, um
- * painel deitado ficaria com metade da tela vazia dos lados; com dezesseis, cada
- * célula teria 45 px e nenhum ponteiro caberia.
+ * Eram oito, e oito casava com o tamanho de um mostrador legível: célula de uns
+ * 95 px num celular deitado. O problema não era o tamanho dos itens — era o
+ * passo. Com oito colunas, um painel de dois ponteiros grandes e quatro
+ * cartões fecha a conta exata (`1 + 3 + 3 + 1`), e a partir daí **não há para
+ * onde mover nada**: não existe meia coluna, então encostar dois marcadores um
+ * pouco mais perto, ou espremer um quinto, é impossível — não por estar cheio
+ * de verdade, mas porque a régua é grossa demais.
+ *
+ * Dezesseis colunas não encolhem nada: o que antes ocupava uma coluna agora
+ * ocupa duas, e desenha igual. O que muda é que passou a existir o meio-termo.
+ *
+ * As linhas acompanham pelo mesmo motivo e na mesma proporção — a célula é
+ * quadrada, e afinar só um dos lados deixaria de ser.
  */
-export const COLUNAS = 8;
+export const COLUNAS = 16;
+
+/**
+ * A régua em que os painéis antigos foram desenhados.
+ *
+ * Quem já tinha o aplicativo tem painéis gravados em oito colunas. Eles são
+ * convertidos uma vez, ao serem lidos — ver `normalizar`.
+ */
+export const COLUNAS_ANTIGAS = 8;
 
 /**
  * O maior painel que se pode montar, em linhas.
  *
- * Bem mais que as três que cabem na tela: quem quiser montar um painel que rola
+ * Bem mais que as seis que cabem na tela: quem quiser montar um painel que rola
  * pode. O que não se quer é permitir um item na linha oitenta, que sumiria
  * abaixo de qualquer rolagem razoável.
  */
-export const LINHAS_MAXIMAS = 8;
+export const LINHAS_MAXIMAS = 16;
 
+/*
+ * Os mínimos estão em colunas novas, e valem o mesmo tamanho de antes.
+ *
+ * Afinar a régua não é permitir mostrador ilegível: um ponteiro de 2×2 na
+ * régua nova teria metade do diâmetro do menor que já existia, e nenhum número
+ * caberia dentro dele. O que a régua fina dá é posição, não miniatura.
+ */
 export const TIPOS = {
-  ponteiro: { nome: 'Ponteiro', minimo: { largura: 2, altura: 2 } },
-  mostrador: { nome: 'Número', minimo: { largura: 1, altura: 1 } },
-  barra: { nome: 'Barra', minimo: { largura: 2, altura: 1 } },
+  ponteiro: { nome: 'Ponteiro', minimo: { largura: 4, altura: 4 } },
+  mostrador: { nome: 'Número', minimo: { largura: 2, altura: 2 } },
+  barra: { nome: 'Barra', minimo: { largura: 4, altura: 2 } },
 };
 
 function novoId(prefixo) {
@@ -181,14 +204,14 @@ export function alturaDoPainel(itens) {
 /**
  * Quantas linhas a grade do editor mostra.
  *
- * Uma a mais do que o painel usa: sem uma linha vazia visível não há para onde
- * arrastar um mostrador que se quer mais para baixo. **Só uma**, porque as
- * linhas dividem a altura da janela — cada linha a mais aperta todas as
- * outras, e quatro linhas fixas encolhiam em um quarto um painel de três, o
- * que faz a prévia mentir sobre o tamanho do que se está montando.
+ * Duas a mais do que o painel usa — que na régua nova é a mesma faixa vazia de
+ * antes: sem ela não há para onde arrastar um mostrador que se quer mais para
+ * baixo. **Só essa faixa**, porque as linhas dividem a altura da janela: cada
+ * linha a mais aperta todas as outras, e sobrar meia tela vazia faz a prévia
+ * mentir sobre o tamanho do que se está montando.
  */
 export function linhasDoEditor(itens) {
-  return Math.min(LINHAS_MAXIMAS, Math.max(3, alturaDoPainel(itens) + 1));
+  return Math.min(LINHAS_MAXIMAS, Math.max(6, alturaDoPainel(itens) + 2));
 }
 
 /**
@@ -204,20 +227,20 @@ export function painelPadrao(nome = 'Padrão') {
     id: novoId('p'),
     nome,
     itens: [
-      criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 2, altura: 2 }),
-      criarItem('0D', 'ponteiro', { x: 2, y: 0, largura: 2, altura: 2 }),
-      criarItem('CONSUMO', 'mostrador', { x: 4, y: 0, largura: 1, altura: 1 }),
-      criarItem('MEDIA', 'mostrador', { x: 5, y: 0, largura: 1, altura: 1 }),
-      criarItem('TURBO', 'mostrador', { x: 6, y: 0, largura: 1, altura: 1 }),
-      criarItem('05', 'mostrador', { x: 7, y: 0, largura: 1, altura: 1 }),
-      criarItem('11', 'mostrador', { x: 4, y: 1, largura: 1, altura: 1 }),
-      criarItem('04', 'mostrador', { x: 5, y: 1, largura: 1, altura: 1 }),
-      criarItem('42', 'mostrador', { x: 6, y: 1, largura: 1, altura: 1 }),
-      criarItem('2F', 'barra', { x: 4, y: 2, largura: 2, altura: 1 }),
-      criarItem('46', 'mostrador', { x: 6, y: 2, largura: 1, altura: 1 }),
-      criarItem('1F', 'mostrador', { x: 7, y: 2, largura: 1, altura: 1 }),
-      criarItem('DISTANCIA', 'mostrador', { x: 0, y: 2, largura: 2, altura: 1 }),
-      criarItem('MAXIMA', 'mostrador', { x: 2, y: 2, largura: 2, altura: 1 }),
+      criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 4, altura: 4 }),
+      criarItem('0D', 'ponteiro', { x: 4, y: 0, largura: 4, altura: 4 }),
+      criarItem('CONSUMO', 'mostrador', { x: 8, y: 0, largura: 2, altura: 2 }),
+      criarItem('MEDIA', 'mostrador', { x: 10, y: 0, largura: 2, altura: 2 }),
+      criarItem('TURBO', 'mostrador', { x: 12, y: 0, largura: 2, altura: 2 }),
+      criarItem('05', 'mostrador', { x: 14, y: 0, largura: 2, altura: 2 }),
+      criarItem('11', 'mostrador', { x: 8, y: 2, largura: 2, altura: 2 }),
+      criarItem('04', 'mostrador', { x: 10, y: 2, largura: 2, altura: 2 }),
+      criarItem('42', 'mostrador', { x: 12, y: 2, largura: 2, altura: 2 }),
+      criarItem('2F', 'barra', { x: 8, y: 4, largura: 4, altura: 2 }),
+      criarItem('46', 'mostrador', { x: 12, y: 4, largura: 2, altura: 2 }),
+      criarItem('1F', 'mostrador', { x: 14, y: 4, largura: 2, altura: 2 }),
+      criarItem('DISTANCIA', 'mostrador', { x: 0, y: 4, largura: 4, altura: 2 }),
+      criarItem('MAXIMA', 'mostrador', { x: 4, y: 4, largura: 4, altura: 2 }),
     ],
   };
 }
@@ -239,26 +262,27 @@ export function painelDeInstrumentos(nome = 'Instrumentos') {
     nome,
     itens: [
       /*
-       * O velocímetro ocupa quatro colunas por três linhas, no centro.
+       * O velocímetro ocupa oito colunas por seis linhas, no centro — metade
+       * da largura da grade.
        *
-       * Quatro e não três porque o mostrador é desenhado no maior círculo que
+       * Oito e não seis porque o mostrador é desenhado no maior círculo que
        * couber na célula: com três colunas ele fica limitado pela largura e
        * sobra faixa preta em cima e embaixo. Com quatro, quem limita passa a ser
        * a altura da tela — e o ponteiro fica do tamanho que a tela permite, que
        * é o ponto de um quadro de instrumentos.
        */
-      criarItem('0D', 'ponteiro', { x: 2, y: 0, largura: 4, altura: 3 }),
+      criarItem('0D', 'ponteiro', { x: 4, y: 0, largura: 8, altura: 6 }),
 
       // À esquerda, o que se consulta parado.
-      criarItem('1F', 'mostrador', { x: 0, y: 0, largura: 2, altura: 1 }),
-      criarItem('42', 'mostrador', { x: 0, y: 1, largura: 1, altura: 1 }),
-      criarItem('05', 'mostrador', { x: 1, y: 1, largura: 1, altura: 1 }),
-      criarItem('MAXIMA', 'mostrador', { x: 0, y: 2, largura: 2, altura: 1 }),
+      criarItem('1F', 'mostrador', { x: 0, y: 0, largura: 4, altura: 2 }),
+      criarItem('42', 'mostrador', { x: 0, y: 2, largura: 2, altura: 2 }),
+      criarItem('05', 'mostrador', { x: 2, y: 2, largura: 2, altura: 2 }),
+      criarItem('MAXIMA', 'mostrador', { x: 0, y: 4, largura: 4, altura: 2 }),
 
       // À direita, a distância e o conta-giros — que se olha junto com a
       // velocidade, e por isso fica do lado dela.
-      criarItem('DISTANCIA', 'mostrador', { x: 6, y: 0, largura: 2, altura: 1 }),
-      criarItem('0C', 'ponteiro', { x: 6, y: 1, largura: 2, altura: 2 }),
+      criarItem('DISTANCIA', 'mostrador', { x: 12, y: 0, largura: 4, altura: 2 }),
+      criarItem('0C', 'ponteiro', { x: 12, y: 2, largura: 4, altura: 4 }),
     ],
   };
 }
@@ -287,8 +311,31 @@ export const MODELOS = [
 export function normalizar(painel, indice = 0) {
   const itens = [];
 
+  /*
+   * A régua em que este painel foi desenhado.
+   *
+   * Um painel gravado antes da grade afinar não traz `grade`, e nesse caso ele
+   * está em oito colunas: tudo nele vale o dobro na régua de hoje. O fator é
+   * lido uma vez e aplicado a posição **e** tamanho juntos — dobrar só a
+   * posição espalharia os itens e deixaria buracos entre eles; dobrar só o
+   * tamanho os faria cobrir uns aos outros.
+   *
+   * Ele não precisa ser inteiro nem ser dois: ler o número gravado, em vez de
+   * assumir «era oito», é o que faz esta conversão sobreviver à próxima vez
+   * que a régua mudar.
+   */
+  const gradeDeOrigem = Number.isFinite(painel?.grade) && painel.grade > 0
+    ? painel.grade
+    : COLUNAS_ANTIGAS;
+  const fator = COLUNAS / gradeDeOrigem;
+
   for (const bruto of painel?.itens ?? []) {
     if (!bruto || !definicaoDe(bruto.chave)) continue;
+
+    const naRegua = (valor, padrao) => {
+      const numero = Math.round((Number(valor) || 0) * fator);
+      return Number.isFinite(numero) && numero > 0 ? numero : padrao;
+    };
 
     const tipo = TIPOS[bruto.tipo] ? bruto.tipo : 'mostrador';
     const minimo = TIPOS[tipo].minimo;
@@ -296,12 +343,12 @@ export function normalizar(painel, indice = 0) {
       id: bruto.id ?? novoId('i'),
       chave: String(bruto.chave).toUpperCase(),
       tipo,
-      largura: Math.max(minimo.largura, Math.min(COLUNAS, Math.round(bruto.largura) || minimo.largura)),
-      altura: Math.max(minimo.altura, Math.min(LINHAS_MAXIMAS, Math.round(bruto.altura) || minimo.altura)),
+      largura: Math.max(minimo.largura, Math.min(COLUNAS, naRegua(bruto.largura, minimo.largura))),
+      altura: Math.max(minimo.altura, Math.min(LINHAS_MAXIMAS, naRegua(bruto.altura, minimo.altura))),
       min: Number.isFinite(bruto.min) ? bruto.min : undefined,
       max: Number.isFinite(bruto.max) ? bruto.max : undefined,
-      x: Math.max(0, Math.round(bruto.x) || 0),
-      y: Math.max(0, Math.round(bruto.y) || 0),
+      x: Math.max(0, Math.round((Number(bruto.x) || 0) * fator)),
+      y: Math.max(0, Math.round((Number(bruto.y) || 0) * fator)),
     };
 
     // Fora da grade ou por cima de outro: vai para o primeiro lugar vago, em
@@ -319,6 +366,9 @@ export function normalizar(painel, indice = 0) {
   return {
     id: painel?.id ?? novoId('p'),
     nome: String(painel?.nome ?? `Painel ${indice + 1}`).slice(0, 24) || `Painel ${indice + 1}`,
+    // Gravar a régua junto é o que impede a conversão de acontecer duas vezes:
+    // relido, este painel já diz em que grade está.
+    grade: COLUNAS,
     itens,
   };
 }
@@ -350,11 +400,17 @@ export function converterEscolhaAntiga(lista) {
   const chaves = ['CONSUMO', 'MEDIA', ...restantes.filter((c) => c !== 'CONSUMO' && c !== 'MEDIA')];
 
   const itens = [
-    criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 2, altura: 2 }),
-    criarItem('0D', 'ponteiro', { x: 2, y: 0, largura: 2, altura: 2 }),
+    criarItem('0C', 'ponteiro', { x: 0, y: 0, largura: 4, altura: 4 }),
+    criarItem('0D', 'ponteiro', { x: 4, y: 0, largura: 4, altura: 4 }),
   ];
+  // Os mostradores são de 2×2 na régua nova — o mesmo tamanho do 1×1 antigo —,
+  // então cabem oito por linha e a fileira começa abaixo dos ponteiros.
+  const PORLINHA = COLUNAS / 2;
   chaves.forEach((chave, ordem) => {
-    itens.push(criarItem(chave, 'mostrador', { x: ordem % COLUNAS, y: 2 + Math.floor(ordem / COLUNAS) }));
+    itens.push(criarItem(chave, 'mostrador', {
+      x: (ordem % PORLINHA) * 2,
+      y: 4 + Math.floor(ordem / PORLINHA) * 2,
+    }));
   });
 
   return { ...painel, itens };
